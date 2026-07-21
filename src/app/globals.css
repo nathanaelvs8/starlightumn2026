@@ -32,29 +32,18 @@
 
 @layer components {
   /**
-   * Teks paragraf di atas background gelap — efek timbul dua lapis.
-   *
-   * Cara kerjanya:
-   *   1. text-shadow nggambar salinan huruf warna PUTIH, digeser ke
-   *      bawah sejauh --text-3d. Ini lapisan bawahnya.
-   *   2. Muka hurufnya diisi gradasi abu-abu (terang di tengah,
-   *      lebih redup di ujung kiri-kanan) lewat background-clip.
-   *
-   * Karena lapisan putih cuma digeser ke bawah, yang kelihatan cuma
-   * pinggiran bawah tiap huruf — kesannya huruf timbul ke atas.
-   *
-   * Semua nilainya ada di tokens.css:
-   *   --c-text-core / --c-text-edge  warna muka huruf
-   *   --c-text-under                 warna lapisan bawah
-   *   --text-3d                      jarak geser
-   *   --text-tracking                jarak antar huruf
-   */
-/**
-   * Teks timbul, dibikin dari DUA lapisan teks yang ditumpuk.
+   * Teks paragraf timbul, dibikin dari DUA lapisan teks yang ditumpuk
+   * (lihat komponen Paragraf di page.tsx).
    *
    * Kenapa nggak pakai text-shadow? Karena background-clip:text
    * mencetak gradasinya MENIMPA bayangan, jadi lapisan putihnya
    * ketutup dan nggak pernah kelihatan. Dua elemen terpisah selalu jalan.
+   *
+   * Semua nilainya ada di tokens.css:
+   *   --c-text-core / --c-text-edge   warna muka huruf
+   *   --c-text-under                  warna lapisan bawah
+   *   --text-3d                       jarak geser
+   *   --text-tracking                 jarak antar huruf
    */
 
   /* Lapisan bawah: huruf putih polos, digeser turun sedikit. */
@@ -82,12 +71,12 @@
 
   /* Blok teks paragraf: font Alice, rata tengah, jarak baris longgar. */
   .prose-starlight {
-      position: relative;
-      font-family: var(--f-alice);
-      line-height: 1.65;
-      letter-spacing: var(--text-tracking);
-      text-align: center;
-      text-wrap: pretty;
+    position: relative;
+    font-family: var(--f-alice);
+    line-height: 1.65;
+    letter-spacing: var(--text-tracking);
+    text-align: center;
+    text-wrap: pretty;
   }
 
   /* Bar abu-abu pengganti teks yang belum ada */
@@ -156,5 +145,16 @@
 
   .hover-pop:hover {
     transform: scale(1.06);
+  }
+}
+
+/* Matiin semua gerakan buat yang sensitif animasi. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

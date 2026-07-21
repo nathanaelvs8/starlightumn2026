@@ -33,9 +33,15 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
-      <Container className="rounded-pill border border-line bg-page/95 px-4 backdrop-blur sm:px-6">
+      {/*
+        Semua halaman background-nya gelap, jadi navbar pakai teks putih
+        di atas panel hitam transparan. Panelnya tembus pandang biar
+        background di belakangnya masih kelihatan — naikin angka di
+        bg-black/25 kalau teksnya kurang kebaca.
+      */}
+      <Container className="rounded-pill border border-white/25 bg-black/25 px-4 backdrop-blur sm:px-6">
         <nav className="relative flex h-[var(--h-nav)] items-center justify-center">
-          {/* Logo — nempel di kiri, menu tetap pas di tengah */}
+          {/* Logo nempel di kiri, menu tetap pas di tengah */}
           <Link
             href="/"
             aria-label="Starlight UMN 2026 — Home"
@@ -57,10 +63,10 @@ export function Navbar() {
                   href={item.href}
                   aria-current={isActive(item.href) ? "page" : undefined}
                   className={clsx(
-                    "nav-link font-alice text-lg uppercase tracking-wide xl:text-xl",
+                    "nav-link font-alice text-xl uppercase tracking-wide xl:text-2xl",
                     isActive(item.href)
-                      ? "text-ink"
-                      : "text-muted hover:text-ink",
+                      ? "text-white"
+                      : "text-white/70 hover:text-white",
                   )}
                 >
                   {item.label}
@@ -76,7 +82,7 @@ export function Navbar() {
             aria-expanded={open}
             aria-controls="menu-mobile"
             aria-label="Buka menu"
-            className="hover-pop absolute right-0 grid h-10 w-10 place-items-center rounded-pill border border-line lg:hidden"
+            className="hover-pop absolute right-0 grid h-10 w-10 place-items-center rounded-pill border border-white/30 text-white lg:hidden"
           >
             <span aria-hidden className="text-lg leading-none">
               {open ? "\u00d7" : "\u2261"}
@@ -93,10 +99,10 @@ export function Navbar() {
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className={clsx(
-                    "block rounded-md px-4 py-3 font-alice text-base uppercase tracking-wide transition-colors",
+                    "block rounded-md px-4 py-3 font-alice text-lg uppercase tracking-wide transition-colors",
                     isActive(item.href)
-                      ? "bg-raised text-ink"
-                      : "text-muted hover:bg-surface hover:text-ink",
+                      ? "bg-white/15 text-white"
+                      : "text-white/70 hover:bg-white/10 hover:text-white",
                   )}
                 >
                   {item.label}
