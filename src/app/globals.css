@@ -1,0 +1,160 @@
+@import url("https://fonts.googleapis.com/css2?family=Alice&display=swap");
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background: var(--c-page);
+    color: var(--c-ink);
+    font-family: var(--f-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  /* Focus ring wajib kelihatan — jangan dihapus. */
+  :where(a, button, input, [tabindex]):focus-visible {
+    outline: 2px solid var(--c-ink);
+    outline-offset: 3px;
+    border-radius: var(--r-sm);
+  }
+}
+
+@layer components {
+  /**
+   * Teks paragraf di atas background gelap — efek timbul dua lapis.
+   *
+   * Cara kerjanya:
+   *   1. text-shadow nggambar salinan huruf warna PUTIH, digeser ke
+   *      bawah sejauh --text-3d. Ini lapisan bawahnya.
+   *   2. Muka hurufnya diisi gradasi abu-abu (terang di tengah,
+   *      lebih redup di ujung kiri-kanan) lewat background-clip.
+   *
+   * Karena lapisan putih cuma digeser ke bawah, yang kelihatan cuma
+   * pinggiran bawah tiap huruf — kesannya huruf timbul ke atas.
+   *
+   * Semua nilainya ada di tokens.css:
+   *   --c-text-core / --c-text-edge  warna muka huruf
+   *   --c-text-under                 warna lapisan bawah
+   *   --text-3d                      jarak geser
+   *   --text-tracking                jarak antar huruf
+   */
+/**
+   * Teks timbul, dibikin dari DUA lapisan teks yang ditumpuk.
+   *
+   * Kenapa nggak pakai text-shadow? Karena background-clip:text
+   * mencetak gradasinya MENIMPA bayangan, jadi lapisan putihnya
+   * ketutup dan nggak pernah kelihatan. Dua elemen terpisah selalu jalan.
+   */
+
+  /* Lapisan bawah: huruf putih polos, digeser turun sedikit. */
+  .star-under {
+    display: block;
+    color: var(--c-text-under);
+    transform: translateY(var(--text-3d));
+  }
+
+  /* Lapisan atas: muka huruf, abu bergradasi ke ujung kiri-kanan. */
+  .star-face {
+    display: block;
+    background-image: linear-gradient(
+      90deg,
+      var(--c-text-edge) 0%,
+      var(--c-text-core) 26%,
+      var(--c-text-core) 74%,
+      var(--c-text-edge) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(var(--glow-text));
+  }
+
+  /* Blok teks paragraf: font Alice, rata tengah, jarak baris longgar. */
+  .prose-starlight {
+      position: relative;
+      font-family: var(--f-alice);
+      line-height: 1.65;
+      letter-spacing: var(--text-tracking);
+      text-align: center;
+      text-wrap: pretty;
+  }
+
+  /* Bar abu-abu pengganti teks yang belum ada */
+  .dummy-line {
+    display: block;
+    height: 12px;
+    border-radius: var(--r-pill);
+    background: var(--c-line);
+  }
+
+  /* Font Alice buat teks non-paragraf (navbar, footer). */
+  .font-alice {
+    font-family: var(--f-alice);
+  }
+
+  /**
+   * Menu navbar. Garis bawah tumbuh dari tengah pas di-hover, dan
+   * hurufnya naik dikit. Yang lagi aktif garisnya nyala terus.
+   */
+  .nav-link {
+    position: relative;
+    display: inline-block;
+    transition:
+      color 200ms ease,
+      transform 200ms ease;
+  }
+
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -8px;
+    height: 2px;
+    width: 0;
+    transform: translateX(-50%);
+    background: currentColor;
+    transition: width 260ms ease;
+  }
+
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after,
+  .nav-link[aria-current="page"]::after {
+    width: 100%;
+  }
+
+  .nav-link:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Link di footer — geser dikit ke kanan pas di-hover. */
+  .footer-link {
+    display: inline-block;
+    transition:
+      color 200ms ease,
+      transform 200ms ease;
+  }
+
+  .footer-link:hover {
+    transform: translateX(3px);
+  }
+
+  /* Logo & ikon — membesar halus pas di-hover. */
+  .hover-pop {
+    transition: transform 260ms ease;
+  }
+
+  .hover-pop:hover {
+    transform: scale(1.06);
+  }
+}

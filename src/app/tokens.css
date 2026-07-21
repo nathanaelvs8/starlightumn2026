@@ -1,0 +1,67 @@
+/* =====================================================================
+   STARLIGHT UMN 2026 — DESIGN TOKENS
+   ---------------------------------------------------------------------
+   Ini SATU-SATUNYA file yang perlu diubah buat re-style seluruh
+   website. Jangan pernah hardcode warna di komponen — selalu lewat
+   token di sini.
+
+   Sekarang isinya grayscale, persis wireframe. Nanti tinggal ganti
+   nilainya jadi palet tema sihir tanpa nyentuh satu baris komponen.
+   ===================================================================== */
+
+:root {
+  /* --- Permukaan ---------------------------------------------------- */
+  --c-page: #ffffff;
+  --c-band: #ececee; /* dasar band kalau gambar belum dipasang */
+  --c-surface: #f7f7f8; /* kartu / panel */
+  --c-raised: #e2e2e6; /* kotak placeholder */
+
+  /* --- Teks --------------------------------------------------------- */
+  --c-ink: #232326;
+  --c-ink-muted: #6b6b73;
+  --c-ink-faint: #9a9aa2;
+
+  /* --- Teks paragraf (di atas background gelap) --------------------- */
+  /*
+   * Efeknya dua lapis, kayak timbul:
+   *   - lapisan BAWAH putih, digeser sedikit ke bawah
+   *   - lapisan ATAS abu-abu, jadi putihnya cuma nongol di sisi bawah
+   * Hasilnya huruf kelihatan timbul ke arah atas.
+   */
+  --c-text-core: #dfd4d9; /* muka huruf, bagian tengah */
+  --c-text-edge: #777278; /* muka huruf, ujung kiri-kanan */
+  --c-text-under: #ffffff; /* lapisan putih di bawahnya */
+  --text-3d: 0.05em; /* seberapa jauh digeser — makin besar makin timbul */
+  --text-tracking: 0.08em; /* jarak antar huruf */
+  --glow-text: 0 0 6px rgba(178, 200, 255, 0.12);
+
+  /* --- Garis & aksi ------------------------------------------------- */
+  --c-line: #d4d4d9;
+  --c-strong: #3a3a3f; /* tombol utama & state aktif */
+  --c-on-strong: #ffffff;
+
+  /* --- Footer ------------------------------------------------------- */
+  --c-footer: #2b2b2f;
+  --c-footer-ink: #f2f2f4;
+  --c-footer-muted: #9a9aa2;
+
+  /* --- Radius ------------------------------------------------------- */
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+
+  /* --- Tipografi ---------------------------------------------------- */
+  /* Ganti dua baris ini pas font tema sihir udah fix. */
+  --f-display: ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+  --f-body: ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+
+  /* Font paragraf. Dimuat di baris @import paling atas globals.css. */
+  --f-alice: "Alice", Georgia, "Times New Roman", serif;
+
+  /* --- Layout ------------------------------------------------------- */
+  --w-shell: 1200px;
+  --h-nav: 76px;
+}
