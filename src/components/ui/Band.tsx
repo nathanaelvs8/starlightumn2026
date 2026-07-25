@@ -1,42 +1,51 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import clsx from "@/lib/clsx";
 
 /**
- * Blok besar dengan satu background.
+ * Blok besar dengan satu background. Background dipasang per-BAND
+ * (beberapa section sekaligus), bukan per-section kecil.
  *
  * === `ratio` ===
  *
- * Isi pakai rasio gambar background-nya, mis. "1920/1450". Tinggi band
- * dikunci ke rasio itu, jadi gambar kepakai PAS — nggak ada sisa warna
- * polos di bawah, dan band berikutnya langsung nempel.
+ * Isi pakai rasio gambar background-nya, mis. "1920/1450".
  *
- * Kalau isinya ternyata lebih tinggi dari band, ISINYA yang dikecilin
- * otomatis (di-scale) sampai muat. Band-nya nggak pernah melar.
+ * Rasio ini jadi tinggi MINIMUM band:
+ *   - isi lebih pendek  → band berhenti di rasio itu, gambar kepakai pas
+ *   - isi lebih panjang → band tumbuh ngikutin isi, nggak ada yang kepotong
  *
- * Di layar kecil (< 1024px) penguncian ini dimatiin — kalau dipaksa,
- * band cuma setinggi ~280px dan isinya bakal keciiil banget. Di sana
- * band tumbuh normal dan background pakai "cover" biar tetap nggak ada
- * putih.
+ * Isi TIDAK PERNAH diciutin. Ukuran teks & gambar di band ini selalu
+ * sama persis dengan band lain.
  *
- * === `fit` ===
+ * Caranya: section dibikin grid satu sel, terus dua hal ditumpuk di sel
+ * yang sama — satu kotak kosong setinggi rasio gambar, dan isinya.
+ * Tinggi baris grid otomatis ngambil yang paling tinggi di antara
+ * keduanya.
+ *
+ * (Jangan pasang aspect-ratio langsung di section. Di elemen blok itu
+ * MENGUNCI tinggi, bukan bikin minimum — isi yang lebih panjang bakal
+ * keluar dari kotak dan kepotong.)
+ *
+ * === Kenapa background "cover" kalau ada ratio ===
+ *
+ * Supaya nggak pernah ada sisa warna polos di bawah, berapa pun tinggi
+ * bandnya. Pas tinggi band == rasio gambar, "cover" hasilnya identik
+ * dengan pas — nggak ada yang kepotong. Baru kalau isi bikin band lebih
+ * tinggi, gambar dizoom dikit dan sisi kiri-kanan kepotong sedikit.
+ *
+ * === `fit` (dipakai kalau `ratio` kosong) ===
  * "width" (default) — lebar gambar pas ke lebar layar, nggak dizoom.
  * "tile" — sama, tapi diulang ke bawah.
- * "cover" — dizoom sampai nutup penuh, kiri-kanan bisa kepotong.
+ * "cover" — dizoom sampai nutup penuh.
+ *
+ * === `flipX` ===
+ * Balik gambar background mendatar. Isi nggak ikut kebalik.
  */
-
-/** Batas paling kecil isi boleh diciutin. */
-const MIN_SCALE = 0.6;
-/** Di bawah lebar ini, rasio nggak dikunci. */
-const LOCK_FROM = 1024;
-
 export function Band({
   bg,
   ratio,
   fit = "width",
-  position = "top center",
+  position = "center",
+  flipX = false,
   children,
   className,
 }: {
@@ -44,87 +53,50 @@ export function Band({
   ratio?: string;
   fit?: "width" | "tile" | "cover";
   position?: string;
+  flipX?: boolean;
   children: ReactNode;
   className?: string;
 }) {
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const contentRef = useRef<HTMLDivElement | null>(null);
-  const [locked, setLocked] = useState(false);
-  const [scale, setScale] = useState(1);
-
-  const measure = useCallback(() => {
-    const section = sectionRef.current;
-    const content = contentRef.current;
-    if (!section || !content) return;
-
-    const on = Boolean(ratio) && window.innerWidth >= LOCK_FROM;
-    setLocked(on);
-
-    if (!on) {
-      setScale(1);
-      return;
-    }
-
-    const available = section.clientHeight;
-    const needed = content.scrollHeight;
-    if (!available || !needed) return;
-
-    setScale(needed > available ? Math.max(MIN_SCALE, available / needed) : 1);
-  }, [ratio]);
-
-  useEffect(() => {
-    measure();
-
-    const ro = new ResizeObserver(measure);
-    if (sectionRef.current) ro.observe(sectionRef.current);
-    if (contentRef.current) ro.observe(contentRef.current);
-    window.addEventListener("resize", measure);
-
-    // gambar selesai dimuat bisa mengubah tinggi isi
-    const t = window.setTimeout(measure, 400);
-
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-      window.clearTimeout(t);
-    };
-  }, [measure]);
-
-  const style: CSSProperties = {};
-
+  /**
+   * Background ditaruh di lapisan sendiri, bukan di <section>, supaya
+   * flipX cuma mbalik gambarnya — kalau transform dipasang di section,
+   * teksnya ikut kebalik jadi cermin.
+   */
+  const bgStyle: CSSProperties = {};
   if (bg) {
-    style.backgroundImage = `url("${bg}")`;
-    style.backgroundSize = !locked || fit === "cover" ? "cover" : "100% auto";
-    style.backgroundRepeat = fit === "tile" ? "repeat-y" : "no-repeat";
-    style.backgroundPosition = position;
+    bgStyle.backgroundImage = `url("${bg}")`;
+    bgStyle.backgroundSize = ratio || fit === "cover" ? "cover" : "100% auto";
+    bgStyle.backgroundRepeat = fit === "tile" ? "repeat-y" : "no-repeat";
+    bgStyle.backgroundPosition = position;
+    if (flipX) bgStyle.transform = "scaleX(-1)";
   }
 
-  if (locked && ratio) style.aspectRatio = ratio;
-
   return (
+    /*
+      grid-cols-[minmax(0,1fr)] itu WAJIB.
+      Default-nya, kolom grid nggak boleh lebih sempit dari lebar isi
+      minimumnya — jadi kotak sponsor & media partner bakal maksa band
+      melebar ngelewatin layar dan bikin geseran ke kanan. minmax(0,1fr)
+      ngasih izin kolomnya menyempit ngikutin layar.
+    */
     <section
-      ref={sectionRef}
-      /* Cek di DevTools: kalau nilainya < 1, isi band ini lagi
-         dipaksa ciut biar muat. Kurangi isinya sampai balik ke 1. */
-      data-band-scale={scale.toFixed(2)}
       className={clsx(
-        "relative bg-band",
-        locked && "flex items-center overflow-hidden",
+        "relative grid grid-cols-[minmax(0,1fr)] overflow-hidden bg-band",
         className,
       )}
-      style={style}
     >
-      <div
-        ref={contentRef}
-        className={clsx("w-full", locked && "shrink-0")}
-        style={
-          scale < 1
-            ? { transform: `scale(${scale})`, transformOrigin: "center center" }
-            : undefined
-        }
-      >
-        {children}
-      </div>
+      {bg && <div aria-hidden className="absolute inset-0" style={bgStyle} />}
+
+      {/* Kotak kosong penentu tinggi minimum. Nggak kelihatan. */}
+      {ratio && (
+        <div
+          aria-hidden
+          className="pointer-events-none [grid-area:1/1]"
+          style={{ aspectRatio: ratio }}
+        />
+      )}
+
+      <div className="relative min-w-0 [grid-area:1/1]">{children}</div>
     </section>
   );
 }

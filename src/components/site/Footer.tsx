@@ -30,6 +30,13 @@ const CREDIT = "Developed and Managed by \u2014";
  * Layoutnya satu kolom rata tengah, ngikutin footer Starlight tahun
  * lalu. Beda dari wireframe yang tiga kolom — nggak ada Quick Links dan
  * nggak ada ikon sosial media di sini.
+ *
+ * CATATAN PENTING soal <Asset>:
+ * Jangan bungkus <Asset> pakai div yang nggak punya lebar sendiri.
+ * <Asset> pakai lebar 100% dari induknya — kalau induknya juga nunggu
+ * lebar dari isinya, hasilnya nol dan gambarnya ilang. Kasih lebar di
+ * <Asset>-nya langsung (lewat `size` atau `className`), atau di div
+ * pembungkus yang lebarnya jelas.
  */
 export function Footer() {
   return (
@@ -47,19 +54,14 @@ export function Footer() {
         }}
       >
         <Container className="flex flex-col items-center py-12 text-center font-alice sm:py-16">
-          {/* Logo */}
-          <div className="hover-pop">
-            <Asset
-              src={asset.logo.footer}
-              alt="Starlight UMN 2026"
-              size="xs"
-            />
-          </div>
+          {/* Logo — hover-pop dipasang di Asset-nya, bukan di pembungkus */}
+          <Asset
+            src={asset.logo.footer}
+            alt="Starlight UMN 2026"
+            size="sm"
+            className="hover-pop"
+          />
 
-
-          {/* Tagline — pakai gambar yang sama dengan section Tag Line.
-              Isi alt-nya pakai bunyi tagline aslinya biar tetap kebaca
-              screen reader & mesin pencari. */}
           {/* Tagline pakai gambar. Alt-nya diisi bunyi taglinenya dari
               copy.ts biar tetap kebaca screen reader & mesin pencari. */}
           <div className="mt-6 w-full sm:mt-8">
@@ -78,16 +80,16 @@ export function Footer() {
           </p>
 
           <div className="hover-pop mt-3 flex items-center gap-4 rounded-md bg-white px-4 py-2.5 sm:gap-5 sm:px-5 sm:py-3">
-            <Asset
-              src={asset.logo.umn}
-              alt="Universitas Multimedia Nusantara"
-              className="w-11 sm:w-12"
-            />
-            <Asset
-              src={asset.logo.bem}
-              alt="BEM UMN"
-              className="w-11 sm:w-12"
-            />
+            {/* Lebarnya ditaruh di div pembungkus yang lebarnya jelas */}
+            <div className="w-11 sm:w-12">
+              <Asset
+                src={asset.logo.umn}
+                alt="Universitas Multimedia Nusantara"
+              />
+            </div>
+            <div className="w-11 sm:w-12">
+              <Asset src={asset.logo.bem} alt="BEM UMN" />
+            </div>
           </div>
 
           {/* Alamat */}
