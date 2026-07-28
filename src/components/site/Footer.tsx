@@ -44,7 +44,7 @@ export function Footer() {
       <Connector />
 
       <footer
-        className="bg-footer text-footer-ink"
+       className="relative z-10 bg-footer text-footer-ink"
         style={{
           backgroundImage: `url("${asset.shared.footerBg}")`,
           /* sama kayak Band: lebar pas, tinggi ngikut, nggak dizoom */

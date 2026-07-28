@@ -146,6 +146,42 @@
   .hover-pop:hover {
     transform: scale(1.06);
   }
+
+  @keyframes faq-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-faq-in {
+    animation: faq-in 400ms ease-out both;
+  }
+
+  .faq-title {
+    color: #eaf3ff;
+    text-shadow:
+      0 0 14px rgba(120, 180, 255, 0.55),
+      0 0 30px rgba(90, 150, 255, 0.35);
+  }
+
+  .faq-scroll::-webkit-scrollbar { width: 6px; }
+  .faq-scroll::-webkit-scrollbar-thumb {
+    background: rgba(150, 200, 255, 0.4);
+    border-radius: 999px;
+  }
+  .faq-scroll::-webkit-scrollbar-track { background: transparent; }
+
+  @keyframes faq-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-faq-in { animation: faq-in 400ms ease-out both; }
 }
 
 /* Matiin semua gerakan buat yang sensitif animasi. */
