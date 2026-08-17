@@ -3,6 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
 import { Asset } from "@/components/ui/Asset";
 import { Reveal } from "@/components/ui/Reveal";
+import { TitleGlow } from "@/components/ui/TitleGlow";
 import { asset } from "@/lib/assets";
 import { copy } from "@/lib/copy";
 
@@ -53,9 +54,20 @@ export default function HomePage() {
       {/* ===== BAND 2 · ABOUT + VISION/MISSION + STARLIGHT 2026 · 1920x1500 ===== */}
       <Band bg={asset.home.bandAbout} ratio="1920/1500">
         <Container className="flex flex-col justify-center gap-10 py-14 sm:gap-14 sm:py-16">
-          <div>
-            <Asset src={asset.home.judulAboutUs} alt="About Us" height="lg" />
+            <div>
             <Reveal>
+              <TitleGlow className="text-center text-4xl sm:text-5xl">
+                About Us
+              </TitleGlow>
+            </Reveal>
+            {/* "What is Starlight?" — ukuran sama kayak judul kolom
+                (Vision/Mission), dikasih jarak dari About Us di atasnya */}
+            <Reveal delay={120}>
+              <TitleGlow className="mt-8 text-center text-3xl sm:mt-10 sm:text-4xl">
+                What is Starlight?
+              </TitleGlow>
+            </Reveal>
+            <Reveal delay={240}>
               <Paragraf className="mt-6 max-w-4xl sm:mt-8">
                 {copy.aboutUs}
               </Paragraf>
@@ -63,10 +75,10 @@ export default function HomePage() {
           </div>
 
           <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-10">
-            <TwoCol judul={asset.home.judulVision} judulAlt="Vision" from="left">
+            <TwoCol judul="Vision" from="left">
               {copy.vision}
             </TwoCol>
-            <TwoCol judul={asset.home.judulMission} judulAlt="Mission" from="right">
+            <TwoCol judul="Mission" from="right">
               {copy.mission}
             </TwoCol>
           </div>
@@ -89,7 +101,11 @@ export default function HomePage() {
       <Band bg={asset.home.bandConcept} ratio="1920/1450">
         <Container className="flex flex-col justify-center gap-8 py-10 sm:gap-10 sm:py-12">
           <div>
-            <Asset src={asset.home.judulConcept} alt="Concept" height="lg" />
+            <Reveal>
+              <TitleGlow className="text-center text-4xl sm:text-5xl">
+                Concept
+              </TitleGlow>
+            </Reveal>
             <Reveal delay={160}>
               <Paragraf className="mt-6 max-w-4xl sm:mt-8">
                 {copy.concept}
@@ -98,16 +114,12 @@ export default function HomePage() {
           </div>
 
           <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-10">
-            <TwoCol judul={asset.home.judulTheme} judulAlt="Theme" from="left">
+            <TwoCol judul="Theme" from="left">
               {copy.theme}
             </TwoCol>
-            <TwoCol
-              judul={asset.home.judulTagline}
-              judulAlt="Tag Line"
-              gambar={asset.home.isiTagline}
-              gambarAlt={copy.tagline}
-              from="right"
-            />
+            <TwoCol judul="Tagline" from="right">
+              {copy.tagline}
+            </TwoCol>
           </div>
 
           <div className="rounded-xl border border-line bg-surface/90 p-4 sm:p-6">
@@ -165,38 +177,30 @@ function Paragraf({
   );
 }
 
+/**
+ * Satu kolom kiri-kanan. Judulnya sekarang teks (TitleGlow), bukan
+ * gambar lagi. Isinya teks paragraf.
+ */
 function TwoCol({
   judul,
-  judulAlt,
   children,
-  gambar,
-  gambarAlt,
   from = "up",
 }: {
   judul: string;
-  judulAlt: string;
   children?: React.ReactNode;
-  gambar?: string;
-  gambarAlt?: string;
   from?: "up" | "left" | "right";
 }) {
   return (
     <div className="flex flex-col">
       <Reveal from={from}>
         <div className="flex h-[clamp(44px,5vw,72px)] items-center justify-center">
-          <Asset src={judul} alt={judulAlt} height="md" />
+          <TitleGlow className="text-3xl sm:text-4xl">{judul}</TitleGlow>
         </div>
       </Reveal>
 
       <Reveal from={from} delay={160}>
         <div className="mt-5">
-          {gambar ? (
-            <div className={`mx-auto w-full ${LEBAR_KOLOM}`}>
-              <Asset src={gambar} alt={gambarAlt ?? ""} />
-            </div>
-          ) : (
-            <Paragraf className={LEBAR_KOLOM}>{children}</Paragraf>
-          )}
+          <Paragraf className={LEBAR_KOLOM}>{children}</Paragraf>
         </div>
       </Reveal>
     </div>

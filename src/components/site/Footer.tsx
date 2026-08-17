@@ -62,15 +62,10 @@ export function Footer() {
             className="hover-pop"
           />
 
-          {/* Tagline pakai gambar. Alt-nya diisi bunyi taglinenya dari
-              copy.ts biar tetap kebaca screen reader & mesin pencari. */}
-          <div className="mt-6 w-full sm:mt-8">
-            <Asset
-              src={asset.home.isiTagline}
-              alt={copy.tagline}
-              size="2xl"
-            />
-          </div>
+          {/* Tagline — teks, pakai font paragraf (Alice) */}
+          <p className="prose-starlight mt-6 max-w-xl text-lg text-footer-ink sm:mt-8 sm:text-xl">
+            {copy.tagline}
+          </p>
 
           <Divider />
 

@@ -71,4 +71,9 @@ export const asset = {
     /** Ilustrasi concept (concept.png di Drive) */
     conceptArt: "/images/home/concept.png",
   },
+  /* ---------- Division ---------- */
+  division: {
+    /** divisi-1.png ... divisi-13.png di public/images/division/ */
+    card: (n: number) => `/images/division/divisi-${n}.png`,
+  },
 } as const;

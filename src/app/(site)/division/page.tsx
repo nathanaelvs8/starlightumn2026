@@ -1,22 +1,33 @@
-import { Band } from "@/components/ui/Band";
 import { Container } from "@/components/ui/Container";
+import { DivisionCoverflow } from "@/components/site/DivisionCoverflow";
+import { TitleGlow } from "@/components/ui/TitleGlow";
 import { asset } from "@/lib/assets";
 
-export const metadata = { title: "Division · Starlight UMN 2026" };
+export const metadata = {
+  title: "Division · Starlight UMN 2026",
+};
 
-/**
- * Halaman ini sengaja masih kosong. Yang ada baru background bersama,
- * navbar, dan footer. Isinya dibangun setelah aset halaman ini dikirim.
- */
-export default function Page() {
+export default function DivisionPage() {
   return (
-    <Band bg={asset.shared.pageBg}>
-      <Container className="flex min-h-[60svh] flex-col items-center justify-center py-24 text-center">
-        <h1 className="text-3xl sm:text-4xl">Division</h1>
-        <p className="mt-4 max-w-sm text-sm text-muted">
-          Halaman ini belum dibangun. Nunggu aset dari tim visual.
-        </p>
+    <>
+      {/* Background fixed — pakai band yang udah ada, sama kayak FAQ */}
+      <div
+        aria-hidden
+        className="fixed inset-0 -z-10 bg-cover bg-center"
+        style={{ backgroundImage: `url("${asset.home.bandAbout}")` }}
+      />
+      <div aria-hidden className="fixed inset-0 -z-10 bg-[#0a1430]/40" />
+
+      <Container className="py-16 sm:py-20">
+        {/* Judul aja, tanpa subtitle — coverflow udah jelas sendiri */}
+        <TitleGlow className="text-center text-5xl sm:text-6xl">
+          Division
+        </TitleGlow>
+
+        <div className="mt-12">
+          <DivisionCoverflow />
+        </div>
       </Container>
-    </Band>
+    </>
   );
 }

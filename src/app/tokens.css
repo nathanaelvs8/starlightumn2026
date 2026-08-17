@@ -54,8 +54,7 @@
 
   /* --- Tipografi ---------------------------------------------------- */
   /* Ganti dua baris ini pas font tema sihir udah fix. */
-  --f-display: ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial,
-    sans-serif;
+  --f-display: "Efco Brookshire", "Alice", serif;
   --f-body: ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
 
   /* Font paragraf. Dimuat di baris @import paling atas globals.css. */
