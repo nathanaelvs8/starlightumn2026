@@ -76,4 +76,12 @@ export const asset = {
     /** divisi-1.png ... divisi-13.png di public/images/division/ */
     card: (n: number) => `/images/division/divisi-${n}.png`,
   },
+    /* ---------- Mini Gerda ---------- */
+  gerda: {
+    background: "/images/mini-gerda/background.png",
+    arus: "/images/mini-gerda/arus.png",
+    /** crest tiap divisi: crest-auradon.png, dst */
+    crest: (divisi: string) =>
+      `/images/mini-gerda/crest-${divisi.toLowerCase()}.png`,
+  },
 } as const;

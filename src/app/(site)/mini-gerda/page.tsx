@@ -1,22 +1,34 @@
-import { Band } from "@/components/ui/Band";
 import { Container } from "@/components/ui/Container";
+import { GerdaFlow } from "@/components/site/GerdaFlow";
+import { TitleGlow } from "@/components/ui/TitleGlow";
 import { asset } from "@/lib/assets";
 
 export const metadata = { title: "Mini Gerda · Starlight UMN 2026" };
 
-/**
- * Halaman ini sengaja masih kosong. Yang ada baru background bersama,
- * navbar, dan footer. Isinya dibangun setelah aset halaman ini dikirim.
- */
-export default function Page() {
+export default function MiniGerdaPage() {
   return (
-    <Band bg={asset.shared.pageBg}>
-      <Container className="flex min-h-[60svh] flex-col items-center justify-center py-24 text-center">
-        <h1 className="text-3xl sm:text-4xl">Mini Gerda</h1>
-        <p className="mt-4 max-w-sm text-sm text-muted">
-          Halaman ini belum dibangun. Nunggu aset dari tim visual.
-        </p>
+    <>
+      {/* Background full-screen di belakang semua */}
+      <div
+        aria-hidden
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: `url("${asset.gerda.background}")`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+
+      <Container className="pt-12 sm:pt-16">
+        <TitleGlow className="text-center text-4xl sm:text-5xl">
+          Mini Gerda
+        </TitleGlow>
       </Container>
-    </Band>
+
+      {/* Panggung full-width, di luar Container biar nggak kebatas lebar */}
+      <div className="mt-8">
+        <GerdaFlow />
+      </div>
+    </>
   );
 }

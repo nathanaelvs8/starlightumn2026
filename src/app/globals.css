@@ -37,6 +37,13 @@
     outline-offset: 3px;
     border-radius: var(--r-sm);
   }
+
+    /* Semua gambar nggak bisa diseret (native drag) — biar drag peta /
+     interaksi lain nggak ke-ghost sama gambar. */
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
 }
 
 @layer components {
