@@ -15,34 +15,19 @@ export default function HomePage() {
     <>
       {/* ================= BAND 1 · HERO · 1920x1080 ================= */}
       <Band bg={asset.home.bandHero} position="center">
-        <Container className="flex min-h-[calc(100svh-var(--h-nav))] flex-col items-center justify-center gap-6 py-14 text-center sm:gap-8 sm:py-20">
-          <Asset
-            src={asset.logo.main}
-            alt="Starlight UMN 2026"
-            size="md"
-            priority
-          />
-
-          <div className="w-full max-w-[340px]">
-            <span className="dummy-line h-4 w-full" />
-            <p className="mt-3 text-sm text-muted">Main Tag Line</p>
+        <Container className="flex min-h-[calc(100svh-var(--h-nav))] flex-col items-center justify-center gap-8 py-14 text-center sm:py-20">
+          {/* Logo pop-out pas masuk homepage. Pakai <img> biasa, bukan
+              <Asset>, karena Asset nyembunyiin logo ini (auto-trim). */}
+          <div className="logo-pop">
+            <img
+              src={asset.logo.main}
+              alt="Starlight UMN 2026"
+              draggable={false}
+              className="mx-auto w-[220px] sm:w-[300px] lg:w-[360px]"
+            />
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-            <ButtonLink href="/division">Explore</ButtonLink>
-            <ButtonLink href="/login" variant="outline">
-              Login
-            </ButtonLink>
-          </div>
-
-          <div className="flex w-full max-w-[400px] items-center gap-3">
-            <span className="h-px flex-1 bg-line" />
-            <span className="whitespace-nowrap text-[11px] font-bold text-muted">
-              ke website eksternal
-            </span>
-            <span className="h-px flex-1 bg-line" />
-          </div>
-
+          {/* Tombol registrasi penonton */}
           <ButtonLink href={REGISTRASI_PENONTON_URL} external>
             Registrasi Penonton
             <span aria-hidden>↗</span>
@@ -51,19 +36,18 @@ export default function HomePage() {
         </Container>
       </Band>
 
-      {/* ===== BAND 2 · ABOUT + VISION/MISSION + STARLIGHT 2026 · 1920x1500 ===== */}
+      {/* ===== BAND 2 · ABOUT + VISION/MISSION · 1920x1500 ===== */}
       <Band bg={asset.home.bandAbout} ratio="1920/1500">
         <Container className="flex flex-col justify-center gap-10 py-14 sm:gap-14 sm:py-16">
-            <div>
+          <div>
             <Reveal>
               <TitleGlow className="text-center text-4xl sm:text-5xl">
                 About Us
               </TitleGlow>
             </Reveal>
-            {/* "What is Starlight?" — ukuran sama kayak judul kolom
-                (Vision/Mission), dikasih jarak dari About Us di atasnya */}
+            {/* jarak About Us → What is Starlight dipanjangin */}
             <Reveal delay={120}>
-              <TitleGlow className="mt-8 text-center text-3xl sm:mt-10 sm:text-4xl">
+              <TitleGlow className="mt-20 text-center text-3xl sm:mt-28 sm:text-4xl">
                 What is Starlight?
               </TitleGlow>
             </Reveal>
@@ -74,25 +58,15 @@ export default function HomePage() {
             </Reveal>
           </div>
 
-          <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-10">
+          {/* jarak paragraf What is Starlight → Vision/Mission dipanjangin
+              (pakai mt di grid, nambah dari gap band) */}
+          <div className="mt-16 grid items-start gap-8 sm:mt-24 lg:grid-cols-2 lg:gap-10">
             <TwoCol judul="Vision" from="left">
               {copy.vision}
             </TwoCol>
             <TwoCol judul="Mission" from="right">
               {copy.mission}
             </TwoCol>
-          </div>
-
-          <div>
-            <Asset
-              src={asset.home.identity2026}
-              alt="Identitas Starlight UMN 2026"
-              size="2xl"
-            />
-            <div className="mx-auto mt-4 flex max-w-2xl flex-col items-center gap-2.5">
-              <span className="dummy-line w-[88%]" />
-              <span className="dummy-line w-[70%]" />
-            </div>
           </div>
         </Container>
       </Band>

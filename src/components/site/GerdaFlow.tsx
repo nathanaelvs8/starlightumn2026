@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Asset } from "@/components/ui/Asset";
 import { divisions } from "@/lib/divisions";
 import { asset } from "@/lib/assets";
+import { Comets } from "@/components/site/Comets";
 import {
   crestLayout,
   ZOOM,
@@ -15,7 +16,7 @@ import {
 import { TitleGlow } from "@/components/ui/TitleGlow";
 
 type Member = { division: string; full_name: string; nim: string };
-const PER_PAGE = 8;
+const PER_PAGE = 5;
 
 export function GerdaFlow() {
   const [active, setActive] = useState(0);
@@ -147,7 +148,7 @@ export function GerdaFlow() {
     <div className="relative">
       <div
         ref={stageRef}
-        className="relative h-[85vh] w-screen cursor-grab select-none overflow-hidden active:cursor-grabbing"
+        className="relative h-[100svh] w-full cursor-grab select-none overflow-hidden active:cursor-grabbing"
         onMouseDown={(e) => onDown(e.clientX)}
         onMouseMove={(e) => onMove(e.clientX)}
         onMouseUp={onUp}
@@ -156,6 +157,19 @@ export function GerdaFlow() {
         onTouchMove={(e) => onMove(e.touches[0].clientX)}
         onTouchEnd={onUp}
       >
+        {/* Background parallax — geser 0.15x kecepatan kamera, jadi
+            gerak lebih lambat dari garis (efek kedalaman kayak Growtopia) */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            backgroundImage: `url("${asset.gerda.background}")`,
+            backgroundSize: "160% 160%",
+            backgroundPosition: `calc(50% + ${cam.x * 0.15}px) calc(50% + ${cam.y * 0.15}px)`,
+          }}
+        />
+        {/* Komet — di belakang garis+crest, di atas background */}
+        <Comets />
         <div
           className="absolute left-0 top-0"
           style={{
@@ -214,51 +228,81 @@ export function GerdaFlow() {
           })}
         </div>
 
-        {/* Panel anggota */}
-        <div className="absolute right-[12%] top-1/2 z-40 w-[38%] max-w-[440px] -translate-y-1/2 overflow-hidden rounded-2xl border border-white/25 bg-[#0a1430]/40 p-5 shadow-[0_8px_40px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:p-6">
-          <TitleGlow className="text-center text-2xl sm:text-3xl">
+
+        {/* Isi kanan: nama divisi + list, di atas panel blur */}
+        <div className="absolute right-[14%] top-1/2 z-40 w-[30%] max-w-[420px] -translate-y-1/2">
+          {/* Judul divisi + fungsi — glow gelap nempel biar belakangnya
+              kayak ketutup, tanpa kotak */}
+          <TitleGlow className="text-center text-3xl sm:text-4xl">
             {activeDiv?.name}
           </TitleGlow>
+          <p
+            className="mt-1 text-center font-alice text-sm uppercase tracking-[0.2em] text-cyan-200/90"
+            style={{ textShadow: "0 0 12px rgba(10,20,48,0.9), 0 0 6px rgba(10,20,48,0.9)" }}
+          >
+            {activeDiv?.role}
+          </p>
 
-          <ul className="mt-4 flex flex-col gap-2">
+          {/* Page x/y di kiri atas */}
+          <p className="mb-2 mt-6 font-alice text-xs uppercase tracking-wide text-white/70">
+            Page {page + 1} / {pageCount}
+          </p>
+
+          {/* Bilah anggota — fade tiap ganti divisi/page (key) */}
+          <div key={`${active}-${page}`} className="animate-fade flex flex-col gap-2">
             {shown.length === 0 ? (
-              <li className="text-center font-alice text-sm text-white/50">
+              <p
+                className="text-center font-alice text-sm text-white/80"
+                style={{ textShadow: "0 0 12px rgba(10,20,48,0.95), 0 0 6px rgba(10,20,48,0.95)" }}
+              >
                 Belum ada anggota.
-              </li>
+              </p>
             ) : (
               shown.map((m, idx) => (
-                <li
+                <div
                   key={idx}
-                  className="flex items-center justify-between gap-3 border-b border-white/10 pb-1.5 font-alice text-sm"
+                  className="flex items-center justify-between gap-3 rounded-md bg-white/90 px-3.5 py-2 font-alice text-xs text-[#0a1430] shadow-[0_0_28px_rgba(255,255,255,0.85)]"
                 >
-                  <span className="text-white/90">{m.full_name}</span>
-                  <span className="text-white/60">{m.nim}</span>
-                </li>
+                  <span className="font-semibold">{m.full_name}</span>
+                  <span className="text-[#0a1430]/70">{m.nim}</span>
+                </div>
               ))
             )}
-          </ul>
+          </div>
 
+          {/* Panah kiri-kanan */}
           {pageCount > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-4 font-alice text-sm text-white/70">
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
-                className="disabled:opacity-30"
-              >
-                ‹
-              </button>
-              <span>
-                Page {page + 1} / {pageCount}
-              </span>
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-                disabled={page === pageCount - 1}
-                className="disabled:opacity-30"
-              >
-                ›
-              </button>
+            <div className="mt-5 flex justify-center">
+              <div className="flex items-center gap-3 rounded-pill border border-white/25 bg-white/10 px-3 py-1.5 backdrop-blur">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  aria-label="Sebelumnya"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-white/40 transition-colors hover:bg-white/15 disabled:opacity-30"
+                >
+                  <img
+                    src={asset.gerda.panah}
+                    alt=""
+                    draggable={false}
+                    className="h-6 w-6 -scale-x-100"
+                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                  disabled={page === pageCount - 1}
+                  aria-label="Berikutnya"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-white/40 transition-colors hover:bg-white/15 disabled:opacity-30"
+                >
+                  <img
+                    src={asset.gerda.panah}
+                    alt=""
+                    draggable={false}
+                    className="h-6 w-6"
+                  />
+                </button>
+              </div>
             </div>
           )}
         </div>

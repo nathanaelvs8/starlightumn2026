@@ -80,6 +80,7 @@ export const asset = {
   gerda: {
     background: "/images/mini-gerda/background.png",
     arus: "/images/mini-gerda/arus.png",
+    panah: "/images/mini-gerda/panah.png",
     /** crest tiap divisi: crest-auradon.png, dst */
     crest: (divisi: string) =>
       `/images/mini-gerda/crest-${divisi.toLowerCase()}.png`,

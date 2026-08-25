@@ -287,6 +287,53 @@
   .animate-fade {
     animation: fade 350ms ease-out both;
   }
+
+  /* Komet: masuk pelan dari kiri-atas, agak cepat di tengah, melambat
+     di ujung kanan-bawah, lewat jalur melengkung. Easing bikin natural. */
+  @keyframes comet-lintas {
+    0% {
+      offset-distance: 0%;
+      opacity: 0;
+    }
+    12% {
+      opacity: 0.9;
+    }
+    88% {
+      opacity: 0.9;
+    }
+    100% {
+      offset-distance: 100%;
+      opacity: 0;
+    }
+  }
+
+  .comet-wrap {
+    position: absolute;
+    left: 0;
+    offset-path: path("M -100 -60 Q 500 200 1500 700");
+    offset-rotate: auto; /* kepala ngarah sesuai jalur */
+    animation-name: comet-lintas;
+    /* ease-in-out bikin: pelan masuk, cepat tengah, pelan keluar */
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+    animation-iteration-count: infinite;
+  }
+
+  /* Logo hero pop-out: muncul dari kecil, over-shoot membesar, settle
+     ke normal dengan mantul. Sekali jalan pas homepage kebuka. */
+  @keyframes logo-pop {
+    0% {
+      transform: scale(0.4);
+    }
+    60% {
+      transform: scale(1.18);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  .logo-pop {
+    animation: logo-pop 850ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
 }
 
 /* Matiin semua gerakan buat yang sensitif animasi. */
@@ -299,3 +346,4 @@
     scroll-behavior: auto !important;
   }
 }
+

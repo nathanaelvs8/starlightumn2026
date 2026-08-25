@@ -21,19 +21,19 @@
 export type CrestPos = { x: number; y: number };
 
 export const crestLayout: Record<string, CrestPos> = {
-  Auradon: { x: 27, y: 25 },
-  Treasury: { x: 31, y: 32 },
-  Herald: { x: 35, y: 42 },
-  Wonderland: { x: 39, y: 45 },
-  Wicked: { x: 43, y: 48 },
+  Auradon: { x: 27, y: 32 },
+  Treasury: { x: 31, y: 38 },
+  Herald: { x: 35, y: 45 },
+  Wonderland: { x: 39, y: 48 },
+  Wicked: { x: 43, y: 51 },
   Dizzy: { x: 47, y: 52 },
   Lumiere: { x: 51, y: 57 },
   Mirror: { x: 54.5, y: 67 },
   Raven: { x: 59, y: 72 },
-  Relic: { x: 63, y: 67 },
-  Fairies: { x: 67, y: 69 },
-  Knights: { x: 71, y: 71 },
-  Enchanted: { x: 75, y: 78 },
+  Relic: { x: 63, y: 69 },
+  Fairies: { x: 68, y: 67 },
+  Knights: { x: 73, y: 71 },
+  Enchanted: { x: 77, y: 74 },
 };
 
 /**
