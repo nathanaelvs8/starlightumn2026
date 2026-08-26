@@ -1,13 +1,6 @@
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 
-/**
- * Navbar + Footer sama di semua halaman.
- *
- * Nanti halaman auth (login/register/lengkapi profil) dipindah ke route
- * group sendiri "(auth)" yang nggak pakai layout ini, karena tiga layar
- * itu nggak punya navbar & footer.
- */
 export default function SiteLayout({
   children,
 }: {

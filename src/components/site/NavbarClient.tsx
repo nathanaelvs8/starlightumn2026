@@ -55,11 +55,11 @@ export function NavbarClient({
             aria-label="Starlight UMN 2026 — Home"
             className="hover-pop absolute left-0"
           >
-            <Asset
+            <img
               src={asset.logo.nav}
               alt="Starlight UMN 2026"
+              draggable={false}
               className="w-[78px] sm:w-[110px] lg:w-[150px]"
-              priority
             />
           </Link>
 
@@ -136,7 +136,7 @@ export function NavbarClient({
           )}
         >
           <ul className="flex flex-col gap-1 p-2">
-            {menu.map((item, i) => (
+            {withVote.map((item, i) => (
               <li key={item.href}>
                 <Link
                   href={item.href}

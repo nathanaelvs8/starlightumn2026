@@ -4,7 +4,7 @@ export const metadata = { title: "Mini Gerda · Starlight UMN 2026" };
 
 export default function MiniGerdaPage() {
   return (
-    <div className="-mt-[var(--h-nav)]">
+    <div style={{ marginTop: "-72px" }}>
       <GerdaFlow />
     </div>
   );
