@@ -27,6 +27,7 @@ export function NavbarClient({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [konfirmLogout, setKonfirmLogout] = useState(false);
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -87,7 +88,7 @@ export function NavbarClient({
               sekarang jadi item menu di tengah, bukan di sini. */}
           {loggedIn && name && (
             <div className="absolute right-0 hidden lg:block">
-              <UserMenu name={name} />
+              <UserMenu name={name} onLogout={() => setKonfirmLogout(true)} />
             </div>
           )}
 
@@ -159,14 +160,13 @@ export function NavbarClient({
             {/* Login / Logout di mobile */}
             <li>
               {loggedIn ? (
-                <form action="/auth/signout" method="post">
-                  <button
-                    type="submit"
-                    className="block w-full rounded-md px-4 py-3 text-left font-alice text-lg uppercase tracking-wide text-white/75 transition-colors hover:bg-white/10 hover:text-white"
-                  >
-                    Logout{name ? ` (${name})` : ""}
-                  </button>
-                </form>
+                <button
+                  type="button"
+                  onClick={() => setKonfirmLogout(true)}
+                  className="block w-full rounded-md px-4 py-3 text-left font-alice text-lg uppercase tracking-wide text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                >
+                  Logout
+                </button>
               ) : (
                 <Link
                   href="/login"
@@ -180,6 +180,41 @@ export function NavbarClient({
           </ul>
         </div>
       </Container>
+
+            {/* Modal konfirmasi logout */}
+      {konfirmLogout && (
+        <div
+          className="fixed inset-0 z-[100] grid place-items-center bg-black/60 px-6 backdrop-blur-sm"
+          onClick={() => setKonfirmLogout(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-white/20 bg-[#0a1430]/95 p-6 text-center shadow-[0_8px_40px_rgba(0,0,0,0.5)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="font-display text-2xl text-white">Keluar dari Akun</p>
+            <p className="mt-3 font-alice text-sm text-white/75">
+              Apakah Anda yakin ingin keluar dari akun ini?
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setKonfirmLogout(false)}
+                className="flex-1 rounded-pill border border-white/30 px-4 py-2.5 font-alice text-sm uppercase tracking-wide text-white/80 transition-colors hover:bg-white/10"
+              >
+                Batal
+              </button>
+              <form action="/auth/signout" method="post" className="flex-1">
+                <button
+                  type="submit"
+                  className="w-full rounded-pill bg-red-500/90 px-4 py-2.5 font-alice text-sm uppercase tracking-wide text-white transition-colors hover:bg-red-500"
+                >
+                  Keluar
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
