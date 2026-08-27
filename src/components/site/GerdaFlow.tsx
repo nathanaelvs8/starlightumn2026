@@ -45,7 +45,11 @@ export function GerdaFlow() {
     const el = stageRef.current;
     if (!el) return;
     const ukur = () => {
-      setSize({ w: el.clientWidth, h: el.clientHeight });
+      setSize((prev) => {
+        const w = el.clientWidth;
+        if (prev.w === w && prev.h !== 0) return prev;
+        return { w, h: el.clientHeight };
+      });
       setIsHP(window.innerWidth < 1024);
     };
     ukur();
@@ -92,7 +96,7 @@ export function GerdaFlow() {
       y: fokusPx.y - (cp.y / 100) * grupH,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size.w, size.h, isHP]);
+   }, [size.w, isHP]);
 
   const anggota = members.filter((m) => m.division === activeDiv?.name);
   const pageCount = Math.max(1, Math.ceil(anggota.length / PER_PAGE));
