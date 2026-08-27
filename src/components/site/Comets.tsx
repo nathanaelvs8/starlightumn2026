@@ -1,9 +1,3 @@
-/**
- * Komet kecil & halus — kepala mungil, ekor bentuk V (makin ke belakang
- * makin melebar dikit), partikel bertebaran. Sengaja kecil biar nggak
- * ganggu isi. Melintas pelan lewat lintasan melengkung.
- */
-
 function Comet({
   top,
   delay,

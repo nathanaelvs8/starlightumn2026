@@ -2,22 +2,21 @@
 
 import { useState } from "react";
 import { divisions } from "@/lib/divisions";
-import { ButtonLink } from "@/components/ui/Button";
+// import { ButtonLink } from "@/components/ui/Button";
 import clsx from "@/lib/clsx";
 import { TitleGlow } from "@/components/ui/TitleGlow";
+import { asset } from "@/lib/assets";
 
 /**
  * Coverflow 13 kartu divisi.
  *
- * - Kartu tengah paling besar (≈230×280) dengan badge "active".
+ * - Kartu tengah paling besar (≈230×280) dengan glow, MEMBALIK tiap ganti.
  * - Kartu samping mengecil & memudar makin jauh dari tengah.
- * - Panah ‹ › kiri-kanan buat geser.
- * - Dot indicator: yang aktif jadi pill memanjang.
- * - Kartu tengah MEMBALIK (flip kartu sihir) tiap ganti divisi.
+ * - Panah ‹ › + dot indicator.
  *
- * Card masih placeholder (border dashed + label) — nunggu aset final
- * dari tim visual. Begitu asetnya ada, ganti isi kotak placeholder
- * jadi <Asset src={asset.division.card(...)} ... />.
+ * Card pakai gambar asli: public/images/division/divisi-1.png … divisi-13.png
+ * (urut sesuai divisions.ts). Pakai <img> biasa, BUKAN <Asset>, karena
+ * Asset punya bug auto-trim yang kadang nyembunyiin gambar.
  */
 export function DivisionCoverflow() {
     const [active, setActive] = useState(0);
@@ -25,11 +24,6 @@ export function DivisionCoverflow() {
 
     const go = (dir: number) => setActive((prev) => (prev + dir + total) % total);
 
-    /**
-     * Lompat ke kartu mana pun. Kalau jaraknya jauh, digeser cepat
-     * bertahap lewat kartu di antaranya — biar nggak ada kartu yang
-     * "meletik" muncul mendadak dari luar layar.
-     */
     /**
      * Lompat ke kartu mana pun. Kalau jauh, digeser cepat bertahap lewat
      * kartu di antaranya biar mulus. Dibikin dari `active` sekarang, terus
@@ -45,7 +39,6 @@ export function DivisionCoverflow() {
         const dir = diff > 0 ? 1 : -1;
         const steps = Math.abs(diff);
 
-        // jadwalin tiap langkah menuju target, satu per 90ms
         for (let s = 1; s <= steps; s++) {
         setTimeout(() => {
             setActive((prev) => (prev + dir + total) % total);
@@ -66,9 +59,6 @@ export function DivisionCoverflow() {
                 if (offset < -total / 2) offset += total;
 
                 const abs = Math.abs(offset);
-                // Render 1 lebih banyak dari yang keliatan (batas 4), biar
-                // kartu yang mau masuk udah ada di posisinya sebelum tampil
-                // — ini yang bikin geser panah jadi mulus, nggak "meletik".
                 if (abs > 4) return null;
 
                 const scale =
@@ -76,9 +66,6 @@ export function DivisionCoverflow() {
                 const opacity =
                 abs === 0 ? 1 : abs === 1 ? 0.7 : abs === 2 ? 0.45 : abs === 3 ? 0.22 : 0;
 
-                // Jarak antar kartu ikut mengecil sesuai skala, jadi kartu
-                // yang lebih kecil nggak kelihatan makin jauh. Dijumlahin
-                // bertahap, bukan offset * angka tetap.
                 const step = (n: number) =>
                 n === 0 ? 0 : n === 1 ? 150 : n === 2 ? 265 : n === 3 ? 350 : 415;
                 const sign = offset < 0 ? -1 : 1;
@@ -102,25 +89,24 @@ export function DivisionCoverflow() {
                 >
                     <div
                     className={clsx(
-                        "relative h-[280px] w-[230px]",
+                        "relative h-[296px] w-[230px]",
                         isActive && "animate-card-flip",
                     )}
                     >
-                    <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-cyan-300/50 bg-white/5 p-4 text-center backdrop-blur">
-                        <span className="text-4xl opacity-40">✦</span>
-                        <span className="font-alice text-xs uppercase tracking-wide text-white/70">
-                        Card Divisi
-                        </span>
-                        <span className="font-alice text-[10px] leading-tight text-white/50">
-                        menunggu asset dari tim visual
-                        <br />
-                        ≈230×280
-                        </span>
-                        {isActive && (
-                        <span className="absolute top-3 rounded-pill bg-cyan-400/90 px-3 py-0.5 text-[10px] font-bold uppercase text-[#0a1430]">
-                            active
-                        </span>
+                    <div
+                        className={clsx(
+                        "relative h-full w-full overflow-hidden rounded-2xl",
+                        isActive
+                            ? "ring-2 ring-cyan-300/70 shadow-[0_0_34px_rgba(103,232,249,0.4)]"
+                            : "ring-1 ring-white/10",
                         )}
+                    >
+                        <img
+                        src={asset.division.card(i + 1)}
+                        alt={div.name}
+                        draggable={false}
+                        className="h-full w-full object-cover"
+                        />
                     </div>
                     </div>
                 </button>
@@ -149,9 +135,7 @@ export function DivisionCoverflow() {
             ))}
         </div>
 
-        {/* Panel detail — animate-panel-in: fade pas halaman kebuka.
-            Isi di dalamnya pakai key={active} biar fade ulang tiap
-            ganti kartu. */}
+        {/* Panel detail */}
         <div className="animate-panel-in mx-auto mt-10 max-w-2xl rounded-2xl border border-cyan-300/30 bg-white/5 p-8 text-center backdrop-blur sm:p-10">
             <div key={active} className="animate-fade">
             <TitleGlow className="text-3xl sm:text-4xl">
@@ -165,9 +149,9 @@ export function DivisionCoverflow() {
                 {divisions[active].desc}
             </p>
             </div>
-            <div className="mt-7">
+            {/* <div className="mt-7">
             <ButtonLink href="#">More Info</ButtonLink>
-            </div>
+            </div> */}
         </div>
         </div>
     );

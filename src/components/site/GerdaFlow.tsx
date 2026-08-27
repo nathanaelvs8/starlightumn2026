@@ -348,6 +348,15 @@ export function GerdaFlow() {
       {Background}
       <Comets />
       {Arus}
+      {/* Fade bawah: comet & garis luntur ke gelap, ga kepotong tajam */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-30 h-44"
+        style={{
+          background:
+            "linear-gradient(to bottom, transparent, rgba(10,20,48,0.97))",
+        }}
+      />
       <div className="absolute right-[14%] top-1/2 z-40 w-[30%] max-w-[420px] -translate-y-1/2">
         {ListAnggota}
       </div>

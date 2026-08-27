@@ -41,11 +41,16 @@ export default async function AdminPage() {
           Daftar user terdaftar
         </p>
 
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link href="/admin/gerda"
             className="rounded-pill border border-cyan-300/40 bg-white/5 px-6 py-3 font-alice text-sm uppercase tracking-wide text-cyan-200 backdrop-blur transition-colors hover:bg-white/10"
           >
             Kelola Mini Gerda →
+          </Link>
+          <Link href="/admin/vote"
+            className="rounded-pill border border-cyan-300/40 bg-white/5 px-6 py-3 font-alice text-sm uppercase tracking-wide text-cyan-200 backdrop-blur transition-colors hover:bg-white/10"
+          >
+            Kelola Voting →
           </Link>
         </div>
 
