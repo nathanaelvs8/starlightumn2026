@@ -72,9 +72,10 @@ export const asset = {
     conceptArt: "/images/home/concept.png",
   },
   /* ---------- Division ---------- */
-  division: {
-    /** divisi-1.png ... divisi-13.png di public/images/division/ */
-    card: (n: number) => `/images/division/divisi-${n}.png`,
+    division: {
+    card: (name: string) => `/images/division/card-${name.toLowerCase()}.png`,
+    bg: (name: string) => `/images/division/bg-${name.toLowerCase()}.png`,
+    bintang: "/images/division/bintang.png",
   },
     /* ---------- Mini Gerda ---------- */
   gerda: {

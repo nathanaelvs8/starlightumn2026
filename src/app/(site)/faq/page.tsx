@@ -19,7 +19,7 @@ export default function FaqPage() {
       <div aria-hidden className="fixed inset-0 -z-10 bg-[#0a1430]/40" />
 
       <Container className="py-16 sm:py-20">
-        <h1 className="faq-title text-center font-alice text-4xl uppercase tracking-wide sm:text-5xl">
+           <h1 className="faq-title text-center font-display text-4xl tracking-wide sm:text-5xl">
           Frequently Asked Questions
         </h1>
         <p className="mt-3 text-center font-alice text-white/70">
