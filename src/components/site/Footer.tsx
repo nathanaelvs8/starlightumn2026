@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Asset } from "@/components/ui/Asset";
 import { Container } from "@/components/ui/Container";
 import { asset } from "@/lib/assets";
@@ -39,21 +39,18 @@ const CREDIT = "Developed and Managed by \u2014";
  * pembungkus yang lebarnya jelas.
  */
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname === "/login") return null;
+
   return (
     <>
-      <Connector />
+            <Separator naik={30} />
 
       <footer
-       className="relative z-10 bg-footer text-footer-ink"
-        style={{
-          backgroundImage: `url("${asset.shared.footerBg}")`,
-          /* sama kayak Band: lebar pas, tinggi ngikut, nggak dizoom */
-          backgroundSize: "100% auto",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "bottom center",
-        }}
+        className="relative z-10 bg-footer bg-cover bg-bottom bg-no-repeat text-footer-ink lg:bg-[length:100%_auto]"
+        style={{ backgroundImage: `url("${asset.shared.footerBg}")` }}
       >
-        <Container className="flex flex-col items-center py-12 text-center font-alice sm:py-16">
+                <Container className="flex flex-col items-center py-32 text-center font-alice sm:py-16">
           {/* Logo — hover-pop dipasang di Asset-nya, bukan di pembungkus */}
           <Asset
             src={asset.logo.footer}
@@ -124,23 +121,20 @@ function Divider() {
  * terakhir dan footer — jadi mending nggak usah muncul sama sekali,
  * biar band langsung nempel ke footer.
  */
-function Connector() {
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const img = new window.Image();
-    img.src = asset.shared.connector;
-    img.onload = () => setReady(true);
-    img.onerror = () => setReady(false);
-  }, []);
-
-  if (!ready) return null;
-
+function Separator({ naik = -60 }: { naik?: number }) {
   return (
-    <div
-      aria-hidden
-      className="-mb-px h-16 w-full bg-contain bg-bottom bg-repeat-x sm:h-24"
-      style={{ backgroundImage: `url("${asset.shared.connector}")` }}
-    />
+    <div className="relative z-40 h-0">
+      <img
+        src={asset.shared.separator}
+        alt=""
+        aria-hidden
+        draggable={false}
+        className="pointer-events-none absolute left-1/2 max-w-none w-[165%] lg:w-[120%]"
+        style={{
+          top: `${-naik}px`,
+          transform: "translate(-50%, -50%)",
+        }}
+      />
+    </div>
   );
 }

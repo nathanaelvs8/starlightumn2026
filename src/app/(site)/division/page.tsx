@@ -18,7 +18,7 @@ export default function DivisionPage() {
       />
       <div aria-hidden className="fixed inset-0 -z-10 bg-[#0a1430]/40" />
 
-      <Container className="py-16 sm:py-20">
+      <Container className="pb-32 pt-16 sm:pb-40 sm:pt-20">
         {/* Judul aja, tanpa subtitle — coverflow udah jelas sendiri */}
         <TitleGlow className="text-center text-5xl sm:text-6xl">
           Division

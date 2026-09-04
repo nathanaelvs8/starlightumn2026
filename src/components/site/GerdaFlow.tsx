@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Asset } from "@/components/ui/Asset";
-import { divisions } from "@/lib/divisions";
+import { divisions as semuaDivisi } from "@/lib/divisions";
 import { asset } from "@/lib/assets";
 import { Comets } from "@/components/site/Comets";
 import {
@@ -21,6 +21,8 @@ import {
   SIZE_NONAKTIF_HP,
 } from "@/lib/gerdaLayout";
 import { TitleGlow } from "@/components/ui/TitleGlow";
+
+const divisions = semuaDivisi.filter((d) => d.name !== "Auradon");
 
 type Member = { division: string; full_name: string; nim: string };
 const PER_PAGE = 5;
@@ -322,18 +324,18 @@ export function GerdaFlow() {
   // ====== HP: atas arus, bawah list ======
   if (isHP) {
     return (
-      <div className="relative flex h-[100svh] w-full flex-col overflow-hidden">
+      <div className="relative flex min-h-[calc(100svh+72px)] w-full flex-col">
         {Background}
         <Comets />
         {/* Atas — arus, tinggi tetap 50% */}
-        <div className="relative h-1/2 w-full shrink-0">{Arus}</div>
+        <div className="relative h-[72svh] w-full shrink-0" style={{ marginBottom: "-12vh" }}>{Arus}</div>
         {/* Bawah — list ngisi sisa ruang & nempel bawah, ditarik naik
             biar numpuk ke arus. Gradient biar garis nyatu. */}
         <div
-          className="relative z-20 -mt-[12vh] flex-1 w-full overflow-y-auto px-6 pb-6 pt-8"
+          className="relative z-20 w-full flex-1 px-6 pb-28 pt-8"
           style={{
             background:
-              "linear-gradient(to bottom, transparent 0%, rgba(10,20,48,0.55) 15%, rgba(10,20,48,0.8) 35%)",
+              "linear-gradient(to bottom, transparent 0%, rgba(10,20,48,0.7) 15%, rgba(10,20,48,0.97) 40%)",
           }}
         >
           <div className="mx-auto w-full max-w-md">{ListAnggota}</div>

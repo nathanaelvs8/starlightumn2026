@@ -33,7 +33,7 @@ export function FaqList() {
 
       {/* Tinggi TETAP: min-h + max-h sama, jadi kotak nggak nyusut walau
           isinya sisa satu. Daftar scroll di dalam. */}
-      <div className="faq-scroll mt-6 h-[60vh] overflow-y-auto pr-1">
+      <div className="faq-scroll mt-6 h-[74vh] overflow-y-auto pb-8 pr-1">
         <ul className="flex flex-col gap-3">
           {filtered.map(({ item, i }, pos) => {
             const open = openIdx === i;

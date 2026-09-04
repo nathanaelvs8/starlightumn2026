@@ -1,23 +1,18 @@
 import { Band } from "@/components/ui/Band";
 import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
-import { Asset } from "@/components/ui/Asset";
 import { Reveal } from "@/components/ui/Reveal";
 import { TitleGlow } from "@/components/ui/TitleGlow";
 import { asset } from "@/lib/assets";
 import { copy } from "@/lib/copy";
 
-/** TODO: ganti pakai URL registrasi penonton yang asli. */
 const REGISTRASI_PENONTON_URL = "#";
 
 export default function HomePage() {
   return (
     <>
-      {/* ================= BAND 1 · HERO · 1920x1080 ================= */}
       <Band bg={asset.home.bandHero} position="center">
         <Container className="flex min-h-[calc(100svh-var(--h-nav))] flex-col items-center justify-center gap-8 py-14 text-center sm:py-20">
-          {/* Logo pop-out pas masuk homepage. Pakai <img> biasa, bukan
-              <Asset>, karena Asset nyembunyiin logo ini (auto-trim). */}
           <div className="logo-pop">
             <img
               src={asset.logo.main}
@@ -27,7 +22,6 @@ export default function HomePage() {
             />
           </div>
 
-          {/* Tombol registrasi penonton */}
           <ButtonLink href={REGISTRASI_PENONTON_URL} external>
             Registrasi Penonton
             <span aria-hidden>↗</span>
@@ -36,7 +30,8 @@ export default function HomePage() {
         </Container>
       </Band>
 
-      {/* ===== BAND 2 · ABOUT + VISION/MISSION · 1920x1500 ===== */}
+      <Separator naik={10} />
+
       <Band bg={asset.home.bandAbout} ratio="1920/1500">
         <Container className="flex flex-col justify-center gap-10 py-14 sm:gap-14 sm:py-16">
           <div>
@@ -45,7 +40,6 @@ export default function HomePage() {
                 About Us
               </TitleGlow>
             </Reveal>
-            {/* jarak About Us → What is Starlight dipanjangin */}
             <Reveal delay={120}>
               <TitleGlow className="mt-20 text-center text-3xl sm:mt-28 sm:text-4xl">
                 What is Starlight?
@@ -58,8 +52,6 @@ export default function HomePage() {
             </Reveal>
           </div>
 
-          {/* jarak paragraf What is Starlight → Vision/Mission dipanjangin
-              (pakai mt di grid, nambah dari gap band) */}
           <div className="mt-16 grid items-start gap-8 sm:mt-24 lg:grid-cols-2 lg:gap-10">
             <TwoCol judul="Vision" from="left">
               {copy.vision}
@@ -71,9 +63,10 @@ export default function HomePage() {
         </Container>
       </Band>
 
-      {/* ===== BAND 3 · CONCEPT + THEME/TAGLINE + SPONSOR · 1920x1450 ===== */}
+      <Separator naik={10} />
+
       <Band bg={asset.home.bandConcept} ratio="1920/1450">
-        <Container className="flex flex-col justify-center gap-8 py-10 sm:gap-10 sm:py-12">
+        <Container className="flex flex-col justify-center gap-8 pb-32 pt-10 sm:gap-10 sm:pb-40 sm:pt-12">
           <div>
             <Reveal>
               <TitleGlow className="text-center text-4xl sm:text-5xl">
@@ -129,6 +122,24 @@ export default function HomePage() {
   );
 }
 
+function Separator({ naik = -60 }: { naik?: number }) {
+  return (
+    <div className="relative z-20 h-0">
+      <img
+        src={asset.shared.separator}
+        alt=""
+        aria-hidden
+        draggable={false}
+        className="pointer-events-none absolute left-1/2 max-w-none w-[165%] lg:w-[120%]"
+        style={{
+          top: `${-naik}px`,
+          transform: "translate(-50%, -50%)",
+        }}
+      />
+    </div>
+  );
+}
+
 const LEBAR_KOLOM = "max-w-full";
 
 function Paragraf({
@@ -151,10 +162,6 @@ function Paragraf({
   );
 }
 
-/**
- * Satu kolom kiri-kanan. Judulnya sekarang teks (TitleGlow), bukan
- * gambar lagi. Isinya teks paragraf.
- */
 function TwoCol({
   judul,
   children,

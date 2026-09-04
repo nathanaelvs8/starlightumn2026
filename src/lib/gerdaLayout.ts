@@ -95,7 +95,7 @@ export const ZOOM_HP = 600;
 
 /** Titik fokus HP: tengah (x 50), agak ke atas panel arus (y kecil). */
 export const FOKUS_X_HP = 50;
-export const FOKUS_Y_HP = 22;
+export const FOKUS_Y_HP = 32;
 
 /** Ukuran crest HP (persen lebar layar) — lebih gede karena layar sempit. */
 export const SIZE_AKTIF_HP = 34;

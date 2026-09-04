@@ -11,7 +11,7 @@ export const metadata = { title: "Stages · Starlight UMN 2026" };
 export default function Page() {
   return (
     <Band bg={asset.shared.pageBg}>
-      <Container className="flex min-h-[60svh] flex-col items-center justify-center py-24 text-center">
+      <Container className="flex min-h-[60svh] flex-col items-center justify-center pb-40 pt-24 text-center">
         <h1 className="text-3xl sm:text-4xl">Stages</h1>
         <p className="mt-4 max-w-sm text-sm text-muted">
           Halaman ini belum dibangun. Nunggu aset dari tim visual.
