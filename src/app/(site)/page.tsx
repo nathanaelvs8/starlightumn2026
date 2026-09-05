@@ -3,6 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { TitleGlow } from "@/components/ui/TitleGlow";
+import { Comets } from "@/components/site/Comets";
 import { asset } from "@/lib/assets";
 import { copy } from "@/lib/copy";
 
@@ -11,14 +12,16 @@ const REGISTRASI_PENONTON_URL = "#";
 export default function HomePage() {
   return (
     <>
-      <Band bg={asset.home.bandHero} position="center">
-        <Container className="flex min-h-[calc(100svh-var(--h-nav))] flex-col items-center justify-center gap-8 py-14 text-center sm:py-20">
+      <div className="-mt-[104px] sm:-mt-[95px]">
+      <Band bg={asset.home.bandHero} fit="cover" position="center">
+        <Comets />
+        <Container className="flex min-h-[100svh] flex-col items-center justify-center gap-8 pb-14 pt-[110px] text-center sm:pb-20 sm:pt-[130px]">
           <div className="logo-pop">
             <img
               src={asset.logo.main}
               alt="Starlight UMN 2026"
               draggable={false}
-              className="mx-auto w-[220px] sm:w-[300px] lg:w-[360px]"
+              className="mx-auto w-[300px] sm:w-[300px] lg:w-[360px]"
             />
           </div>
 
@@ -29,11 +32,12 @@ export default function HomePage() {
           </ButtonLink>
         </Container>
       </Band>
+      </div>
 
       <Separator naik={10} />
 
       <Band bg={asset.home.bandAbout} ratio="1920/1500">
-        <Container className="flex flex-col justify-center gap-10 py-14 sm:gap-14 sm:py-16">
+        <Container className="flex flex-col justify-center gap-10 pb-32 pt-32 sm:gap-14 sm:pb-16 sm:pt-40">
           <div>
             <Reveal>
               <TitleGlow className="text-center text-4xl sm:text-5xl">
@@ -52,7 +56,7 @@ export default function HomePage() {
             </Reveal>
           </div>
 
-          <div className="mt-16 grid items-start gap-8 sm:mt-24 lg:grid-cols-2 lg:gap-10">
+          <div className="mt-4 grid items-start gap-8 sm:mt-24 lg:grid-cols-2 lg:gap-10">
             <TwoCol judul="Vision" from="left">
               {copy.vision}
             </TwoCol>
@@ -65,17 +69,20 @@ export default function HomePage() {
 
       <Separator naik={10} />
 
-      <Band bg={asset.home.bandConcept} ratio="1920/1450">
-        <Container className="flex flex-col justify-center gap-8 pb-32 pt-10 sm:gap-10 sm:pb-40 sm:pt-12">
+      <Band bg={asset.home.bandConcept} ratio="1920/1900">
+        <Container className="flex flex-col justify-center gap-8 pb-40 pt-28 sm:gap-10 sm:pb-48 sm:pt-36">
           <div>
             <Reveal>
               <TitleGlow className="text-center text-4xl sm:text-5xl">
-                Concept
+                Tagline
               </TitleGlow>
             </Reveal>
             <Reveal delay={160}>
-              <Paragraf className="mt-6 max-w-4xl sm:mt-8">
-                {copy.concept}
+              <Paragraf
+                className="mt-6 max-w-4xl sm:mt-8"
+                size="clamp(22px, 2.2vw, 38px)"
+              >
+                {copy.tagline}
               </Paragraf>
             </Reveal>
           </div>
@@ -84,12 +91,12 @@ export default function HomePage() {
             <TwoCol judul="Theme" from="left">
               {copy.theme}
             </TwoCol>
-            <TwoCol judul="Tagline" from="right">
-              {copy.tagline}
+            <TwoCol judul="Concept" from="right">
+              {copy.concept}
             </TwoCol>
           </div>
 
-          <div className="rounded-xl border border-line bg-surface/90 p-4 sm:p-6">
+          <div className="mt-20 rounded-xl border border-line bg-surface/90 p-4 sm:mt-28 sm:p-6">
             <h2 className="text-center text-lg sm:text-xl">Sponsor</h2>
             <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -145,14 +152,16 @@ const LEBAR_KOLOM = "max-w-full";
 function Paragraf({
   children,
   className,
+  size = "clamp(15px, 1.1vw, 20px)",
 }: {
   children: React.ReactNode;
   className?: string;
+  size?: string;
 }) {
   return (
     <p
       className={`prose-starlight mx-auto ${className ?? ""}`}
-      style={{ fontSize: "clamp(15px, 1.1vw, 20px)" }}
+      style={{ fontSize: size }}
     >
       <span aria-hidden className="star-under absolute inset-0">
         {children}

@@ -7,6 +7,7 @@ import { TitleGlow } from "@/components/ui/TitleGlow";
 import { asset } from "@/lib/assets";
 
 const STEP = [0, 250, 390, 530];
+const STEP_HP = [0, 150, 240, 330];
 const SCALE = [1, 0.74, 0.62, 0.52];
 const OPACITY = [1, 1, 1, 1];
 
@@ -63,6 +64,14 @@ export function DivisionCoverflow() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [isHP, setIsHP] = useState(false);
+  useEffect(() => {
+    const cek = () => setIsHP(window.innerWidth < 640);
+    cek();
+    window.addEventListener("resize", cek);
+    return () => window.removeEventListener("resize", cek);
   }, []);
 
   const touchX = useRef<number | null>(null);
@@ -134,7 +143,7 @@ export function DivisionCoverflow() {
       </div>
 
       <div
-        className="relative flex h-[420px] items-center justify-center overflow-hidden sm:h-[470px]"
+        className="relative flex h-[38svh] items-center justify-center sm:h-[470px] lg:h-[42svh]"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -153,7 +162,7 @@ export function DivisionCoverflow() {
             if (abs > 3) return null;
 
             const sign = offset < 0 ? -1 : 1;
-            const translateX = sign * STEP[abs];
+            const translateX = sign * (isHP ? STEP_HP : STEP)[abs];
             const rot = offset === 0 ? 0 : sign * -34;
             const isActive = abs === 0;
 
@@ -180,7 +189,7 @@ export function DivisionCoverflow() {
                 >
                   <div
                     className={clsx(
-                      "relative h-[344px] w-[268px] overflow-hidden rounded-2xl",
+                      "relative h-[215px] w-[168px] overflow-hidden rounded-2xl sm:h-[344px] sm:w-[268px] lg:h-[268px] lg:w-[209px]",
                       isActive && "animate-card-flip",
                     )}
                     style={undefined}
@@ -201,7 +210,7 @@ export function DivisionCoverflow() {
         <Arrow dir="right" onClick={() => go(1)} />
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-2.5 sm:mt-8 lg:mt-4">
         {divisions.map((_, i) => {
           const on = i === active;
           return (
@@ -226,7 +235,7 @@ export function DivisionCoverflow() {
       </div>
 
       <div
-        className="animate-panel-in mx-auto mt-10 max-w-2xl rounded-2xl border bg-white/5 p-8 text-center backdrop-blur sm:p-10"
+        className="animate-panel-in mx-auto mt-4 max-w-2xl rounded-2xl border bg-white/5 p-5 text-center backdrop-blur sm:mt-10 sm:p-10 lg:mt-5 lg:p-6"
         style={{
           borderColor: `${accent}55`,
           boxShadow: `0 0 30px ${accent}22`,

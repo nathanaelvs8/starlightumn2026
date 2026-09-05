@@ -44,7 +44,7 @@ export function Footer() {
 
   return (
     <>
-            <Separator naik={30} />
+      <Separator naik={0} />
 
       <footer
         className="relative z-10 bg-footer bg-cover bg-bottom bg-no-repeat text-footer-ink lg:bg-[length:100%_auto]"
@@ -60,7 +60,7 @@ export function Footer() {
           />
 
           {/* Tagline — teks, pakai font paragraf (Alice) */}
-          <p className="prose-starlight mt-6 max-w-xl text-lg text-footer-ink sm:mt-8 sm:text-xl">
+          <p className="prose-starlight mt-6 max-w-2xl text-2xl text-footer-ink sm:mt-8 sm:text-3xl">
             {copy.tagline}
           </p>
 

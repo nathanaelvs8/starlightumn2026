@@ -23,7 +23,8 @@ export default function FaqPage() {
           Frequently Asked Questions
         </h1>
         <p className="mt-3 text-center font-alice text-white/70">
-          Klik pertanyaan untuk buka jawaban
+          Temukan jawaban atas pertanyaan yang paling sering diajukan seputar
+          Starlight UMN 2026
         </p>
 
         <div className="mt-10">

@@ -65,7 +65,7 @@ export function VoteBoard() {
           Voting Selesai
         </TitleGlow>
         <p className="mt-3 text-center font-alice text-white/70">
-          Terima kasih sudah ikut vote!
+          Terima kasih atas partisipasi Anda. Berikut hasil akhir voting.
         </p>
 
         <div className="mx-auto mt-10 max-w-2xl space-y-3">
@@ -126,7 +126,8 @@ export function VoteBoard() {
       <div className="flex min-h-[60svh] flex-col items-center justify-center text-center">
         <TitleGlow className="text-4xl sm:text-5xl">Vote</TitleGlow>
         <p className="mt-6 max-w-md font-alice text-white/70">
-          Voting bakal dibuka pas waktunya. Nantikan!
+          Voting belum dibuka. Nantikan informasi selanjutnya melalui kanal resmi
+          Starlight UMN 2026.
         </p>
       </div>
     );
@@ -136,7 +137,8 @@ export function VoteBoard() {
     <div className="py-4">
       <TitleGlow className="text-center text-4xl sm:text-5xl">Vote</TitleGlow>
       <p className="mt-3 text-center font-alice text-white/70">
-        Pilih satu tim. Kamu bisa ganti pilihan selama voting masih buka.
+        Pilih satu tim. Pilihan dapat diubah selama periode voting masih
+        berlangsung.
       </p>
 
       <div className="mx-auto mt-10 grid max-w-4xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
