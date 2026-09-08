@@ -125,7 +125,7 @@ function Separator({ naik = -60 }: { naik?: number }) {
   return (
     <div className="relative z-40 h-0">
       <img
-        src={asset.shared.separator}
+        src={asset.shared.separatorFooter}
         alt=""
         aria-hidden
         draggable={false}

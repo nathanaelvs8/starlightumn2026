@@ -1,6 +1,7 @@
 export const asset = {
   shared: {
     separator: "/images/shared/separator.webp",
+    separatorFooter: "/images/shared/separator-footer.webp",
     footerBg: "/images/shared/footer-bg.webp",
     pageBg: "/images/shared/page-bg.webp",
   },
