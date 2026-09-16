@@ -3,7 +3,6 @@ export const asset = {
     separator: "/images/shared/separator.webp",
     separatorFooter: "/images/shared/separator-footer.webp",
     footerBg: "/images/shared/footer-bg.webp",
-    pageBg: "/images/shared/page-bg.webp",
   },
 
   logo: {
@@ -42,6 +41,23 @@ export const asset = {
     card: (name: string) => `/images/division/card-${name.toLowerCase()}.webp`,
     bg: (name: string) => `/images/division/bg-${name.toLowerCase()}.webp`,
     bintang: "/images/division/bintang.webp",
+  },
+
+  stages: {
+    /** Background halaman daftar /stages. */
+    bg: "/images/stages/bg.webp",
+
+    /** Logo berwarna — dipakai di halaman stage-nya sendiri. */
+    logo: (slug: string) => `/images/stages/${slug}.webp`,
+
+    /** Logo abu-abu + rantai + gembok — dipakai di daftar /stages. */
+    logoLocked: (slug: string) => `/images/stages/${slug}-locked.webp`,
+
+    /**
+     * Bingkai emas buat video. Sudah mendatar dan lubang tengahnya
+     * tepat 16:9 — lihat convert-stages.js.
+     */
+    frame: "/images/stages/frame-video.webp",
   },
 
   gerda: {

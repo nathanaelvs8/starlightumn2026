@@ -318,6 +318,94 @@
     animation-iteration-count: infinite;
   }
 
+  /**
+   * Lingkaran sihir (MagicCircle.tsx).
+   *
+   * transform-origin ditulis dalam satuan viewBox (200 200 = pusat),
+   * dan transform-box: view-box bikin browser ngartiin angka itu di
+   * sistem koordinat SVG-nya. Tanpa itu, <g> yang isinya busur
+   * setengah lingkaran bakal muter ngelilingi titik tengah KOTAK
+   * ISINYA sendiri, bukan pusat lingkaran — hasilnya goyang, bukan
+   * muter di tempat.
+   */
+  .seal-spin,
+  .seal-spin-rev {
+    transform-box: view-box;
+    transform-origin: 200px 200px;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    will-change: transform;
+  }
+
+  .seal-spin {
+    animation-name: seal-spin;
+  }
+  .seal-spin-rev {
+    animation-name: seal-spin-rev;
+  }
+
+  @keyframes seal-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes seal-spin-rev {
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+
+  /**
+   * Kedipan bara.
+   *
+   * Titik-titiknya sengaja NGGAK rata (0 / 17 / 41 / 58 / 79 / 100) dan
+   * durasinya bilangan ganjil, biar polanya nggak ketebak. Kalau
+   * naik-turunnya rapi, hasilnya kerasa kayak lampu rusak — bukan api.
+   */
+  @keyframes seal-ember {
+    0% {
+      opacity: 0.88;
+    }
+    17% {
+      opacity: 1;
+    }
+    41% {
+      opacity: 0.8;
+    }
+    58% {
+      opacity: 0.97;
+    }
+    79% {
+      opacity: 0.85;
+    }
+    100% {
+      opacity: 0.88;
+    }
+  }
+
+  .seal-ember {
+    animation: seal-ember 6.7s ease-in-out infinite;
+  }
+
+  /* Titik cahaya di sudut segitiga — napas pelan. */
+  @keyframes seal-pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.35);
+    }
+  }
+
+  .seal-pulse {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: seal-pulse 3.2s ease-in-out infinite;
+  }
+
   /* Logo hero pop-out: muncul dari kecil, over-shoot membesar, settle
      ke normal dengan mantul. Sekali jalan pas homepage kebuka. */
   @keyframes logo-pop {
@@ -342,6 +430,13 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /*
+      WAJIB dibarengin durasi 0,01ms. Animasi yang muter terus (komet,
+      cincin lingkaran sihir) kalau cuma dipendekin durasinya bakal
+      ngulang ribuan kali per detik — bukannya berhenti, malah jadi
+      kedip-kedip. Dikunci sekali jalan supaya beneran diam.
+    */
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
