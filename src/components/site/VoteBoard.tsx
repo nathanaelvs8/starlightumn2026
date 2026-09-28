@@ -17,6 +17,20 @@ export function VoteBoard() {
   const [myTeam, setMyTeam] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  /**
+   * Kabar hasil voting, buat ditaruh di live region.
+   *
+   * Dulu satu-satunya tanda kalau suara tersimpan itu border kartunya
+   * berubah warna. Di HP kartunya sering udah di luar layar pas
+   * tombolnya ditekan, dan yang pakai screen reader nggak dapet apa-apa
+   * sama sekali — di seluruh `src/` nggak ada satu pun aria-live.
+   *
+   * Yang gagal juga dulu muncul sebagai alert() bawaan browser berisi
+   * teks mentah dari Postgres. Sekarang dua-duanya lewat sini.
+   */
+  const [kabar, setKabar] = useState<
+    { tipe: "ok" | "galat"; teks: string } | null
+  >(null);
 
   const muat = async () => {
     const r = await fetch("/api/vote").then((x) => x.json());
@@ -34,19 +48,43 @@ export function VoteBoard() {
   const vote = async (teamId: string) => {
     if (saving) return;
     setSaving(teamId);
-    const res = await fetch("/api/vote", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ team_id: teamId }),
-    });
-    if (!res.ok) {
-      const d = await res.json().catch(() => ({}));
-      alert(d.error ?? "Gagal menyimpan vote.");
+    setKabar(null);
+
+    const nama = teams.find((t) => t.id === teamId)?.name ?? "tim itu";
+
+    /*
+      Dibungkus try/catch karena `fetch` melempar — bukan mengembalikan
+      respons — kalau jaringannya putus di tengah jalan. Tanpa ini,
+      sinyal yang hilang pas tombol ditekan bikin tombolnya nyangkut di
+      "Menyimpan…" selamanya tanpa ada penjelasan apa pun.
+    */
+    try {
+      const res = await fetch("/api/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ team_id: teamId }),
+      });
+
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setKabar({
+          tipe: "galat",
+          teks: d.error ?? "Suaramu gagal tersimpan. Coba sekali lagi.",
+        });
+        setSaving(null);
+        return;
+      }
+
+      await muat();
+      setKabar({ tipe: "ok", teks: `Suaramu untuk ${nama} sudah tercatat.` });
+    } catch {
+      setKabar({
+        tipe: "galat",
+        teks: "Koneksi terputus. Cek jaringanmu, lalu coba lagi.",
+      });
+    } finally {
       setSaving(null);
-      return;
     }
-    await muat();
-    setSaving(null);
   };
 
   if (loading) {
@@ -140,6 +178,35 @@ export function VoteBoard() {
         Pilih satu tim. Pilihan dapat diubah selama periode voting masih
         berlangsung.
       </p>
+
+      {/*
+        Live region.
+
+        `role="status"` + `aria-live="polite"` bikin screen reader
+        membacakan isinya begitu berubah, tanpa motong apa yang lagi
+        dibaca. Elemennya SELALU ada di DOM (cuma isinya yang kosong
+        pas belum ada kabar) — kalau elemennya sendiri yang muncul-
+        hilang, sebagian screen reader nggak mengumumkan apa-apa.
+
+        Warnanya ngikut yang udah dipakai halaman ini: cyan buat
+        berhasil, merah lembut buat gagal. Nggak ada warna baru.
+      */}
+      <div
+        role="status"
+        aria-live="polite"
+        className="mx-auto mt-4 flex min-h-[1.5rem] max-w-md justify-center px-4"
+      >
+        {kabar && (
+          <p
+            className={`text-center font-alice text-sm ${
+              kabar.tipe === "ok" ? "text-cyan-200" : "text-red-200"
+            }`}
+          >
+            {kabar.tipe === "ok" && <span aria-hidden>✦ </span>}
+            {kabar.teks}
+          </p>
+        )}
+      </div>
 
       <div className="mx-auto mt-10 grid max-w-4xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {teams.map((t) => {

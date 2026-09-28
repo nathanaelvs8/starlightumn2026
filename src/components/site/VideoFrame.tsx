@@ -99,7 +99,7 @@ export function VideoFrame({
 /** Tampilan sementara selama videonya belum ada. */
 function Placeholder() {
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#0a1430] text-center">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-night text-center">
       <svg viewBox="0 0 24 24" className="h-9 w-9 opacity-40" fill="white">
         <path d="M8 5v14l11-7z" />
       </svg>

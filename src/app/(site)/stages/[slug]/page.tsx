@@ -48,7 +48,7 @@ export default function StagePage({ params }: { params: { slug: string } }) {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${stage.bg}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-[#0a1430]/60" />
+      <div aria-hidden className="fixed inset-0 -z-10 bg-night/60" />
 
       <Container className="pb-32 pt-8 sm:pb-40 sm:pt-12">
         <Hero stage={stage} />
@@ -56,9 +56,13 @@ export default function StagePage({ params }: { params: { slug: string } }) {
         <Reveal>
           <Panel className="mt-12 sm:mt-16">
             <Berlian accent={stage.accent} />
-            <h2 className="mt-4 text-center font-display text-3xl text-white [text-shadow:0_0_18px_rgba(255,154,77,0.35)] sm:text-4xl">
+            {/* Ini <h1> halaman ini — nama panggungnya sendiri. Sebelumnya
+                <h2>, sementara "Trailer <nama>" di bawah yang jadi <h1>,
+                jadi daftar heading-nya kebalik. Ukuran hurufnya nggak
+                berubah: semuanya dari className, bukan dari tag-nya. */}
+            <h1 className="mt-4 text-center font-display text-3xl text-white [text-shadow:0_0_18px_rgba(255,154,77,0.35)] sm:text-4xl">
               {stage.name}
-            </h2>
+            </h1>
             <div className="mt-6 flex flex-col gap-5">
               {stage.desc.map((paragraf, i) => (
                 <p
@@ -75,7 +79,7 @@ export default function StagePage({ params }: { params: { slug: string } }) {
         {/* ---------- Trailer ---------- */}
         <section className="mt-16 sm:mt-24">
           <Reveal>
-            <TitleGlow className="text-center text-3xl uppercase sm:text-4xl">
+            <TitleGlow as="h2" className="text-center text-3xl sm:text-4xl">
               {`Trailer ${stage.name}`}
             </TitleGlow>
           </Reveal>
@@ -178,7 +182,7 @@ function Panel({
 }) {
   return (
     <div
-      className={`mx-auto w-full max-w-5xl rounded-xl border border-white/15 bg-[#0a1430]/55 p-6 shadow-[0_8px_40px_rgba(0,0,0,0.45)] backdrop-blur-md sm:p-10 ${className ?? ""}`}
+      className={`mx-auto w-full max-w-5xl rounded-xl border border-white/15 bg-night/55 p-6 shadow-[0_8px_40px_rgba(0,0,0,0.45)] backdrop-blur-md sm:p-10 ${className ?? ""}`}
     >
       {children}
     </div>

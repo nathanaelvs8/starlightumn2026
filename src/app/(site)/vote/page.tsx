@@ -20,7 +20,7 @@ export default async function VotePage() {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${asset.home.bandAbout}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-[#0a1430]/40" />
+      <div aria-hidden className="fixed inset-0 -z-10 bg-night/40" />
 
       <Container className="pb-32 pt-16 sm:pb-40 sm:pt-20">
         <VoteBoard />

@@ -16,7 +16,7 @@ export default function DivisionPage() {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${asset.home.bandAbout}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-[#0a1430]/40" />
+      <div aria-hidden className="fixed inset-0 -z-10 bg-night/40" />
 
       <Container className="pb-28 pt-4 sm:pb-40 sm:pt-20 lg:pb-28 lg:pt-2">
         {/* Judul aja, tanpa subtitle — coverflow udah jelas sendiri */}

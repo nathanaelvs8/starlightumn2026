@@ -57,7 +57,7 @@ export function AdminUsers() {
                   <span
                     className={
                       u.role === "admin"
-                        ? "rounded-pill bg-cyan-400/90 px-2.5 py-0.5 text-xs font-bold text-[#0a1430]"
+                        ? "rounded-pill bg-cyan-400/90 px-2.5 py-0.5 text-xs font-bold text-night"
                         : "text-white/60"
                     }
                   >

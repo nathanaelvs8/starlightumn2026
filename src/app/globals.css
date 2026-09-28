@@ -31,9 +31,19 @@
     text-wrap: balance;
   }
 
-  /* Focus ring wajib kelihatan — jangan dihapus. */
+  /*
+   * Focus ring wajib kelihatan — jangan dihapus.
+   *
+   * Warnanya --c-focus (bara), BUKAN --c-ink. Hampir semua halaman di
+   * situs ini latarnya biru malam; ring warna tinta nyaris hitam di
+   * atasnya kontrasnya cuma 1,16:1, alias nggak kelihatan sama sekali.
+   *
+   * Ring ini cuma muncul pas navigasi keyboard (:focus-visible), jadi
+   * yang pakai mouse atau jari nggak akan pernah melihatnya — tampilan
+   * situsnya sama persis kayak sebelumnya.
+   */
   :where(a, button, input, [tabindex]):focus-visible {
-    outline: 2px solid var(--c-ink);
+    outline: 2px solid var(--c-focus);
     outline-offset: 3px;
     border-radius: var(--r-sm);
   }
@@ -120,22 +130,35 @@
       transform 200ms ease;
   }
 
+  /*
+   * Garis bawah nav, tumbuh dari tengah ke kiri-kanan.
+   *
+   * Dulu yang dianimasi `width` (0 → 100%). Hasilnya sama di mata,
+   * tapi tiap frame browser harus ngitung ulang tata letak garisnya.
+   * `transform: scaleX()` dikerjakan langsung di GPU tanpa hitung
+   * ulang apa pun.
+   *
+   * Garisnya sekarang selalu selebar tautannya (left/right 0) dan yang
+   * berubah cuma skalanya, dengan titik tumpu di tengah — jadi arah
+   * tumbuhnya, kecepatannya, dan bentuknya persis kayak sebelumnya.
+   */
   .nav-link::after {
     content: "";
     position: absolute;
-    left: 50%;
+    left: 0;
+    right: 0;
     bottom: -8px;
     height: 2px;
-    width: 0;
-    transform: translateX(-50%);
     background: currentColor;
-    transition: width 260ms ease;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 260ms ease;
   }
 
   .nav-link:hover::after,
   .nav-link:focus-visible::after,
   .nav-link[aria-current="page"]::after {
-    width: 100%;
+    transform: scaleX(1);
   }
 
   .nav-link:hover {
@@ -192,12 +215,9 @@
   }
   .faq-scroll::-webkit-scrollbar-track { background: transparent; }
 
-  @keyframes faq-in {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .animate-faq-in { animation: faq-in 400ms ease-out both; }
+  /* `@keyframes faq-in` + `.animate-faq-in` tadinya ditulis dua kali di
+     file ini, persis sama. Yang kedua dihapus — definisi aslinya ada di
+     atas, sebelum .faq-title. */
 
   @keyframes card-flip {
     0% {

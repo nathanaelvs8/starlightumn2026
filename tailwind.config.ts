@@ -19,6 +19,15 @@ const config: Config = {
         footer: "var(--c-footer)",
         "footer-ink": "var(--c-footer-ink)",
         "footer-muted": "var(--c-footer-muted)",
+
+        /*
+         * Warna dunia malam. `<alpha-value>` itu tempat Tailwind
+         * nyelipin angka transparansi, jadi `bg-night/55` beneran jalan
+         * — beda sama `bg-[var(--c-night)]/55` yang `/55`-nya dibuang.
+         */
+        night: "rgb(var(--c-night-rgb) / <alpha-value>)",
+        abyss: "rgb(var(--c-abyss-rgb) / <alpha-value>)",
+        ember: "rgb(var(--c-ember-rgb) / <alpha-value>)",
       },
       borderRadius: {
         sm: "var(--r-sm)",

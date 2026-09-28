@@ -23,6 +23,10 @@ import clsx from "@/lib/clsx";
  * Gembok & rantainya "nyala": logonya jadi lebih terang dan dikasih
  * glow warna panggungnya, cincinnya ikut terang, terus naik dikit.
  * Bukan kebuka beneran — cuma ngasih tau kalau ini bisa diklik.
+ *
+ * Tiap efeknya dipasang dua kali: `group-hover` buat mouse dan
+ * `group-active` buat jari. Di HP nggak ada hover sama sekali, jadi
+ * tanpa yang kedua segelnya bakal diem total pas diketuk.
  */
 export function StageSeal({
   stage,
@@ -30,22 +34,30 @@ export function StageSeal({
   size,
   className,
   priority,
+  /**
+   * Render sebagai <div> polos, bukan <a>.
+   *
+   * Dipakai kalau segelnya cuma jadi BAGIAN dari tautan yang lebih
+   * besar — kayak baris di jalur konstelasi /stages, yang satu baris
+   * (segel + nama + tagline) semuanya satu tautan. Tautan di dalam
+   * tautan itu HTML nggak sah dan bikin tap target-nya rebutan.
+   */
+  tanpaLink,
 }: {
   stage: Stage;
   size: string;
   className?: string;
   priority?: boolean;
+  tanpaLink?: boolean;
 }) {
-  return (
-    <Link
-      href={`/stages/${stage.slug}`}
-      aria-label={`Panggung ${stage.name} — belum dibuka`}
-      className={clsx(
-        "group relative grid aspect-square place-items-center outline-offset-8",
-        className,
-      )}
-      style={{ width: size, ["--accent" as string]: stage.accent }}
-    >
+  const kelas = clsx(
+    "group relative grid aspect-square place-items-center outline-offset-8",
+    className,
+  );
+  const gaya = { width: size, ["--accent" as string]: stage.accent };
+
+  const isi = (
+    <>
       {/*
         Sumur gelap di belakang logo.
 
@@ -68,13 +80,13 @@ export function StageSeal({
       {/* Kabut warna panggung, nyala pas disentuh. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-[12%] rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-40"
+        className="pointer-events-none absolute inset-[12%] rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-40 group-active:opacity-40"
         style={{ background: stage.accent }}
       />
 
       <SmallSeal
         accent={stage.accent}
-        className="absolute inset-0 h-full w-full opacity-45 transition-opacity duration-500 group-hover:opacity-100"
+        className="absolute inset-0 h-full w-full opacity-45 transition-opacity duration-500 group-hover:opacity-100 group-active:opacity-100"
       />
 
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -83,7 +95,7 @@ export function StageSeal({
         alt=""
         draggable={false}
         loading={priority ? "eager" : "lazy"}
-        className="relative w-[84%] transition-transform duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-[1.04]"
+        className="relative w-[84%] transition-transform duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-[1.04] group-active:-translate-y-1.5 group-active:scale-[1.04]"
         style={{
           /* Karya aslinya sengaja diredupin biar kerasa "mati". Di atas
              latar segelap ini jadi kelewat tenggelam, jadi dinaikin
@@ -104,19 +116,45 @@ export function StageSeal({
         aria-hidden
         draggable={false}
         loading="lazy"
-        className="pointer-events-none absolute w-[84%] opacity-0 mix-blend-screen transition-all duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-[1.04] group-hover:opacity-60"
+        className="pointer-events-none absolute w-[84%] opacity-0 mix-blend-screen transition-all duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-[1.04] group-hover:opacity-60 group-active:-translate-y-1.5 group-active:scale-[1.04] group-active:opacity-60"
         style={{
           filter: `drop-shadow(0 0 14px ${stage.accent}) drop-shadow(0 0 30px ${stage.accent})`,
         }}
       />
 
-      {/* Petunjuk kecil, muncul pas disentuh. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute bottom-[16%] font-alice text-xs uppercase tracking-[0.25em] text-white/0 transition-all duration-500 group-hover:text-white/75"
-      >
-        Lihat Panggung
-      </span>
+      {/* Petunjuk kecil, muncul pas disentuh.
+
+          Cuma dipasang di versi tautan-sendiri (susunan segitiga di
+          layar lebar). Di jalur konstelasi HP petunjuknya udah ada di
+          sebelah segel sebagai teks beneran, jadi kalau dipasang lagi
+          di sini malah ketumpuk. */}
+      {!tanpaLink && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute bottom-[16%] font-alice text-xs uppercase tracking-[0.25em] text-white/0 transition-all duration-500 group-hover:text-white/75"
+        >
+          Lihat Panggung
+        </span>
+      )}
+    </>
+  );
+
+  if (tanpaLink) {
+    return (
+      <div aria-hidden className={kelas} style={gaya}>
+        {isi}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/stages/${stage.slug}`}
+      aria-label={`Panggung ${stage.name} — belum dibuka`}
+      className={kelas}
+      style={gaya}
+    >
+      {isi}
     </Link>
   );
 }

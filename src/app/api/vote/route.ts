@@ -58,7 +58,10 @@ export async function POST(req: Request) {
 
   const { team_id } = await req.json();
   if (!team_id) {
-    return NextResponse.json({ error: "team_id wajib" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Tim yang dipilih tidak terbaca. Coba muat ulang halaman." },
+      { status: 400 },
+    );
   }
 
   // upsert: satu baris per user (user_id primary key), jadi ganti pilihan
@@ -68,7 +71,23 @@ export async function POST(req: Request) {
     .upsert({ user_id: user.id, team_id }, { onConflict: "user_id" });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    /*
+      JANGAN kirim `error.message` ke pengguna.
+
+      Itu teks mentah dari Postgres, bahasa Inggris, dan isinya nama
+      constraint — misalnya "duplicate key value violates unique
+      constraint votes_pkey". Mahasiswa yang lagi milih jagoannya
+      nggak bisa berbuat apa-apa sama kalimat itu, dan dia juga nggak
+      perlu tau nama tabel kita.
+
+      Pesan aslinya tetap dicatat di log server biar masih bisa
+      ditelusuri kalau ada yang lapor.
+    */
+    console.error("[vote] gagal simpan:", error.message);
+    return NextResponse.json(
+      { error: "Suaramu gagal tersimpan. Coba sekali lagi sebentar." },
+      { status: 500 },
+    );
   }
   return NextResponse.json({ ok: true });
 }

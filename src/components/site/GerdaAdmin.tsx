@@ -76,7 +76,20 @@ export function GerdaAdmin() {
     if (r.ok) {
       setEditId(null);
       load();
+      return;
     }
+    /*
+      Dulu `if (r.ok)` ini nggak punya cabang gagal sama sekali.
+
+      Efeknya: kalau PATCH-nya gagal, barisnya diem aja di mode edit
+      dengan teks yang udah diketik masih nempel di kotaknya. Admin
+      lihat tulisannya sudah benar, ngira kesimpan, lalu pindah — dan
+      perubahannya hilang tanpa sepatah kata pun.
+
+      Data ketikannya sengaja NGGAK dibuang: barisnya tetap di mode
+      edit biar bisa langsung dicoba simpan lagi.
+    */
+    alert("Perubahan gagal disimpan. Coba simpan lagi.");
   };
 
   const hapus = async (id: string) => {
@@ -88,7 +101,11 @@ export function GerdaAdmin() {
       body: JSON.stringify({ id }),
     });
     setBusy(false);
-    if (r.ok) load();
+    if (r.ok) {
+      load();
+      return;
+    }
+    alert("Anggota gagal dihapus. Coba lagi.");
   };
 
   // kelompokin per divisi
@@ -106,7 +123,7 @@ export function GerdaAdmin() {
           <select
             value={division}
             onChange={(e) => setDivision(e.target.value)}
-            className="rounded-lg border border-white/20 bg-[#0a1430] px-4 py-2.5 font-alice text-white focus:border-cyan-300/60 focus:outline-none"
+            className="rounded-lg border border-white/20 bg-night px-4 py-2.5 font-alice text-white focus:border-cyan-300/60 focus:outline-none"
           >
             {divisions.map((d) => (
               <option key={d.name} value={d.name}>
@@ -136,7 +153,7 @@ export function GerdaAdmin() {
             type="button"
             onClick={tambah}
             disabled={busy}
-            className="self-start rounded-pill bg-cyan-400 px-6 py-2.5 font-alice font-bold uppercase tracking-wide text-[#0a1430] transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="self-start rounded-pill bg-cyan-400 px-6 py-2.5 font-alice font-bold uppercase tracking-wide text-night transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             Tambah
           </button>
@@ -187,7 +204,7 @@ export function GerdaAdmin() {
                             type="button"
                             onClick={() => simpanEdit(m.id)}
                             disabled={busy}
-                            className="rounded bg-cyan-400 px-3 py-1 text-xs font-bold text-[#0a1430]"
+                            className="rounded bg-cyan-400 px-3 py-1 text-xs font-bold text-night"
                           >
                             Simpan
                           </button>
@@ -214,14 +231,31 @@ export function GerdaAdmin() {
                               setEditNama(m.full_name);
                               setEditNim(m.nim);
                             }}
-                            className="text-xs text-cyan-300 hover:underline"
+                            /*
+                              Area sentuh dilebarin lewat padding, lalu
+                              ditarik balik pakai margin negatif supaya
+                              barisnya nggak jadi tinggi. Ukuran & warna
+                              hurufnya nggak berubah.
+                            */
+                            className="-my-2 px-2 py-2 text-xs text-cyan-300 hover:underline"
+                            aria-label={`Edit ${m.full_name}`}
                           >
                             Edit
                           </button>
+                          {/*
+                            "Hapus" dikasih jarak sendiri dari "Edit".
+
+                            Dua-duanya tadinya cuma teks 12px tanpa padding
+                            dan cuma berjarak 8px. Di HP, dalam gelap, pas
+                            acara lagi jalan, itu mesin salah-pencet — dan
+                            satu-satunya pengaman cuma confirm() bawaan
+                            browser, nggak ada undo sama sekali.
+                          */}
                           <button
                             type="button"
                             onClick={() => hapus(m.id)}
-                            className="text-xs text-red-400 hover:underline"
+                            className="-my-2 ml-2 px-2 py-2 text-xs text-red-400 hover:underline"
+                            aria-label={`Hapus ${m.full_name}`}
                           >
                             Hapus
                           </button>

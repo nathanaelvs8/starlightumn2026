@@ -5,10 +5,27 @@ export const asset = {
     footerBg: "/images/shared/footer-bg.webp",
   },
 
+  /*
+   * Logo Starlight ada TIGA ukuran file, bukan satu.
+   *
+   * Gambarnya sama persis — yang beda cuma resolusinya, disesuaikan
+   * sama slot tempat dia dipasang. Dulu ketiganya nunjuk ke file
+   * 1920x1920 seberat 506KB, padahal di navbar dia dirender 78px:
+   * 24 kali lebih besar dari yang dibutuhin, dan ikut diunduh di
+   * SETIAP halaman sebelum apa pun sempat tergambar.
+   *
+   *   nav    320px →  34KB   slot 78-150px  (cukup sampai layar 2x)
+   *   main   800px → 137KB   slot 300-360px (cukup sampai layar 2x)
+   *   footer 320px →  34KB   slot maks 44px
+   *
+   * File 1920px-nya sengaja NGGAK dihapus — masih jadi sumber kalau
+   * nanti butuh ukuran lain. Tampilannya sama persis, cuma unduhannya
+   * yang jauh lebih ringan.
+   */
   logo: {
-    nav: "/images/logo/starlight-main.webp",
-    footer: "/images/logo/starlight-main.webp",
-    main: "/images/logo/starlight-main.webp",
+    nav: "/images/logo/starlight-nav.webp",
+    footer: "/images/logo/starlight-nav.webp",
+    main: "/images/logo/starlight-hero.webp",
     umn: "/images/logo/umn-no-outline.webp",
     bem: "/images/logo/bem-no-outline.webp",
   },

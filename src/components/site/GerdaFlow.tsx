@@ -41,6 +41,8 @@ export function GerdaFlow() {
   const dragging = useRef(false);
   const moved = useRef(false);
   const lastX = useRef(0);
+  /** Titik awal sentuhan — dipakai ngukur jarak geser TOTAL. */
+  const startX = useRef(0);
 
   // Ukur panggung arus + deteksi HP (< 1024px)
   useEffect(() => {
@@ -132,6 +134,7 @@ export function GerdaFlow() {
     dragging.current = true;
     moved.current = false;
     lastX.current = x;
+    startX.current = x;
   };
   const clampCamX = (x: number) => {
     const firstX = ((LAYOUT[divisions[0].name]?.x ?? 0) / 100) * grupW;
@@ -144,7 +147,27 @@ export function GerdaFlow() {
   const onMove = (x: number) => {
     if (!dragging.current) return;
     const dx = x - lastX.current;
-    if (Math.abs(dx) > 2) moved.current = true;
+    /*
+      Ambang "ini geser, bukan ketuk".
+
+      DUA hal yang dibenerin di sini.
+
+      1. Ambangnya dulu 2px — kekecilan buat jari. Jempol yang diem pun
+         bergoyang beberapa piksel pas menekan layar, jadi `moved`
+         hampir selalu jadi true, terus ketukannya dibatalin di onClick
+         crest. Di HP crest-nya kelihatan bisa diketuk tapi nggak
+         pernah merespons. 10px itu ambang yang lazim dipakai buat
+         misahin tap dari drag: longgar buat goyangan jari, masih ketat
+         buat geser peta beneran.
+
+      2. Yang diukur dulu `dx`, yaitu selisih ANTAR-EVENT, bukan jarak
+         dari titik awal. Geser pelan-pelan sejauh 200px yang tiap
+         event-nya cuma pindah 1-2px nggak akan pernah melewati ambang,
+         jadi geser panjang malah kebaca sebagai ketukan dan halaman
+         lompat ke divisi yang nggak disengaja. Sekarang dihitung dari
+         `startX`, jadi yang dinilai jarak total.
+    */
+    if (Math.abs(x - startX.current) > 10) moved.current = true;
     lastX.current = x;
     setCam((c) => {
       const nx = clampCamX(c.x + dx);
@@ -261,10 +284,10 @@ export function GerdaFlow() {
           shown.map((m, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between gap-3 rounded-md bg-white/90 px-3.5 py-2 font-alice text-xs text-[#0a1430] shadow-[0_0_28px_rgba(255,255,255,0.85)]"
+              className="flex items-center justify-between gap-3 rounded-md bg-white/90 px-3.5 py-2 font-alice text-xs text-night shadow-[0_0_28px_rgba(255,255,255,0.85)]"
             >
               <span className="font-semibold">{m.full_name}</span>
-              <span className="text-[#0a1430]/70">{m.nim}</span>
+              <span className="text-night/70">{m.nim}</span>
             </div>
           ))
         )}

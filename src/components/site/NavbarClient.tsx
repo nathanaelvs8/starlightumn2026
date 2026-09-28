@@ -188,7 +188,7 @@ export function NavbarClient({
           onClick={() => setKonfirmLogout(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-white/20 bg-[#0a1430]/95 p-6 text-center shadow-[0_8px_40px_rgba(0,0,0,0.5)]"
+            className="w-full max-w-sm rounded-2xl border border-white/20 bg-night/95 p-6 text-center shadow-[0_8px_40px_rgba(0,0,0,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="font-display text-2xl text-white">Keluar dari Akun</p>

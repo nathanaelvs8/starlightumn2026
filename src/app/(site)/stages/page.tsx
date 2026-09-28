@@ -1,10 +1,12 @@
 import { Container } from "@/components/ui/Container";
 import { TitleGlow } from "@/components/ui/TitleGlow";
 import { Reveal } from "@/components/ui/Reveal";
-import { MagicCircle, POSISI_SEAL } from "@/components/site/MagicCircle";
+import Link from "next/link";
+import { MagicCircle, POSISI_SEAL, WARNA_API, GLOW_API } from "@/components/site/MagicCircle";
 import { StageSeal } from "@/components/site/StageSeal";
 import { asset } from "@/lib/assets";
-import { stages } from "@/lib/stages";
+import { stages, type Stage } from "@/lib/stages";
+import clsx from "@/lib/clsx";
 
 export const metadata = { title: "Stages · Starlight UMN 2026" };
 
@@ -37,8 +39,15 @@ export const metadata = { title: "Stages · Starlight UMN 2026" };
  * lingkarannya, bukan batas potong. Wadah luarnya dikasih ruang lega
  * biar nggak ada yang kepotong dan nggak bikin geseran mendatar.
  *
- * Di HP susunan segitiga nggak muat — jadi ditumpuk ke bawah, tiap
- * logo tetap bawa cincin kecilnya sendiri.
+ * Di HP susunan segitiga nggak muat. Yang dipakai bukan tumpukan rata
+ * tengah — itu kebaca sebagai tiga bulatan beruntun, mirip deretan
+ * avatar, dan nggak ada yang nunjukin ketiganya satu rangkaian.
+ * Gantinya segitiganya DIBUKA jadi jalur menurun: segelnya gantian
+ * kiri-kanan, disambung garis penghubung yang bahan visualnya sama
+ * kayak sisi segitiga di layar lebar (garis solid ber-gradient +
+ * titik denyut). Nama & tagline-nya ditaruh di sisi kosongnya, karena
+ * logo versi kekunci itu wordmark berantai yang nggak kebaca di lebar
+ * segitu — tanpa label, ketiganya cuma tiga gumpalan putih yang mirip.
  */
 
 /**
@@ -69,7 +78,7 @@ export default function StagesPage() {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${asset.stages.bg}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-[#0a1430]/55" />
+      <div aria-hidden className="fixed inset-0 -z-10 bg-night/55" />
 
       <Container className="pb-32 pt-12 sm:pb-40 sm:pt-16">
         <Reveal>
@@ -110,21 +119,210 @@ export default function StagesPage() {
           </div>
         </div>
 
-        {/* ---------- Tumpukan (HP & tablet) ----------
-            Jaraknya sengaja MINUS. Tiap seal itu kotak persegi, padahal
-            logonya melebar — jadi di atas & bawah logo ada ruang kosong
-            bawaan hampir 85px. Ditumpuk apa adanya, jarak antar logo
-            jadi ±200px dan harus discroll jauh cuma buat lihat tiga
-            gambar. Ditarik 64px, ruang kosongnya kepakai dan logonya
-            sendiri tetap nggak pernah ketindihan. */}
-        <div className="mt-8 flex flex-col items-center -space-y-16 lg:hidden">
+        {/* ---------- Jalur konstelasi (HP & tablet) ---------- */}
+        <div className="mt-10 lg:hidden">
           {stages.map((stage, i) => (
-            <Reveal key={stage.slug} delay={i * 120}>
-              <StageSeal stage={stage} size="min(82vw, 380px)" priority={i === 0} />
-            </Reveal>
+            <div key={stage.slug}>
+              {i > 0 && <Penghubung kanan={i % 2 === 1} />}
+              <Baris stage={stage} kanan={i % 2 === 1} priority={i === 0} />
+            </div>
           ))}
         </div>
       </Container>
     </>
+  );
+}
+
+/* ====================================================================
+   JALUR KONSTELASI — versi HP & tablet dari susunan segitiga.
+   ==================================================================== */
+
+/**
+ * Lebar segel di jalur konstelasi, dalam persen lebar baris.
+ *
+ * 50% itu kompromi buat layar 360px — yang paling sempit yang masih
+ * wajar didukung. Di situ Container nyisain 320px, jadi segelnya 160px
+ * dan kolom teksnya 148px. Nama panggung terpanjang, "Enchantia",
+ * dirender pakai Efco Brookshire yang hurufnya melebar; di text-xl dia
+ * makan ±105px, jadi masih ada sisa. Kalau angka ini dinaikin, ukuran
+ * namanya harus ikut diturunin — namanya satu kata, nggak bisa turun
+ * baris kalau kepepet.
+ */
+const SEAL_HP = 50;
+
+/**
+ * Pusat segel diukur dari sisi barisnya. Segelnya nempel di pinggir,
+ * jadi pusatnya di setengah lebarnya sendiri. Dipakai buat nentuin
+ * ujung garis penghubung — diturunkan dari SEAL_HP, bukan ditulis
+ * ulang, biar garisnya nggak bisa meleset kalau lebarnya disetel.
+ */
+const PUSAT_HP = SEAL_HP / 2;
+
+/**
+ * Satu panggung di jalur konstelasi: segel di satu sisi, nama dan
+ * tagline di sisi kosongnya.
+ *
+ * Satu baris = SATU tautan, bukan segel-nya sendiri yang diklik. Di HP
+ * target sentuh sebesar mungkin itu murah dan langsung kerasa, dan
+ * kalau namanya nggak ikut bisa diketuk orang bakal ngetuk namanya
+ * duluan lalu ngira halamannya rusak. Makanya segelnya dirender
+ * `tanpaLink` — tautan di dalam tautan itu HTML nggak sah.
+ */
+function Baris({
+  stage,
+  /** Segelnya di kanan? Kalau nggak, di kiri. Gantian tiap panggung. */
+  kanan,
+  priority,
+}: {
+  stage: Stage;
+  kanan: boolean;
+  priority?: boolean;
+}) {
+  return (
+    <Reveal from={kanan ? "right" : "left"}>
+      <Link
+        href={`/stages/${stage.slug}`}
+        aria-label={`Panggung ${stage.name} — belum dibuka`}
+        className={clsx(
+          "group flex items-center gap-3 outline-offset-4 sm:gap-5",
+          kanan && "flex-row-reverse",
+        )}
+      >
+        <StageSeal
+          stage={stage}
+          size={`${SEAL_HP}%`}
+          priority={priority}
+          tanpaLink
+          className="shrink-0"
+        />
+
+        <div className={clsx("min-w-0 flex-1", kanan && "text-right")}>
+          <h2 className="font-display text-xl leading-tight text-white [text-shadow:0_0_18px_rgba(255,154,77,0.35)] sm:text-3xl">
+            {stage.name}
+          </h2>
+
+          {/* Garis pendek warna panggungnya — penanda yang sama sekali
+              nggak makan tempat, tapi bikin ketiganya langsung kebaca
+              sebagai tiga hal yang beda, bukan tiga blok teks. */}
+          <span
+            aria-hidden
+            className={clsx("mt-2 block h-px w-8", kanan && "ml-auto")}
+            style={{
+              background: stage.accent,
+              boxShadow: `0 0 10px ${stage.accent}`,
+            }}
+          />
+
+          <p className="mt-2.5 font-alice text-[11px] leading-relaxed text-white/70 sm:text-sm">
+            {stage.tagline}
+          </p>
+
+          {/* Petunjuk yang SELALU kelihatan. Semua tanda "bisa diklik"
+              yang lain nempel di hover, dan di HP hover itu nggak ada
+              sama sekali. */}
+          <span
+            className={clsx(
+              "mt-3 inline-flex items-center gap-1.5 font-alice text-[10px] uppercase tracking-[0.2em] text-white/55 transition-colors duration-300 group-hover:text-white group-active:text-white sm:text-xs",
+              kanan && "flex-row-reverse",
+            )}
+          >
+            Lihat Panggung
+            <span
+              aria-hidden
+              className={clsx(
+                "transition-transform duration-300",
+                kanan
+                  ? "group-hover:-translate-x-1 group-active:-translate-x-1"
+                  : "group-hover:translate-x-1 group-active:translate-x-1",
+              )}
+            >
+              {kanan ? "←" : "→"}
+            </span>
+          </span>
+        </div>
+      </Link>
+    </Reveal>
+  );
+}
+
+/**
+ * Garis penghubung antar dua panggung — sisi segitiga yang "dibuka".
+ *
+ * Bahannya sengaja disamain persis sama polygon di MagicCircle: garis
+ * solid tipis yang pudar di kedua ujungnya, plus satu titik bara yang
+ * denyut di tengah. Itu yang bikin versi HP kebaca sebagai susunan yang
+ * SAMA kayak di layar lebar, cuma dilipat.
+ *
+ * Kotaknya dibiarin gepeng (`preserveAspectRatio="none"`) supaya ujung
+ * garisnya nempel tepat di pusat segel berapa pun lebar layarnya, tanpa
+ * perlu tau tinggi barisnya. Tebal garisnya nggak ikut ketarik karena
+ * dikunci `vector-effect="non-scaling-stroke"`.
+ */
+function Penghubung({
+  /** Segel di baris BAWAH ada di kanan? Yang atas otomatis kebalikannya. */
+  kanan,
+}: {
+  kanan: boolean;
+}) {
+  const dari = kanan ? PUSAT_HP : 100 - PUSAT_HP;
+  const ke = kanan ? 100 - PUSAT_HP : PUSAT_HP;
+  const id = `konstelasi-${kanan ? "ka" : "ki"}`;
+
+  return (
+    <div
+      aria-hidden
+      /* Ditarik naik-turun karena segelnya kotak persegi sementara
+         logonya melebar — di atas & bawah logo ada ruang kosong bawaan.
+         Tanpa ini jarak antar panggung jadi jauh banget padahal yang
+         misahin cuma udara. */
+      className="relative -my-4 h-16 sm:-my-5 sm:h-20"
+    >
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        fill="none"
+        className="h-full w-full"
+        style={{ color: WARNA_API, filter: GLOW_API }}
+      >
+        <defs>
+          <linearGradient
+            id={id}
+            gradientUnits="userSpaceOnUse"
+            x1={dari}
+            y1="0"
+            x2={ke}
+            y2="100"
+          >
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="currentColor" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0.1" />
+          </linearGradient>
+        </defs>
+        <line
+          x1={dari}
+          y1="0"
+          x2={ke}
+          y2="100"
+          stroke={`url(#${id})`}
+          strokeWidth="1.4"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+
+      {/* Titik bara di tengah garis. Ditaruh sebagai elemen HTML, bukan
+          <circle> di dalam SVG-nya — di kotak yang sengaja digepengin
+          begitu, lingkaran bakal ikut jadi lonjong. Posisinya dipisah ke
+          pembungkus luar karena .seal-pulse animasinya transform, jadi
+          bakal nabrak kalau ditumpuk sama translate. */}
+      <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <span
+          className="seal-pulse block h-1.5 w-1.5 rounded-full"
+          style={{
+            background: WARNA_API,
+            boxShadow: `0 0 8px ${WARNA_API}, 0 0 18px rgba(255,110,30,0.7)`,
+          }}
+        />
+      </span>
+    </div>
   );
 }

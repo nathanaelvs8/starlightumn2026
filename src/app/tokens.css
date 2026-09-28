@@ -40,6 +40,47 @@
   --c-strong: #3a3a3f; /* tombol utama & state aktif */
   --c-on-strong: #ffffff;
 
+  /* --- Dunia malam (nilai yang BENERAN dipakai komponen) ------------ */
+  /*
+   * Ini bukan warna baru. Tiga nilai di bawah cuma memindahkan angka
+   * yang tadinya diketik ulang di 26 tempat ke satu tempat. Nilainya
+   * SAMA PERSIS sama yang sudah dipakai — nggak ada satu piksel pun
+   * yang berubah. Bedanya cuma: sekarang bisa diganti dari sini.
+   *
+   * --c-night   biru malam, dasar semua scrim & panel
+   * --c-abyss   biru paling pekat, buat sumur gelap di belakang logo
+   * --c-ember   oranye bara lingkaran sihir (lihat MagicCircle.tsx)
+   */
+  /*
+   * Ditulis sebagai KANAL RGB telanjang, bukan hex.
+   *
+   * Alasannya teknis: Tailwind cuma bisa nyetel transparansi (`bg-night/55`)
+   * kalau warnanya dia rakit sendiri dari kanal. Kalau tokennya hex,
+   * `bg-[var(--c-night)]/55` bikin `/55`-nya dibuang diam-diam dan
+   * scrim-nya jadi buram total — latar halamannya ketutup semua.
+   *
+   * Yang dipakai komponen tetap `bg-night/55` dst. lewat tailwind.config.ts.
+   * Buat CSS biasa yang butuh warnanya utuh, pakai --c-night.
+   */
+  --c-night-rgb: 10 20 48; /* #0a1430 */
+  --c-abyss-rgb: 3 8 26; /* #03081a */
+  --c-ember-rgb: 255 154 77; /* #ff9a4d */
+
+  --c-night: rgb(var(--c-night-rgb));
+  --c-abyss: rgb(var(--c-abyss-rgb));
+  --c-ember: rgb(var(--c-ember-rgb));
+
+  /*
+   * Warna focus ring.
+   *
+   * DULU ini `--c-ink` (#232326, nyaris hitam). Di atas --c-night
+   * kontrasnya cuma 1,16:1 — praktis nggak kelihatan, jadi yang
+   * navigasi pakai keyboard nggak tau lagi fokus di mana. Dipisah ke
+   * tokennya sendiri supaya halaman gelap dan halaman terang bisa
+   * beda tanpa saling ganggu.
+   */
+  --c-focus: var(--c-ember);
+
   /* --- Footer ------------------------------------------------------- */
   --c-footer: #2b2b2f;
   --c-footer-ink: #f2f2f4;

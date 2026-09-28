@@ -68,24 +68,49 @@ export function VoteAdmin() {
     return data.publicUrl;
   };
 
+  /**
+   * Kirim satu perubahan setelan voting, lalu BALIKIN kalau gagal.
+   *
+   * Dua toggle di bawah dulu nyetel state lokal terus nembak PATCH
+   * tanpa pernah membaca hasilnya — nggak ada cek `res.ok`, nggak ada
+   * catch. Kalau permintaannya gagal (sinyal putus, sesi admin kedaluwarsa,
+   * server error), tombolnya tetap bergeser ke posisi baru dan
+   * kelihatan berhasil.
+   *
+   * Itu berbahaya justru di dua tombol ini: keduanya menentukan apa
+   * yang dilihat SEMUA pengunjung. Admin bisa mengira voting sudah
+   * dibuka padahal belum, dan baru sadar pas ada yang komplain.
+   */
+  const simpanSetelan = async (
+    patch: { is_open: boolean } | { is_finished: boolean },
+    batalkan: () => void,
+  ) => {
+    try {
+      const res = await fetch("/api/admin/vote-settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) {
+        batalkan();
+        alert("Setelan gagal disimpan. Status dikembalikan seperti semula.");
+      }
+    } catch {
+      batalkan();
+      alert("Koneksi terputus. Setelan dikembalikan seperti semula.");
+    }
+  };
+
   const toggleVoting = async () => {
     const baru = !isOpen;
     setIsOpen(baru);
-    await fetch("/api/admin/vote-settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_open: baru }),
-    });
+    await simpanSetelan({ is_open: baru }, () => setIsOpen(!baru));
   };
 
   const toggleSelesai = async () => {
     const baru = !isFinished;
     setIsFinished(baru);
-    await fetch("/api/admin/vote-settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_finished: baru }),
-    });
+    await simpanSetelan({ is_finished: baru }, () => setIsFinished(!baru));
   };
 
   const tambah = async () => {
@@ -175,10 +200,21 @@ export function VoteAdmin() {
               : "Voting DITUTUP — user lihat pesan tunggu."}
           </p>
         </div>
+        {/*
+          role="switch" + aria-checked itu yang bikin screen reader
+          membacakan ini sebagai saklar dan menyebut posisinya
+          ("nyala"/"mati"). Tanpa itu yang kedengeran cuma "tombol",
+          tanpa cara apa pun buat tau voting lagi buka atau tutup —
+          padahal tombol ini yang nentuin apa yang dilihat semua
+          pengunjung. Tampilannya nggak berubah sama sekali.
+        */}
         <button
           type="button"
+          role="switch"
+          aria-checked={isOpen}
+          aria-label="Buka voting untuk pengunjung"
           onClick={toggleVoting}
-          className={`relative h-8 w-14 rounded-full transition-colors ${
+          className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${
             isOpen ? "bg-green-500/80" : "bg-white/20"
           }`}
         >
@@ -202,8 +238,11 @@ export function VoteAdmin() {
         </div>
         <button
           type="button"
+          role="switch"
+          aria-checked={isFinished}
+          aria-label="Tandai voting selesai dan tampilkan hasil akhir"
           onClick={toggleSelesai}
-          className={`relative h-8 w-14 rounded-full transition-colors ${
+          className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${
             isFinished ? "bg-red-500/80" : "bg-white/20"
           }`}
         >
@@ -223,7 +262,7 @@ export function VoteAdmin() {
             value={nama}
             onChange={(e) => setNama(e.target.value)}
             placeholder="Nama tim"
-            className="flex-1 rounded-md border border-white/20 bg-[#0a1430] px-3 py-2 font-alice text-sm text-white placeholder:text-white/40"
+            className="flex-1 rounded-md border border-white/20 bg-night px-3 py-2 font-alice text-sm text-white placeholder:text-white/40"
           />
           <input
             ref={fileRef}
@@ -281,7 +320,7 @@ export function VoteAdmin() {
                         <input
                           value={editNama}
                           onChange={(e) => setEditNama(e.target.value)}
-                          className="flex-1 rounded-md border border-white/20 bg-[#0a1430] px-3 py-1.5 font-alice text-sm text-white"
+                          className="flex-1 rounded-md border border-white/20 bg-night px-3 py-1.5 font-alice text-sm text-white"
                         />
                         <input
                           type="file"

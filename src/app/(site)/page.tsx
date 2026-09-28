@@ -1,13 +1,25 @@
 import { Band } from "@/components/ui/Band";
 import { Container } from "@/components/ui/Container";
-import { ButtonLink } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { TitleGlow } from "@/components/ui/TitleGlow";
 import { Comets } from "@/components/site/Comets";
 import { asset } from "@/lib/assets";
 import { copy } from "@/lib/copy";
 
+/**
+ * Tautan pendaftaran penonton.
+ *
+ * ┌─────────────────────────────────────────────────────────────────┐
+ * │ ISI INI SEBELUM RILIS.                                          │
+ * │ Selama masih "#", tombolnya tampil tapi DIMATIKAN — lihat di    │
+ * │ bawah. Begitu diisi URL beneran, tombolnya nyala sendiri.       │
+ * └─────────────────────────────────────────────────────────────────┘
+ */
 const REGISTRASI_PENONTON_URL = "#";
+
+/** Tautannya udah beneran ada, belum? */
+const REGISTRASI_SIAP = REGISTRASI_PENONTON_URL !== "#";
 
 export default function HomePage() {
   return (
@@ -16,20 +28,41 @@ export default function HomePage() {
       <Band bg={asset.home.bandHero} fit="cover" position="center">
         <Comets />
         <Container className="flex min-h-[100svh] flex-col items-center justify-center gap-8 pb-14 pt-[110px] text-center sm:pb-20 sm:pt-[130px]">
-          <div className="logo-pop">
+          <h1 className="logo-pop">
             <img
               src={asset.logo.main}
               alt="Starlight UMN 2026"
               draggable={false}
               className="mx-auto w-[300px] sm:w-[300px] lg:w-[360px]"
             />
-          </div>
+          </h1>
 
-          <ButtonLink href={REGISTRASI_PENONTON_URL} external>
-            Registrasi Penonton
-            <span aria-hidden>↗</span>
-            <span className="sr-only">(buka di tab baru)</span>
-          </ButtonLink>
+          {/*
+            Selama tautannya masih "#", tombolnya dirender sebagai
+            tombol MATI, bukan tautan.
+
+            Sebelumnya dia `<a href="#" target="_blank">`, jadi ditekan
+            malah buka tab kedua berisi halaman yang sama persis — dan
+            orang menyimpulkan situsnya rusak. Itu satu-satunya tombol
+            aksi di homepage, jadi kesan pertamanya mahal.
+
+            Tombolnya sengaja TETAP DITAMPILKAN, bukan disembunyikan,
+            supaya susunan hero-nya nggak berubah. Tampilannya sama,
+            cuma sekarang nggak bisa diklik dan `aria-disabled` bikin
+            screen reader menyebutnya nonaktif.
+          */}
+          {REGISTRASI_SIAP ? (
+            <ButtonLink href={REGISTRASI_PENONTON_URL} external>
+              Registrasi Penonton
+              <span aria-hidden>↗</span>
+              <span className="sr-only">(buka di tab baru)</span>
+            </ButtonLink>
+          ) : (
+            <Button disabled title="Pendaftaran belum dibuka">
+              Registrasi Penonton
+              <span aria-hidden>↗</span>
+            </Button>
+          )}
         </Container>
       </Band>
       </div>
@@ -40,12 +73,12 @@ export default function HomePage() {
         <Container className="flex flex-col justify-center gap-10 pb-32 pt-32 sm:gap-14 sm:pb-16 sm:pt-40">
           <div>
             <Reveal>
-              <TitleGlow className="text-center text-4xl sm:text-5xl">
+              <TitleGlow as="h2" className="text-center text-4xl sm:text-5xl">
                 About Us
               </TitleGlow>
             </Reveal>
             <Reveal delay={120}>
-              <TitleGlow className="mt-20 text-center text-3xl sm:mt-28 sm:text-4xl">
+              <TitleGlow as="h2" className="mt-20 text-center text-3xl sm:mt-28 sm:text-4xl">
                 What is Starlight?
               </TitleGlow>
             </Reveal>
@@ -73,7 +106,7 @@ export default function HomePage() {
         <Container className="flex flex-col justify-center gap-8 pb-40 pt-28 sm:gap-10 sm:pb-48 sm:pt-36">
           <div>
             <Reveal>
-              <TitleGlow className="text-center text-4xl sm:text-5xl">
+              <TitleGlow as="h2" className="text-center text-4xl sm:text-5xl">
                 Tagline
               </TitleGlow>
             </Reveal>
@@ -184,7 +217,7 @@ function TwoCol({
     <div className="flex flex-col">
       <Reveal from={from}>
         <div className="flex h-[clamp(44px,5vw,72px)] items-center justify-center">
-          <TitleGlow className="text-3xl sm:text-4xl">{judul}</TitleGlow>
+          <TitleGlow as="h3" className="text-3xl sm:text-4xl">{judul}</TitleGlow>
         </div>
       </Reveal>
 

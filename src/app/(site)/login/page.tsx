@@ -108,7 +108,7 @@ export default function LoginPage() {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${asset.home.bandAbout}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-[#0a1430]/60" />
+      <div aria-hidden className="fixed inset-0 -z-10 bg-night/60" />
 
       <Container className="flex min-h-[80svh] items-center justify-center py-16">
         <div className="w-full max-w-md rounded-2xl border border-cyan-300/30 bg-white/5 p-8 backdrop-blur sm:p-10">
@@ -147,7 +147,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={verifikasi}
                 disabled={loading || otp.length < 6}
-                className="mt-2 rounded-pill bg-cyan-400 px-6 py-3 font-alice font-bold uppercase tracking-wide text-[#0a1430] transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="mt-2 rounded-pill bg-cyan-400 px-6 py-3 font-alice font-bold uppercase tracking-wide text-night transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {loading ? "Tunggu…" : "Verifikasi"}
               </button>
@@ -195,7 +195,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={mode === "login" ? masuk : daftar}
                 disabled={loading}
-                className="mt-2 rounded-pill bg-cyan-400 px-6 py-3 font-alice font-bold uppercase tracking-wide text-[#0a1430] transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="mt-2 rounded-pill bg-cyan-400 px-6 py-3 font-alice font-bold uppercase tracking-wide text-night transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {loading ? "Tunggu…" : mode === "login" ? "Masuk" : "Daftar"}
               </button>

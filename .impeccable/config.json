@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "createdAt": "2026-09-20T21:00:32.186Z",
+        "reason": "Overshoot disengaja pada .logo-pop (hero homepage): keyframe-nya sendiri scale 0.4 -> 1.18 -> 1, dan komentar penulis di globals.css menyebut 'over-shoot membesar, settle ke normal dengan mantul'. Sesuai tone situs acara bertema sihir. Pemilik repo juga menetapkan batasan jangan mengubah identitas visual/motion situs, jadi ini tidak diubah."
+      }
+    ]
+  }
+}

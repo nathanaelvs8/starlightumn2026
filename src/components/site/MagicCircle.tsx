@@ -40,7 +40,12 @@
  */
 export const WARNA_API = "#ff9a4d";
 
-const GLOW_API =
+/**
+ * Glow bara di sekeliling garis. Diekspor karena jalur konstelasi di
+ * /stages (versi HP) harus pakai bara yang sama persis kayak segitiga
+ * di sini — kalau nggak, garis penghubungnya kelihatan dari dunia lain.
+ */
+export const GLOW_API =
   "drop-shadow(0 0 3px rgba(255,170,90,0.95)) " +
   "drop-shadow(0 0 10px rgba(255,110,30,0.7)) " +
   "drop-shadow(0 0 26px rgba(255,60,10,0.45))";

@@ -58,6 +58,26 @@ export function DivisionCoverflow() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      /*
+        Panah kiri/kanan diikat ke window, jadi kepencet di MANA pun
+        halaman ini bakal geser coverflow-nya. Masalahnya kalau yang
+        lagi difokus itu kotak isian: orang mau mindahin kursor di
+        dalam teks, yang jalan malah kartunya. Sama juga kalau dia lagi
+        nyoba pilih teks pakai keyboard.
+
+        Jadi dicek dulu — kalau fokusnya lagi di tempat mengetik,
+        biarin tombolnya jalan sebagaimana mestinya.
+      */
+      const f = document.activeElement as HTMLElement | null;
+      if (
+        f &&
+        (f.tagName === "INPUT" ||
+          f.tagName === "TEXTAREA" ||
+          f.tagName === "SELECT" ||
+          f.isContentEditable)
+      ) {
+        return;
+      }
       if (e.key === "ArrowLeft") go(-1);
       if (e.key === "ArrowRight") go(1);
     };
@@ -95,7 +115,7 @@ export function DivisionCoverflow() {
         @media (prefers-reduced-motion: reduce){ .div-anim{animation:none !important} }
       `}</style>
 
-      <div aria-hidden className="fixed inset-0 -z-20 bg-[#0a1430]" />
+      <div aria-hidden className="fixed inset-0 -z-20 bg-night" />
 
       {layers.map((src, i) => (
         <div
@@ -109,7 +129,7 @@ export function DivisionCoverflow() {
         />
       ))}
 
-      <div aria-hidden className="fixed inset-0 -z-10 bg-[#0a1430]/40" />
+      <div aria-hidden className="fixed inset-0 -z-10 bg-night/40" />
 
       <div
         aria-hidden
@@ -142,8 +162,24 @@ export function DivisionCoverflow() {
         />
       </div>
 
+      {/*
+        `overflow-hidden` WAJIB di sini.
+
+        Kartu-kartu di dalamnya `absolute` dan digeser sampai ±330px
+        (HP) / ±530px (>=640px) dari tengah. Nggak ada satu pun leluhur
+        yang motong, dan `overflow-x` juga nggak diset di globals.css —
+        jadi kartu terjauh nongol jauh di luar layar dan halamannya bisa
+        digeser ke samping. Di layar 360px luberannya ±194px.
+
+        Efeknya buat yang pegang HP: swipe vertikal ke bawah sering
+        kebaca sebagai geser mendatar, jadi halaman mental ke samping
+        pas dia cuma mau scroll.
+
+        Yang kepotong cuma bagian kartu yang MEMANG udah di luar layar,
+        jadi tampilannya sendiri nggak berubah.
+      */}
       <div
-        className="relative flex h-[38svh] items-center justify-center sm:h-[470px] lg:h-[42svh]"
+        className="relative flex h-[38svh] items-center justify-center overflow-hidden sm:h-[470px] lg:h-[42svh]"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -218,8 +254,27 @@ export function DivisionCoverflow() {
               key={i}
               type="button"
               onClick={() => jumpTo(i)}
-              aria-label={`Ke divisi ${i + 1}`}
-              className="group grid place-items-center py-1"
+              aria-label={`Ke divisi ${divisions[i].name}`}
+              aria-current={on ? "true" : undefined}
+              /*
+                Area sentuh dilebarin TANPA mengubah tata letak.
+                Titiknya tetap 9px dan jaraknya tetap sama persis.
+                Caranya: padding menambah kotak yang bisa diketuk,
+                margin negatif menarik balik ruang yang dimakannya.
+                  tinggi  9 + 17·2 − 13·2 = 17px  (sama kayak py-1 dulu)
+                  lebar   9 +  5·2 −  5·2 =  9px  (sama)
+                Area efektifnya jadi 19×43px, dari yang tadinya 9×17px.
+
+                Kenapa nggak 44×44 sesuai panduan Apple/Android: jarak
+                antar titik cuma ±19px. Kotak 44px bakal saling tumpuk
+                sama titik sebelahnya, jadi ngetuk titik 5 malah kena
+                titik 6 — lebih parah dari masalah aslinya. 19×43 itu
+                yang paling besar yang masih muat tanpa tabrakan.
+
+                Kalau mau beneran 44×44, titiknya harus direnggangin —
+                dan itu mengubah tampilan, jadi nggak saya kerjain.
+              */
+              className="group grid place-items-center px-[5px] py-[17px] -mx-[5px] -my-[13px]"
             >
               <span
                 className="block h-[9px] rounded-full transition-all duration-300 group-hover:scale-125"
