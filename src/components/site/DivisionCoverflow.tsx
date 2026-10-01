@@ -7,9 +7,17 @@ import { TitleGlow } from "@/components/ui/TitleGlow";
 import { asset } from "@/lib/assets";
 
 const STEP = [0, 250, 390, 530];
-const STEP_HP = [0, 150, 240, 330];
+/*
+  HP: cuma SATU kartu tetangga tiap sisi, dan posisinya ditarik masuk
+  (±118px) biar kartunya utuh di dalam layar. Dulu ±150/240/330 — kartu
+  tetangga kepotong lurus di pinggir layar dan ketumpuk tombol panah.
+  Kartu ke-2 & ke-3 tetap dirender (biar animasi gesernya mulus) tapi
+  disembunyiin (OPACITY_HP 0).
+*/
+const STEP_HP = [0, 118, 190, 260];
 const SCALE = [1, 0.74, 0.62, 0.52];
 const OPACITY = [1, 1, 1, 1];
+const OPACITY_HP = [1, 0.9, 0, 0];
 
 export function DivisionCoverflow() {
   const [active, setActive] = useState(0);
@@ -183,7 +191,9 @@ export function DivisionCoverflow() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        <Arrow dir="left" onClick={() => go(-1)} />
+        {/* Panah di samping kartu cuma dari sm ke atas. Di HP panahnya
+            pindah ke baris indikator di bawah — di sini dia nutupin kartu. */}
+        <Arrow dir="left" onClick={() => go(-1)} className="absolute left-2 z-20 hidden sm:left-6 sm:grid" />
 
         <div
           className="relative flex h-full w-full items-center justify-center"
@@ -209,9 +219,12 @@ export function DivisionCoverflow() {
                 onClick={() => setActive(i)}
                 aria-label={div.name}
                 className="absolute transition-all duration-500 ease-out"
+                tabIndex={isHP && OPACITY_HP[abs] === 0 ? -1 : undefined}
                 style={{
                   transform: `translateX(${translateX}px) rotateY(${rot}deg) scale(${SCALE[abs]})`,
-                  opacity: OPACITY[abs],
+                  opacity: (isHP ? OPACITY_HP : OPACITY)[abs],
+                  // kartu yang disembunyiin di HP jangan bisa kepencet
+                  pointerEvents: isHP && OPACITY_HP[abs] === 0 ? "none" : undefined,
                   zIndex: 10 - abs,
                   transformStyle: "preserve-3d",
                 }}
@@ -243,10 +256,23 @@ export function DivisionCoverflow() {
           })}
         </div>
 
-        <Arrow dir="right" onClick={() => go(1)} />
+        <Arrow dir="right" onClick={() => go(1)} className="absolute right-2 z-20 hidden sm:right-6 sm:grid" />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-2.5 sm:mt-8 lg:mt-4">
+      {/*
+        Indikator: jalur rasi — kerlip empat sudut (bentuk yang sama kayak
+        di lingkaran sihir & FAQ) disambung satu garis tipis. Yang aktif
+        lebih besar & nyala warna divisinya. Dulu titik bulat + pil.
+      */}
+      <div className="mt-3 flex items-center justify-center gap-2 sm:mt-8 lg:mt-4">
+        {/* HP: panah di kiri-kanan jalur indikator (lebih kecil biar muat
+            di layar 360px). */}
+        <Arrow dir="left" onClick={() => go(-1)} kecil className="grid sm:hidden" />
+        <div className="relative flex items-center gap-2 sm:gap-2.5">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+          />
         {divisions.map((_, i) => {
           const on = i === active;
           return (
@@ -274,19 +300,34 @@ export function DivisionCoverflow() {
                 Kalau mau beneran 44×44, titiknya harus direnggangin —
                 dan itu mengubah tampilan, jadi nggak saya kerjain.
               */
-              className="group grid place-items-center px-[5px] py-[17px] -mx-[5px] -my-[13px]"
+              className="group relative grid place-items-center px-[5px] py-[17px] -mx-[5px] -my-[13px]"
             >
+              {/* Slot setinggi 18px buat semua (yang aktif 18px, yang
+                  lain 9px di tengahnya) — jadi baris indikatornya nggak
+                  naik-turun pas ganti divisi. */}
               <span
-                className="block h-[9px] rounded-full transition-all duration-300 group-hover:scale-125"
-                style={{
-                  width: on ? 26 : 9,
-                  backgroundColor: on ? accent : "rgba(255,255,255,0.28)",
-                  boxShadow: on ? `0 0 12px ${accent}aa` : "none",
-                }}
-              />
+                className="grid h-[18px] place-items-center transition-[width] duration-300"
+                style={{ width: on ? 18 : 9 }}
+              >
+                <svg
+                  viewBox="0 0 12 12"
+                  aria-hidden
+                  className="block transition-all duration-300 [@media(hover:hover)]:group-hover:scale-125"
+                  style={{
+                    width: on ? 18 : 9,
+                    height: on ? 18 : 9,
+                    color: on ? accent : "rgba(255,255,255,0.4)",
+                    filter: on ? `drop-shadow(0 0 5px ${accent})` : "none",
+                  }}
+                >
+                  <path d="M6 0Q6.9 5.1 12 6Q6.9 6.9 6 12Q5.1 6.9 0 6Q5.1 5.1 6 0Z" fill="currentColor" />
+                </svg>
+              </span>
             </button>
           );
         })}
+        </div>
+        <Arrow dir="right" onClick={() => go(1)} kecil className="grid sm:hidden" />
       </div>
 
       <div
@@ -330,12 +371,21 @@ export function DivisionCoverflow() {
   );
 }
 
+/**
+ * Tombol panah. Posisi & tampil/sembunyi-nya (display) diatur pemanggil
+ * lewat `className` — ada dua pasang: di samping kartu (sm+) dan di baris
+ * indikator (HP). `kecil` = versi HP (36px, biar muat di layar 360px).
+ */
 function Arrow({
   dir,
   onClick,
+  className,
+  kecil,
 }: {
   dir: "left" | "right";
   onClick: () => void;
+  className?: string;
+  kecil?: boolean;
 }) {
   return (
     <button
@@ -343,8 +393,9 @@ function Arrow({
       onClick={onClick}
       aria-label={dir === "left" ? "Sebelumnya" : "Berikutnya"}
       className={clsx(
-        "absolute z-20 grid h-11 w-11 place-items-center rounded-pill border border-white/30 bg-black/30 text-xl text-white backdrop-blur transition-colors hover:bg-black/50",
-        dir === "left" ? "left-2 sm:left-6" : "right-2 sm:right-6",
+        "shrink-0 place-items-center rounded-pill border border-white/30 bg-black/30 text-white backdrop-blur transition-colors [@media(hover:hover)]:hover:bg-black/50",
+        kecil ? "h-9 w-9 text-lg" : "h-11 w-11 text-xl",
+        className,
       )}
     >
       {dir === "left" ? "‹" : "›"}

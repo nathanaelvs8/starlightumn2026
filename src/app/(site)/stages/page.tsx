@@ -6,7 +6,8 @@ import { MagicCircle, POSISI_SEAL, WARNA_SIHIR, GLOW_SIHIR } from "@/components/
 import { StageSeal } from "@/components/site/StageSeal";
 import { RasiLangit } from "@/components/site/RasiLangit";
 import { asset } from "@/lib/assets";
-import { stages, type Stage } from "@/lib/stages";
+import { stages, tanggalPanggung, type Stage } from "@/lib/stages";
+import { isAdmin } from "@/lib/admin";
 import clsx from "@/lib/clsx";
 
 export const metadata = { title: "Stages · Starlight UMN 2026" };
@@ -69,7 +70,11 @@ const ARENA = "min(76vw, 880px)";
 /** Ukuran tiap seal, dalam persen sisi arena. */
 const SEAL = 52;
 
-export default function StagesPage() {
+export default async function StagesPage() {
+  /* Admin boleh masuk ke panggung yang masih disegel; yang lain cuma
+     bisa buka yang `terbuka`. */
+  const admin = await isAdmin();
+
   return (
     <>
       {/* Background FIXED — nggak ikut memanjang sama isi, sama kayak
@@ -90,7 +95,7 @@ export default function StagesPage() {
             Stages
           </TitleGlow>
           <p className="mx-auto mt-4 max-w-xl text-center font-alice text-sm text-white/70 sm:text-base">
-            {"Tiga panggung, tiga babak. Segelnya belum dibuka — sentuh salah satunya untuk melihat apa yang menanti di baliknya."}
+            {"Starlight UMN 2026 terdiri atas tiga panggung. Pilih salah satu panggung untuk melihat detailnya."}
           </p>
         </Reveal>
 
@@ -117,7 +122,7 @@ export default function StagesPage() {
                   top: `${POSISI_SEAL[i].top}%`,
                 }}
               >
-                <StageSeal stage={stage} size={`calc(${ARENA} * ${SEAL / 100})`} priority />
+                <StageSeal stage={stage} size={`calc(${ARENA} * ${SEAL / 100})`} priority admin={admin} />
               </div>
             ))}
           </div>
@@ -128,7 +133,7 @@ export default function StagesPage() {
           {stages.map((stage, i) => (
             <div key={stage.slug}>
               {i > 0 && <Penghubung kanan={i % 2 === 1} />}
-              <Baris stage={stage} kanan={i % 2 === 1} priority={i === 0} />
+              <Baris stage={stage} kanan={i % 2 === 1} priority={i === 0} admin={admin} />
             </div>
           ))}
         </div>
@@ -177,60 +182,66 @@ function Baris({
   /** Segelnya di kanan? Kalau nggak, di kiri. Gantian tiap panggung. */
   kanan,
   priority,
+  admin,
 }: {
   stage: Stage;
   kanan: boolean;
   priority?: boolean;
+  admin?: boolean;
 }) {
-  return (
-    <Reveal from={kanan ? "right" : "left"}>
-      <Link
-        href={`/stages/${stage.slug}`}
-        aria-label={stage.terbuka ? `Panggung ${stage.name}` : `Panggung ${stage.name} — belum dibuka`}
-        className={clsx(
-          "group flex items-center gap-3 outline-offset-4 sm:gap-5",
-          kanan && "flex-row-reverse",
-        )}
-      >
-        <StageSeal
-          stage={stage}
-          size={`${SEAL_HP}%`}
-          priority={priority}
-          tanpaLink
-          className="shrink-0"
+  const terbuka = !!stage.terbuka;
+  const bisaDibuka = terbuka || !!admin;
+
+  const isi = (
+    <>
+      <StageSeal
+        stage={stage}
+        size={`${SEAL_HP}%`}
+        priority={priority}
+        tanpaLink
+        admin={admin}
+        className="shrink-0"
+      />
+
+      <div className={clsx("min-w-0 flex-1", kanan && "text-right")}>
+        <h2 className="font-display text-xl leading-tight text-white [text-shadow:0_0_18px_rgba(190,184,255,0.45)] sm:text-3xl">
+          {stage.name}
+        </h2>
+
+        {/* Garis pendek warna panggungnya — penanda yang sama sekali
+            nggak makan tempat, tapi bikin ketiganya langsung kebaca
+            sebagai tiga hal yang beda, bukan tiga blok teks. */}
+        <span
+          aria-hidden
+          className={clsx("mt-2 block h-px w-8", kanan && "ml-auto")}
+          style={{
+            background: stage.accent,
+            boxShadow: `0 0 10px ${stage.accent}`,
+          }}
         />
 
-        <div className={clsx("min-w-0 flex-1", kanan && "text-right")}>
-          <h2 className="font-display text-xl leading-tight text-white [text-shadow:0_0_18px_rgba(190,184,255,0.45)] sm:text-3xl">
-            {stage.name}
-          </h2>
+        {/* Tanggalnya — warna emas, sama kayak kartu panggung terdekat
+            di hero homepage. */}
+        <p className="mt-2.5 font-alice text-xs tracking-wide text-emas sm:text-sm">
+          {tanggalPanggung(stage)}
+        </p>
 
-          {/* Garis pendek warna panggungnya — penanda yang sama sekali
-              nggak makan tempat, tapi bikin ketiganya langsung kebaca
-              sebagai tiga hal yang beda, bukan tiga blok teks. */}
-          <span
-            aria-hidden
-            className={clsx("mt-2 block h-px w-8", kanan && "ml-auto")}
-            style={{
-              background: stage.accent,
-              boxShadow: `0 0 10px ${stage.accent}`,
-            }}
-          />
+        <p className="mt-1.5 font-alice text-[11px] leading-relaxed text-white/70 sm:text-sm">
+          {stage.tagline}
+        </p>
 
-          <p className="mt-2.5 font-alice text-[11px] leading-relaxed text-white/70 sm:text-sm">
-            {stage.tagline}
-          </p>
-
-          {/* Petunjuk yang SELALU kelihatan. Semua tanda "bisa diklik"
-              yang lain nempel di hover, dan di HP hover itu nggak ada
-              sama sekali. */}
+        {/* Petunjuk yang SELALU kelihatan. Semua tanda "bisa diklik"
+            yang lain nempel di hover, dan di HP hover itu nggak ada
+            sama sekali. Yang masih disegel dapet keterangan diam,
+            tanpa panah — biar nggak dikira tombol. */}
+        {bisaDibuka ? (
           <span
             className={clsx(
               "mt-3 inline-flex items-center gap-1.5 font-alice text-[10px] uppercase tracking-[0.2em] text-white/55 transition-colors duration-300 group-hover:text-white group-active:text-white sm:text-xs",
               kanan && "flex-row-reverse",
             )}
           >
-            Lihat Panggung
+            {terbuka ? "Lihat Panggung" : "Pratinjau Admin"}
             <span
               aria-hidden
               className={clsx(
@@ -243,8 +254,37 @@ function Baris({
               {kanan ? "←" : "→"}
             </span>
           </span>
-        </div>
-      </Link>
+        ) : (
+          <span className="mt-3 inline-block font-alice text-[10px] uppercase tracking-[0.2em] text-white/40 sm:text-xs">
+            Segera Dibuka
+          </span>
+        )}
+      </div>
+    </>
+  );
+
+  const kelas = clsx(
+    "flex items-center gap-3 sm:gap-5",
+    kanan && "flex-row-reverse",
+  );
+
+  return (
+    <Reveal from={kanan ? "right" : "left"}>
+      {bisaDibuka ? (
+        <Link
+          href={`/stages/${stage.slug}`}
+          aria-label={
+            terbuka
+              ? `Panggung ${stage.name}, ${tanggalPanggung(stage)}`
+              : `Panggung ${stage.name}, ${tanggalPanggung(stage)} — pratinjau admin`
+          }
+          className={clsx("group outline-offset-4", kelas)}
+        >
+          {isi}
+        </Link>
+      ) : (
+        <div className={kelas}>{isi}</div>
+      )}
     </Reveal>
   );
 }

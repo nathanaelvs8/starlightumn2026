@@ -20,35 +20,35 @@ export type FaqItem = {
 export const faqs: FaqItem[] = [
   {
     kategori: "Starlight",
-    q: "Starlight acara apa?",
-    a: "Starlight adalah Kegiatan Mahasiswa dari Universitas Multimedia Nusantara yang berfokus pada Pencarian Bakat. Teman-teman yang memiliki Bakat apapun seperti bernyanyi, dance, dan berbagai bakat lainnya bisa langsung daftar yaa!",
+    q: "Apa itu Starlight?",
+    a: "Starlight adalah Kegiatan Mahasiswa Universitas Multimedia Nusantara yang berfokus pada pencarian bakat. Siapa pun yang memiliki bakat, seperti bernyanyi, menari, maupun bakat lainnya, dapat langsung mendaftar.",
   },
 
   {
     kategori: "Isthara",
-    q: "Isthara itu apa sih?",
-    a: "Isthara adalah panggilan untuk teman-teman Peserta yang mengikuti Kompetisi Starlight. Jadi kalau teman-teman dengar kata-kata “Isthara”, itu adalah sebutan untuk teman-teman Peserta ya.",
+    q: "Apa itu Isthara?",
+    a: "Isthara adalah sebutan bagi para peserta yang mengikuti kompetisi Starlight.",
   },
   {
     kategori: "Isthara",
-    q: "Apakah Isthara mendapat SKKM?",
-    a: "Dapat Dong, para Isthara akan mendapatkan SKKM 1+ Bakat & Minat. Khusus Isthara yang berhasil mendapat Juara, akan mendapat SKKM tambahan:",
+    q: "Apakah Isthara mendapatkan SKKM?",
+    a: "Ya. Setiap Isthara akan mendapatkan 1 SKKM Bakat & Minat. Isthara yang meraih juara akan mendapatkan SKKM tambahan sebagai berikut:",
     daftar: ["Juara 1: +4 SKKM", "Juara 2: +3 SKKM", "Juara 3: +2 SKKM", "Juara Favorit: +2 SKKM"],
   },
   {
     kategori: "Isthara",
-    q: "Isthara terbuka untuk siapa saja?",
-    a: "Terbuka untuk Umum ya, jadi untuk Teman-teman yang berkuliah di Universitas Multimedia Nusantara ataupun masih bersekolah / berkuliah di tempat lain bisa sekali untuk mengikuti Acara Starlight ya teman-teman.",
+    q: "Siapa saja yang dapat menjadi Isthara?",
+    a: "Pendaftaran Isthara terbuka untuk umum. Mahasiswa Universitas Multimedia Nusantara maupun pelajar dan mahasiswa dari institusi lain dapat mengikuti Starlight.",
   },
 
   {
     kategori: "Mini Gerda",
-    q: "Masa kerja sebagai Mini Gerda berapa lama?",
-    a: "Masa kerjanya hanya 3 Bulan saja ya teman-teman, dari Akhir September sampai Pertengahan November.",
+    q: "Berapa lama masa kerja Mini Gerda?",
+    a: "Masa kerja Mini Gerda berlangsung selama 3 bulan, yaitu dari akhir September hingga pertengahan November.",
   },
   {
     kategori: "Mini Gerda",
-    q: "Dapat SKKM apa saja?",
-    a: "Mini Gerda mendapat 2 SKKM, 1+ SKKM Organisasi & Pengembangan Kepribadian dan 1+ SKKM Bakat & Minat.",
+    q: "Berapa SKKM yang didapatkan Mini Gerda?",
+    a: "Mini Gerda mendapatkan 2 SKKM, yaitu 1 SKKM Organisasi & Pengembangan Kepribadian dan 1 SKKM Bakat & Minat.",
   },
 ];

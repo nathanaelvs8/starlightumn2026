@@ -23,7 +23,7 @@ export function AdminUsers() {
         if (d.error) setErr(d.error);
         else setUsers(d.users);
       })
-      .catch(() => setErr("Gagal ambil data"))
+      .catch(() => setErr("Data gagal dimuat. Silakan muat ulang halaman."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -40,8 +40,8 @@ export function AdminUsers() {
             <tr>
               <th className="px-4 py-3">Nama</th>
               <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">No HP</th>
-              <th className="px-4 py-3">Role</th>
+              <th className="px-4 py-3">Nomor HP</th>
+              <th className="px-4 py-3">Peran</th>
             </tr>
           </thead>
           <tbody>
@@ -71,7 +71,7 @@ export function AdminUsers() {
       </div>
 
       <p className="border-t border-white/10 px-4 py-3 text-center text-xs text-white/50">
-        Total {users.length} user
+        Total {users.length} pengguna
       </p>
     </div>
   );

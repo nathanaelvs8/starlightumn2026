@@ -160,7 +160,7 @@ export function FaqList() {
 
           {filtered.length === 0 && (
             <p className="rounded-xl border border-white/15 bg-white/5 px-6 py-8 text-center font-alice text-white/70">
-              Nggak ada pertanyaan yang cocok. Coba kata kunci lain.
+              Tidak ada pertanyaan yang sesuai. Silakan coba kata kunci lain.
             </p>
           )}
         </div>

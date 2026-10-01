@@ -1,28 +1,67 @@
 import { Band } from "@/components/ui/Band";
 import { Container } from "@/components/ui/Container";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { TitleGlow } from "@/components/ui/TitleGlow";
 import { Comets } from "@/components/site/Comets";
 import { Awan } from "@/components/site/Awan";
 import { asset } from "@/lib/assets";
 import { copy } from "@/lib/copy";
+import { rentangAcara } from "@/lib/stages";
+import { SPONSOR, MEDIA_PARTNER } from "@/lib/sponsor";
+import { createClient } from "@/lib/supabase/server";
+
+/*
+  Dirender per permintaan, bukan sekali pas build: tombol Vote &
+  Registrasi di hero ngikutin setelan admin. Kalau statis, tombolnya
+  kebeku sesuai setelan di hari build.
+*/
+export const dynamic = "force-dynamic";
 
 /**
- * Tautan pendaftaran penonton.
+ * Link registrasi penonton — diatur admin di /admin (saklar + link).
+ * `null` = tombolnya nggak ditampilin sama sekali: saklarnya mati, link
+ * belum diisi, atau kolom setelannya belum ada di database.
+ * (Dulu link-nya ditulis di sini dan tombolnya tampil abu-abu mati
+ * selama belum diisi — kelihatan kayak tombol rusak.)
  *
- * ┌─────────────────────────────────────────────────────────────────┐
- * │ ISI INI SEBELUM RILIS.                                          │
- * │ Selama masih "#", tombolnya tampil tapi DIMATIKAN — lihat di    │
- * │ bawah. Begitu diisi URL beneran, tombolnya nyala sendiri.       │
- * └─────────────────────────────────────────────────────────────────┘
+ * Nggak pakai try/catch: Supabase nggak ngelempar kalau query gagal,
+ * dia balikin `error` — dan itu udah ditangani di bawah.
  */
-const REGISTRASI_PENONTON_URL = "#";
+async function linkRegistrasi(): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("vote_settings")
+    .select("registrasi_aktif, registrasi_url")
+    .eq("id", 1)
+    .single();
+  if (error || !data?.registrasi_aktif || !data.registrasi_url) return null;
+  return /^https?:\/\//i.test(data.registrasi_url) ? data.registrasi_url : null;
+}
 
-/** Tautannya udah beneran ada, belum? */
-const REGISTRASI_SIAP = REGISTRASI_PENONTON_URL !== "#";
+/** Voting lagi dibuka? Dipakai buat nampilin tombol "Vote Sekarang" di hero. */
+async function votingDibuka() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("vote_settings")
+    .select("is_open, is_finished")
+    .eq("id", 1)
+    .single();
+  return !!data?.is_open && !data?.is_finished;
+}
 
-export default function HomePage() {
+/** Kerlip empat sudut emas — bentuk kerlip yang sama dipakai di seluruh situs. */
+function KerlipEmas() {
+  return (
+    <svg aria-hidden viewBox="0 0 12 12" className="h-2.5 w-2.5 shrink-0 text-emas sm:h-3 sm:w-3">
+      <path d="M6 0Q6.9 5.1 12 6Q6.9 6.9 6 12Q5.1 6.9 0 6Q5.1 5.1 6 0Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+export default async function HomePage() {
+  const [registrasi, voting] = await Promise.all([linkRegistrasi(), votingDibuka()]);
+
   return (
     /*
       SATU langit buat seluruh homepage, dipasang di pembungkus ini —
@@ -54,47 +93,49 @@ export default function HomePage() {
     >
       <Band>
         <Comets />
-        <Container className="relative flex min-h-[100svh] flex-col items-center justify-center gap-8 pb-14 pt-[110px] text-center sm:pb-20 sm:pt-[130px]">
+        <Container className="relative flex min-h-[100svh] flex-col items-center justify-center gap-6 pb-14 pt-[110px] text-center sm:pb-20 sm:pt-[130px]">
           <Awan n={5} sisi="kiri" atas="24%" lebar="clamp(110px, 21vw, 390px)" keluar={0.35} redup={0.8} durasi={22} />
           {/* Di HP logonya hampir selebar layar, jadi awan kanan diturunin
               ke bawah tombol biar nggak nempel ke ujung bintang. */}
           <Awan n={6} sisi="kanan" atas="80%" lebar="clamp(140px, 18vw, 350px)" keluar={0.3} redup={0.75} balik durasi={26} jeda={9} className="sm:hidden" />
           <Awan n={6} sisi="kanan" atas="58%" lebar="clamp(140px, 18vw, 350px)" keluar={0.3} redup={0.75} balik durasi={26} jeda={9} className="hidden sm:block" />
 
+          {/* Logonya yang jadi pusat — dulu 360px, sekarang lebih besar
+              karena hero-nya nggak lagi dibagi sama kotak & tombol. */}
           <h1 className="logo-pop">
             <img
               src={asset.logo.main}
               alt="Starlight UMN 2026"
               draggable={false}
-              className="mx-auto w-[300px] sm:w-[300px] lg:w-[360px]"
+              className="mx-auto w-[300px] sm:w-[360px] lg:w-[440px]"
             />
           </h1>
 
           {/*
-            Selama tautannya masih "#", tombolnya dirender sebagai
-            tombol MATI, bukan tautan.
-
-            Sebelumnya dia `<a href="#" target="_blank">`, jadi ditekan
-            malah buka tab kedua berisi halaman yang sama persis — dan
-            orang menyimpulkan situsnya rusak. Itu satu-satunya tombol
-            aksi di homepage, jadi kesan pertamanya mahal.
-
-            Tombolnya sengaja TETAP DITAMPILKAN, bukan disembunyikan,
-            supaya susunan hero-nya nggak berubah. Tampilannya sama,
-            cuma sekarang nggak bisa diklik dan `aria-disabled` bikin
-            screen reader menyebutnya nonaktif.
+            Cuma tanggal acaranya, gaya poster: satu baris, tanpa kotak.
+            Sempat ada subjudul + kotak "panggung terdekat" + tombol
+            Lihat Panggung — kesannya kayak template generik, dan
+            Stages udah ada di navbar.
           */}
-          {REGISTRASI_SIAP ? (
-            <ButtonLink href={REGISTRASI_PENONTON_URL} external>
-              Registrasi Penonton
-              <span aria-hidden>↗</span>
-              <span className="sr-only">(buka di tab baru)</span>
-            </ButtonLink>
-          ) : (
-            <Button disabled title="Pendaftaran belum dibuka">
-              Registrasi Penonton
-              <span aria-hidden>↗</span>
-            </Button>
+          <p className="flex items-center gap-3 font-alice text-sm uppercase tracking-[0.3em] text-white/90 [filter:var(--halo-text)] sm:gap-4 sm:text-base">
+            <KerlipEmas />
+            {rentangAcara()}
+            <KerlipEmas />
+          </p>
+
+          {/* Tombol cuma muncul kalau ada yang perlu dilakukan: voting
+              lagi dibuka, atau registrasi penonton dinyalain admin. */}
+          {(voting || registrasi) && (
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+              {voting && <ButtonLink href="/vote">Vote Sekarang</ButtonLink>}
+              {registrasi && (
+                <ButtonLink href={registrasi} external variant={voting ? "outline" : "solid"}>
+                  Registrasi Penonton
+                  <span aria-hidden>↗</span>
+                  <span className="sr-only">(buka di tab baru)</span>
+                </ButtonLink>
+              )}
+            </div>
           )}
         </Container>
       </Band>
@@ -130,7 +171,8 @@ export default function HomePage() {
               </TitleGlow>
             </Reveal>
             <Reveal delay={240}>
-              <Paragraf className="mt-6 max-w-4xl sm:mt-8">
+              {/* max-w-2xl: ±75 huruf per baris di laptop (dulu 4xl, ±100). */}
+              <Paragraf className="mt-6 max-w-2xl sm:mt-8">
                 {copy.aboutUs}
               </Paragraf>
             </Reveal>
@@ -180,41 +222,29 @@ export default function HomePage() {
             <Awan n={1} sisi="kanan" atas="calc(100% + 2rem)" lebar="clamp(190px, 28vw, 540px)" keluar={0.3} balik durasi={22} jeda={2} />
             <Awan n={2} sisi="kiri" atas="calc(100% + 3.5rem)" lebar="clamp(170px, 24vw, 480px)" keluar={0.35} redup={0.8} durasi={27} jeda={16} />
 
-            <TwoCol judul="Theme" from="left">
+            <TwoCol judul="Theme" subjudul={copy.temaNama} from="left">
               {copy.theme}
             </TwoCol>
-            <TwoCol judul="Concept" from="right">
+            <TwoCol judul="Concept" subjudul={copy.konsepNama} from="right">
               {copy.concept}
             </TwoCol>
           </div>
 
-          <div className="mt-20 rounded-xl border border-line bg-surface/90 p-4 sm:mt-28 sm:p-6">
-            <h2 className="text-center text-lg sm:text-xl">Sponsor</h2>
-            <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex aspect-[3/1] items-center justify-center rounded-lg border border-dashed border-line bg-raised text-xs text-muted"
-                >
-                  Logo sponsor
-                </div>
-              ))}
+          {/*
+            Sponsor & Media Partner — cuma tampil kalau daftarnya udah
+            diisi (src/lib/sponsor.ts). Dulu isinya 16 kotak abu-abu
+            "Logo sponsor" + judul hitam di atas latar gelap (nyaris nggak
+            kebaca), tepat sebelum footer: kesan terakhirnya "belum jadi".
+          */}
+          {(SPONSOR.length > 0 || MEDIA_PARTNER.length > 0) && (
+            <div className="mt-20 rounded-xl border border-white/15 bg-night/45 p-6 backdrop-blur sm:mt-28 sm:p-10">
+              <DaftarLogo judul="Sponsor" logo={SPONSOR} besar />
+              {SPONSOR.length > 0 && MEDIA_PARTNER.length > 0 && (
+                <hr className="my-8 border-white/10" />
+              )}
+              <DaftarLogo judul="Media Partner" logo={MEDIA_PARTNER} />
             </div>
-
-            <hr className="my-4 border-line sm:my-5" />
-
-            <h2 className="text-center text-lg sm:text-xl">Media Partner</h2>
-            <div className="mt-3 grid grid-cols-4 gap-2.5 sm:grid-cols-6">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex aspect-[3/1] items-center justify-center rounded-md border border-dashed border-line bg-raised text-center text-[10px] leading-tight text-muted"
-                >
-                  Logo
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </Container>
       </Band>
     </div>
@@ -241,7 +271,46 @@ function Separator({ naik = -60 }: { naik?: number }) {
   );
 }
 
-const LEBAR_KOLOM = "max-w-full";
+/*
+  Lebar maksimal paragraf dua kolom (Vision/Mission, Theme/Concept).
+  Dulu "max-w-full" — di laptop satu baris jadi ±90 huruf, rata tengah,
+  capek dibaca. 34rem ≈ 65–70 huruf per baris. Di HP nggak ngaruh
+  (layarnya udah lebih sempit dari ini).
+*/
+const LEBAR_KOLOM = "max-w-[34rem]";
+
+/** Logo sponsor / media partner. Kosong = nggak dirender. */
+function DaftarLogo({
+  judul,
+  logo,
+  besar,
+}: {
+  judul: string;
+  logo: { nama: string; src: string }[];
+  besar?: boolean;
+}) {
+  if (logo.length === 0) return null;
+  return (
+    <section>
+      <h2 className="text-center font-display text-2xl text-white sm:text-3xl [text-shadow:0_0_18px_rgba(190,184,255,0.45)]">
+        {judul}
+      </h2>
+      <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-6">
+        {logo.map((l) => (
+          <li key={l.nama}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={l.src}
+              alt={l.nama}
+              loading="lazy"
+              className={besar ? "h-14 w-auto sm:h-20" : "h-10 w-auto sm:h-14"}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 function Paragraf({
   children,
@@ -268,10 +337,17 @@ function Paragraf({
 
 function TwoCol({
   judul,
+  subjudul,
   children,
   from = "up",
 }: {
   judul: string;
+  /**
+   * Nama tema / konsepnya, tampil besar warna emas di bawah judul
+   * (pola dari Starlight 2025: "THEME" lalu nama temanya). Emas = sisi
+   * Auradon dari logo; dipakai hemat, cuma di sini & tombol utama.
+   */
+  subjudul?: string;
   children?: React.ReactNode;
   from?: "up" | "left" | "right";
 }) {
@@ -281,6 +357,11 @@ function TwoCol({
         <div className="flex h-[clamp(44px,5vw,72px)] items-center justify-center">
           <TitleGlow as="h3" className="text-3xl sm:text-4xl">{judul}</TitleGlow>
         </div>
+        {subjudul && (
+          <p className="mt-3 text-center font-display text-2xl text-emas [text-shadow:0_0_18px_rgb(var(--c-emas-rgb)/0.45)] sm:text-3xl">
+            {subjudul}
+          </p>
+        )}
       </Reveal>
 
       <Reveal from={from} delay={160}>

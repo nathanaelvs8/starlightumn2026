@@ -97,10 +97,14 @@ function kerlip(s: number) {
 function Lapis({
   putar,
   durasi,
+  warna = WARNA_SIHIR,
+  glow = GLOW_SIHIR,
   children,
 }: {
   putar?: "kanan" | "kiri";
   durasi?: number;
+  warna?: string;
+  glow?: string;
   children: ReactNode;
 }) {
   return (
@@ -118,7 +122,7 @@ function Lapis({
         viewBox="0 0 400 400"
         fill="none"
         className="block h-full w-full overflow-visible"
-        style={{ color: WARNA_SIHIR, filter: GLOW_SIHIR }}
+        style={{ color: warna, filter: glow }}
       >
         {children}
       </svg>
@@ -129,11 +133,25 @@ function Lapis({
 export function MagicCircle({
   /** Gambar segitiga rasi penghubung tiga seal. Matiin buat lingkaran polos. */
   segitiga = false,
+  /**
+   * Warna garis lingkarannya. Default putih (sihir langit) — dipakai di
+   * daftar /stages. Halaman satu panggung ngisi ini pakai warna logo
+   * panggungnya (`accent` di src/lib/stages.ts), biar lingkarannya nyatu
+   * sama logo yang ada di tengahnya.
+   */
+  warna = WARNA_SIHIR,
   className,
 }: {
   segitiga?: boolean;
+  warna?: string;
   className?: string;
 }) {
+  // Glow-nya ikut warna garis: inti tipis + pendaran. Putih pakai glow
+  // lavender bawaan; warna lain pakai warnanya sendiri (hex + alpha).
+  const cat =
+    warna === WARNA_SIHIR
+      ? { warna, glow: GLOW_SIHIR }
+      : { warna, glow: `drop-shadow(0 0 2px ${warna}d9) drop-shadow(0 0 10px ${warna}8c)` };
   const sudutSegitiga = SUDUT.map((d) => titik(R_SEGITIGA, d));
   const tengahSisi = sudutSegitiga.map(([x, y], i) => {
     const [x2, y2] = sudutSegitiga[(i + 1) % 3];
@@ -146,7 +164,7 @@ export function MagicCircle({
           pembungkus, jadi tetap dikerjain GPU. */}
       <div className="sihir-napas absolute inset-0">
         {/* --- yang diam: cincin luar, inti, bintang kompas, segitiga --- */}
-        <Lapis>
+        <Lapis {...cat}>
           <circle cx="200" cy="200" r="196" stroke="currentColor" strokeOpacity="0.3" strokeWidth="0.7" />
 
           <circle cx="200" cy="200" r="62" stroke="currentColor" strokeOpacity="0.45" strokeWidth="1" strokeDasharray="0.1 6" strokeLinecap="round" />
@@ -184,7 +202,7 @@ export function MagicCircle({
         </Lapis>
 
         {/* --- r188 butiran cahaya --- */}
-        <Lapis putar="kanan" durasi={110}>
+        <Lapis {...cat} putar="kanan" durasi={110}>
           {Array.from({ length: 60 }).map((_, i) => {
             const [x, y] = titik(188, i * 6);
             return <circle key={i} cx={x} cy={y} r={i % 5 === 0 ? 1.6 : 0.9} fill="currentColor" fillOpacity={i % 5 === 0 ? 0.9 : 0.55} />;
@@ -192,7 +210,7 @@ export function MagicCircle({
         </Lapis>
 
         {/* --- r176 garis skala --- */}
-        <Lapis putar="kiri" durasi={150}>
+        <Lapis {...cat} putar="kiri" durasi={150}>
           {Array.from({ length: 72 }).map((_, i) => {
             const deg = i * 5;
             const panjang = i % 6 === 0 ? 10 : 4;
@@ -203,7 +221,7 @@ export function MagicCircle({
         </Lapis>
 
         {/* --- r158 pita bintang (ganti pita rune) --- */}
-        <Lapis putar="kanan" durasi={200}>
+        <Lapis {...cat} putar="kanan" durasi={200}>
           <circle cx="200" cy="200" r="150" stroke="currentColor" strokeOpacity="0.25" strokeWidth="0.6" />
           <circle cx="200" cy="200" r="166" stroke="currentColor" strokeOpacity="0.25" strokeWidth="0.6" />
           {Array.from({ length: 12 }).map((_, i) => {
@@ -220,7 +238,7 @@ export function MagicCircle({
         </Lapis>
 
         {/* --- r140 empat busur bercelah --- */}
-        <Lapis putar="kiri" durasi={80}>
+        <Lapis {...cat} putar="kiri" durasi={80}>
           {[0, 90, 180, 270].map((mulai) => {
             const [x1, y1] = titik(140, mulai + 8);
             const [x2, y2] = titik(140, mulai + 82);

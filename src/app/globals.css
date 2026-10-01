@@ -542,6 +542,125 @@
   .logo-pop {
     animation: logo-pop 850ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
+
+  /**
+   * Dekor hero halaman panggung (DekorPanggung.tsx).
+   *
+   * SATU animasi per partikel — goyang kiri-kanan, putaran, kedip
+   * semuanya digabung ke keyframes yang sama. Versi pertama numpuk 2–3
+   * animasi per partikel dan makan ±9% main thread di laptop.
+   *
+   * Durasi & delay diisi per partikel lewat style inline. Semuanya mulai
+   * dari opacity 0, jadi kalau "kurangi animasi" nyala (gerakan
+   * dimatiin), partikelnya nggak nongol diam di tempat.
+   */
+  .dekor-naik,
+  .dekor-jatuh,
+  .dekor-kerlip,
+  .dekor-kunang {
+    opacity: 0;
+    animation-iteration-count: infinite;
+  }
+  .dekor-naik {
+    animation-name: dekor-naik;
+    animation-timing-function: linear;
+  }
+  .dekor-jatuh {
+    animation-name: dekor-jatuh;
+    animation-timing-function: linear;
+  }
+  .dekor-kerlip {
+    animation-name: dekor-kerlip;
+    animation-timing-function: ease-in-out;
+  }
+  .dekor-kunang {
+    animation-name: dekor-kunang;
+    animation-timing-function: ease-in-out;
+  }
+
+  /* Naik pelan sambil meliuk, muncul lalu pudar. */
+  @keyframes dekor-naik {
+    0% {
+      transform: translate(0, 0);
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    25% {
+      transform: translate(10px, -65px);
+    }
+    50% {
+      transform: translate(-9px, -130px);
+    }
+    70% {
+      opacity: 0.9;
+    }
+    75% {
+      transform: translate(8px, -195px);
+    }
+    100% {
+      transform: translate(0, -260px);
+      opacity: 0;
+    }
+  }
+  /* Jatuh sambil berayun & berputar (kelopak). */
+  @keyframes dekor-jatuh {
+    0% {
+      transform: translate(0, 0) rotate(0deg);
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    25% {
+      transform: translate(-18px, 80px) rotate(100deg);
+    }
+    50% {
+      transform: translate(14px, 160px) rotate(200deg);
+    }
+    75% {
+      transform: translate(-12px, 240px) rotate(300deg);
+    }
+    80% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate(6px, 320px) rotate(400deg);
+      opacity: 0;
+    }
+  }
+  @keyframes dekor-kerlip {
+    0%,
+    100% {
+      transform: scale(0.3);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  /* Kunang-kunang: muter pelan di satu tempat sambil kedip. */
+  @keyframes dekor-kunang {
+    0%,
+    100% {
+      transform: translate(0, 0);
+      opacity: 0.15;
+    }
+    25% {
+      transform: translate(22px, -14px);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(6px, -32px);
+      opacity: 0.3;
+    }
+    75% {
+      transform: translate(-18px, -12px);
+      opacity: 1;
+    }
+  }
 }
 
 /* Matiin semua gerakan buat yang sensitif animasi. */

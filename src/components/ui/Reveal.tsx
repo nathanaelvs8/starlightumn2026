@@ -10,12 +10,12 @@ import type { CSSProperties, ReactNode } from "react";
  *
  * Scroll turun  → isi nunggu sebentar (JEDA_AWAL), baru muncul
  *                 pakai fade + gerak.
- * Scroll terus  → tetap kelihatan, nggak ilang.
- * Balik ke atas → begitu elemennya balik ke BAWAH layar, dia
- *                 ngilang lagi pakai animasi yang sama tapi mundur.
+ * Setelah itu   → tetap tampil, SEKALI muncul ya udah.
  *
- * Jadi yang bikin ngilang cuma satu kondisi: elemennya belum
- * kelewatan. Kalau udah kelewatan ke atas, dia tetap tampil.
+ * Dulu kalau di-scroll balik ke atas, elemen yang turun lagi ke bawah
+ * layar ngilang, terus animasi ulang pas di-scroll turun lagi. Di
+ * halaman pendek kayak /stages (Enchantia paling bawah) itu kejadian
+ * tiap kali scroll naik-turun dikit — bikin pusing.
  *
  * === Kenapa pakai IntersectionObserver ===
  *
@@ -85,13 +85,12 @@ export function Reveal({
 
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        // Masuk layar, ATAU udah kelewatan di atas (mis. halaman dibuka
+        // dengan posisi scroll di tengah) → tampil, lalu berhenti ngamatin.
+        if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) {
           setShown(true);
-          return;
+          io.disconnect();
         }
-        // Cuma sembunyiin kalau elemennya masih DI BAWAH layar
-        // alias belum kelewatan. Kalau udah lewat ke atas, biarin.
-        if (entry.boundingClientRect.top > 0) setShown(false);
       },
       {
         // Dipicu pas ujung atasnya nyentuh sekitar 85% tinggi layar,
@@ -117,11 +116,10 @@ export function Reveal({
     transform: shown ? "none" : HIDDEN[from],
     transition: `opacity ${DURASI}ms ease, transform ${DURASI}ms ease`,
     /*
-      Pas muncul: tunggu JEDA_AWAL dulu, baru gerak. `delay` dipakai
-      buat bikin elemen bawah nyusul setelah yang atas.
-      Pas ngilang: langsung, nggak pakai nunggu.
+      Tunggu JEDA_AWAL dulu, baru gerak. `delay` dipakai buat bikin
+      elemen bawah nyusul setelah yang atas.
     */
-    transitionDelay: shown ? `${JEDA_AWAL + delay}ms` : "0ms",
+    transitionDelay: `${JEDA_AWAL + delay}ms`,
     willChange: "opacity, transform",
   };
 

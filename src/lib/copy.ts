@@ -23,4 +23,8 @@ export const copy = {
     "Becoming unbound menggambarkan proses mahasiswa dalam menemukan mengekspresikan bakatnya tanpa terikat oleh standar yang membatasi. Tema ini menekankan keberanian untuk tumbuh, mencoba, dan menampilkan diri secara jujur. Starlight hadir sebagai ruang aman bagi setiap individu untuk berkembang sesuai karakter dan potensi uniknya.",
 
   tagline: "\u201cSpark the Magic, Brave to Rise\u201d",
+
+  /** Nama tema & konsep \u2014 tampil besar di bawah judul "Theme" / "Concept". */
+  temaNama: "Becoming Unbound",
+  konsepNama: "Auradon & The Isle",
 } as const;

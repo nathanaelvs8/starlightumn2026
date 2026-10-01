@@ -47,11 +47,11 @@ export async function GET() {
 export async function POST(request: Request) {
   const guard = await pastikanAdmin();
   if (!guard.ok || !guard.supabase)
-    return NextResponse.json({ error: "Bukan admin" }, { status: guard.status });
+    return NextResponse.json({ error: "Akses ditolak. Fitur ini khusus admin." }, { status: guard.status });
 
   const { name, photo_url } = await request.json();
   if (!name)
-    return NextResponse.json({ error: "Nama tim wajib" }, { status: 400 });
+    return NextResponse.json({ error: "Nama tim wajib diisi." }, { status: 400 });
 
   const { error } = await guard.supabase
     .from("vote_teams")
@@ -65,10 +65,10 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const guard = await pastikanAdmin();
   if (!guard.ok || !guard.supabase)
-    return NextResponse.json({ error: "Bukan admin" }, { status: guard.status });
+    return NextResponse.json({ error: "Akses ditolak. Fitur ini khusus admin." }, { status: guard.status });
 
   const { id, name, photo_url } = await request.json();
-  if (!id) return NextResponse.json({ error: "ID kurang" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "ID wajib diisi." }, { status: 400 });
 
   const patch: Record<string, unknown> = {};
   if (name !== undefined) patch.name = name;
@@ -87,10 +87,10 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   const guard = await pastikanAdmin();
   if (!guard.ok || !guard.supabase)
-    return NextResponse.json({ error: "Bukan admin" }, { status: guard.status });
+    return NextResponse.json({ error: "Akses ditolak. Fitur ini khusus admin." }, { status: guard.status });
 
   const { id } = await request.json();
-  if (!id) return NextResponse.json({ error: "ID kurang" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "ID wajib diisi." }, { status: 400 });
 
   const { error } = await guard.supabase
     .from("vote_teams")

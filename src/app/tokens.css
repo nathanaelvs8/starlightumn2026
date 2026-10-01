@@ -78,6 +78,13 @@
    * Buat CSS biasa yang butuh warnanya utuh, pakai --c-night.
    */
   --c-night-rgb: 10 20 48; /* #0a1430 */
+  /*
+   * Emas — sisi Auradon dari logo (setengah ungu = The Isle, setengah
+   * emas = Auradon). Dipakai HEMAT: tombol utama & penanda penting aja,
+   * biar tetap kerasa istimewa. Diambil dari emas logonya (#e1b97d),
+   * dinaikin dikit biar nyala di atas langit malam.
+   */
+  --c-emas-rgb: 236 196 122; /* #ecc47a */
   --c-abyss-rgb: 3 8 26; /* #03081a */
   --c-ember-rgb: 255 154 77; /* #ff9a4d */
 

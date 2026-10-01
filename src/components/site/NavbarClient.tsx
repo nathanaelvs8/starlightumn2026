@@ -9,12 +9,19 @@ import { Avatar, UserMenu } from "./UserMenu";
 import { asset } from "@/lib/assets";
 import clsx from "@/lib/clsx";
 
-/** Menu utama. Vote disisipin pas login, Login/UserMenu di bawah. */
+/**
+ * Menu utama. Login/UserMenu di bawah.
+ *
+ * Vote SELALU tampil. Dulu cuma muncul setelah login, jadi pengunjung
+ * nggak pernah tau ada voting — apalagi tau kalau harus login dulu.
+ * Sekarang yang belum login dikasih penjelasan + tombol Masuk di /vote.
+ */
 const MENU_BASE = [
   { href: "/", label: "Home" },
   { href: "/division", label: "Division" },
   { href: "/stages", label: "Stages" },
   { href: "/mini-gerda", label: "Mini Gerda" },
+  { href: "/vote", label: "Vote" },
   { href: "/faq", label: "FAQ" },
 ];
 
@@ -34,17 +41,8 @@ export function NavbarClient({
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-    // Vote disisipin antara Mini Gerda dan FAQ, cuma kalau udah login.
-  const withVote = loggedIn
-    ? [
-        ...MENU_BASE.slice(0, 4), // Home, Division, Stages, Mini Gerda
-        { href: "/vote", label: "Vote" },
-        ...MENU_BASE.slice(4), // FAQ
-      ]
-    : MENU_BASE;
-
   // Kalau belum login, Login ikut jadi item menu di tengah.
-  const menu = loggedIn ? withVote : [...withVote, { href: "/login", label: "Login" }];
+  const menu = loggedIn ? MENU_BASE : [...MENU_BASE, { href: "/login", label: "Login" }];
 
   return (
     <header className="sticky top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
@@ -60,19 +58,26 @@ export function NavbarClient({
               src={asset.logo.nav}
               alt="Starlight UMN 2026"
               draggable={false}
-              className="w-[78px] sm:w-[110px] lg:w-[150px]"
+              /* Di HP dulu 78px — pas setinggi navbar, tulisan "Starlight"-
+                 nya jadi kecil banget. Sekarang sedikit nongol keluar
+                 pil navbar, sama kayak versi laptop (150px di navbar 76px). */
+              className="w-[96px] sm:w-[120px] lg:w-[150px]"
             />
           </Link>
 
-          {/* Menu desktop */}
-          <ul className="hidden items-center gap-8 lg:flex xl:gap-11">
+          {/* Menu desktop.
+              Ukurannya naik bertahap: sejak Vote selalu tampil (7 item
+              pas belum login), di 1024px menunya nabrak logo dan di
+              1280px nempel. Dari 1366px ke atas ukurannya sama kayak
+              dulu. */}
+          <ul className="hidden items-center gap-5 lg:flex min-[1280px]:gap-8 min-[1366px]:gap-11">
             {menu.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
                   aria-current={isActive(item.href) ? "page" : undefined}
                   className={clsx(
-                    "nav-link font-alice text-xl uppercase tracking-wide xl:text-2xl",
+                    "nav-link font-alice text-lg uppercase tracking-wide min-[1280px]:text-xl min-[1366px]:text-2xl",
                     isActive(item.href)
                       ? "text-white"
                       : "text-white/70 hover:text-white",
@@ -191,7 +196,7 @@ export function NavbarClient({
               </li>
             )}
 
-            {withVote.map((item, i) => (
+            {MENU_BASE.map((item, i) => (
               <li key={item.href}>
                 <Link
                   href={item.href}

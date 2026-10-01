@@ -2,12 +2,21 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import clsx from "@/lib/clsx";
 
+/*
+  Huruf tombol pakai Alice kapital (sama kayak menu navbar & tombol
+  login), bukan Efco Brookshire — huruf hias itu di ukuran tombol jadi
+  susah dibaca ("Registrasi Penonton" dulu nyaris nggak kebaca).
+*/
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 font-display text-sm font-bold sm:px-8 sm:text-base";
+  "inline-flex items-center justify-center gap-2 rounded-pill px-7 py-3 font-alice text-sm font-bold uppercase tracking-[0.12em] transition-[background-color,box-shadow,transform] duration-200 sm:px-9 sm:text-base";
 
 const variants = {
-  solid: "bg-strong text-onstrong hover:opacity-90",
-  outline: "border border-line bg-page text-ink hover:bg-raised",
+  /* Tombol utama: emas (sisi Auradon dari logo), teks biru malam. */
+  solid:
+    "bg-emas text-night shadow-[0_0_24px_rgb(var(--c-emas-rgb)/0.35)] [@media(hover:hover)]:hover:-translate-y-0.5 [@media(hover:hover)]:hover:shadow-[0_0_34px_rgb(var(--c-emas-rgb)/0.55)]",
+  /* Tombol kedua: kaca tembus pandang, sama kayak navbar. */
+  outline:
+    "border border-white/35 bg-white/5 text-white backdrop-blur [@media(hover:hover)]:hover:bg-white/15",
 } as const;
 
 /**

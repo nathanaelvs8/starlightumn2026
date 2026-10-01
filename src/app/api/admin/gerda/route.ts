@@ -37,12 +37,12 @@ export async function GET() {
 export async function POST(request: Request) {
   const guard = await pastikanAdmin();
   if (!guard.ok || !guard.supabase)
-    return NextResponse.json({ error: "Bukan admin" }, { status: guard.status });
+    return NextResponse.json({ error: "Akses ditolak. Fitur ini khusus admin." }, { status: guard.status });
 
   const body = await request.json();
   const { division, full_name, nim } = body;
   if (!division || !full_name || !nim)
-    return NextResponse.json({ error: "Data kurang lengkap" }, { status: 400 });
+    return NextResponse.json({ error: "Data belum lengkap." }, { status: 400 });
 
   const { error } = await guard.supabase
     .from("mini_gerda_members")
@@ -56,12 +56,12 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const guard = await pastikanAdmin();
   if (!guard.ok || !guard.supabase)
-    return NextResponse.json({ error: "Bukan admin" }, { status: guard.status });
+    return NextResponse.json({ error: "Akses ditolak. Fitur ini khusus admin." }, { status: guard.status });
 
   const body = await request.json();
   const { id, division, full_name, nim } = body;
   if (!id)
-    return NextResponse.json({ error: "ID kurang" }, { status: 400 });
+    return NextResponse.json({ error: "ID wajib diisi." }, { status: 400 });
 
   const { error } = await guard.supabase
     .from("mini_gerda_members")
@@ -76,11 +76,11 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   const guard = await pastikanAdmin();
   if (!guard.ok || !guard.supabase)
-    return NextResponse.json({ error: "Bukan admin" }, { status: guard.status });
+    return NextResponse.json({ error: "Akses ditolak. Fitur ini khusus admin." }, { status: guard.status });
 
   const { id } = await request.json();
   if (!id)
-    return NextResponse.json({ error: "ID kurang" }, { status: 400 });
+    return NextResponse.json({ error: "ID wajib diisi." }, { status: 400 });
 
   const { error } = await guard.supabase
     .from("mini_gerda_members")

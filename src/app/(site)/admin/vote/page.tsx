@@ -39,7 +39,7 @@ export default async function AdminVotePage() {
             href="/admin"
             className="font-alice text-sm text-cyan-200/80 transition-colors hover:text-cyan-200"
           >
-            ← Balik ke Admin
+            ← Kembali ke Admin
           </Link>
         </div>
 
@@ -47,7 +47,7 @@ export default async function AdminVotePage() {
           Voting
         </TitleGlow>
         <p className="mt-3 text-center font-alice text-white/70">
-          Kelola tim & buka/tutup voting
+          Kelola tim dan status voting
         </p>
 
         <div className="mt-10">

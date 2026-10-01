@@ -38,7 +38,9 @@ export function UserMenu({
         className="flex items-center gap-2.5 rounded-pill border border-cyan-300/30 bg-white/5 py-1.5 pl-1.5 pr-4 backdrop-blur transition-colors hover:border-cyan-300/60 hover:bg-white/10"
       >
         <Avatar name={firstName} />
-        <span className="max-w-[130px] truncate font-alice text-sm text-white/90">
+        {/* 90px di laptop sempit (1024–1279px), biar chip-nya nggak
+            nabrak menu di tengah. */}
+        <span className="max-w-[90px] truncate font-alice text-sm text-white/90 min-[1280px]:max-w-[130px]">
           {firstName}
         </span>
         <svg

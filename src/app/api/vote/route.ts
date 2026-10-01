@@ -7,7 +7,7 @@ export async function GET() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Belum login" }, { status: 401 });
+    return NextResponse.json({ error: "Anda belum masuk. Silakan masuk terlebih dahulu." }, { status: 401 });
   }
 
   const [teamsRes, votesRes, settingsRes] = await Promise.all([
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Belum login" }, { status: 401 });
+    return NextResponse.json({ error: "Anda belum masuk. Silakan masuk terlebih dahulu." }, { status: 401 });
   }
 
   // pastikan voting masih buka
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
   const { team_id } = await req.json();
   if (!team_id) {
     return NextResponse.json(
-      { error: "Tim yang dipilih tidak terbaca. Coba muat ulang halaman." },
+      { error: "Tim yang dipilih tidak terbaca. Silakan muat ulang halaman." },
       { status: 400 },
     );
   }
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     */
     console.error("[vote] gagal simpan:", error.message);
     return NextResponse.json(
-      { error: "Suaramu gagal tersimpan. Coba sekali lagi sebentar." },
+      { error: "Suara Anda gagal tersimpan. Silakan coba beberapa saat lagi." },
       { status: 500 },
     );
   }
