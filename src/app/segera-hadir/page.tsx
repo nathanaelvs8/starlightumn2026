@@ -1,4 +1,4 @@
-import Link from "next/link";
+
 import { TitleGlow } from "@/components/ui/TitleGlow";
 import { asset } from "@/lib/assets";
 
@@ -26,13 +26,6 @@ export default function SegeraHadirPage() {
         Website resmi Starlight UMN 2026 sedang dipersiapkan. Nantikan
         informasi selanjutnya melalui kanal resmi kami.
       </p>
-
-      <Link
-        href="/login"
-        className="mt-12 font-alice text-xs text-white/40 transition-colors hover:text-white/70"
-      >
-        Masuk panitia
-      </Link>
     </main>
   );
 }
