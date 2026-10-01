@@ -56,6 +56,14 @@ export function StageSeal({
   );
   const gaya = { width: size, ["--accent" as string]: stage.accent };
 
+  /**
+   * Panggung yang segelnya udah kebuka (`terbuka` di src/lib/stages.ts)
+   * pakai logo BERWARNA tanpa rantai & gembok, dan cincinnya nyala
+   * penuh. Sisanya logo kekunci yang abu-abu.
+   */
+  const terbuka = !!stage.terbuka;
+  const logo = terbuka ? asset.stages.logo(stage.slug) : asset.stages.logoLocked(stage.slug);
+
   const isi = (
     <>
       {/*
@@ -84,25 +92,32 @@ export function StageSeal({
         style={{ background: stage.accent }}
       />
 
+      {/* Cincinnya selalu putih (sihir langit), warna panggung cuma
+          dipakai buat kabut & glow logo pas disentuh. Yang udah kebuka
+          cincinnya nyala penuh; yang kekunci redup sampai disentuh. */}
       <SmallSeal
-        accent={stage.accent}
-        className="absolute inset-0 h-full w-full opacity-45 transition-opacity duration-500 group-hover:opacity-100 group-active:opacity-100"
+        className={clsx(
+          "absolute inset-0 h-full w-full transition-opacity duration-500 group-hover:opacity-100 group-active:opacity-100",
+          terbuka ? "opacity-90" : "opacity-45",
+        )}
       />
 
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={asset.stages.logoLocked(stage.slug)}
+        src={logo}
         alt=""
         draggable={false}
         loading={priority ? "eager" : "lazy"}
         className="relative w-[84%] transition-transform duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-[1.04] group-active:-translate-y-1.5 group-active:scale-[1.04]"
         style={{
-          /* Karya aslinya sengaja diredupin biar kerasa "mati". Di atas
-             latar segelap ini jadi kelewat tenggelam, jadi dinaikin
-             dikit — rantainya yang udah nyaris putih boleh saja mentok,
-             emang maunya berkilau. */
-          filter:
-            "brightness(1.3) contrast(1.12) drop-shadow(0 6px 22px rgba(0,0,0,0.55))",
+          /* Logo kekunci aslinya sengaja diredupin biar kerasa "mati".
+             Di atas latar segelap ini jadi kelewat tenggelam, jadi
+             dinaikin dikit — rantainya yang udah nyaris putih boleh saja
+             mentok, emang maunya berkilau. Logo berwarna (kebuka) udah
+             terang dari sananya, cukup bayangannya aja. */
+          filter: terbuka
+            ? "drop-shadow(0 6px 22px rgba(0,0,0,0.55))"
+            : "brightness(1.3) contrast(1.12) drop-shadow(0 6px 22px rgba(0,0,0,0.55))",
         }}
       />
 
@@ -111,7 +126,7 @@ export function StageSeal({
           keganti warna. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={asset.stages.logoLocked(stage.slug)}
+        src={logo}
         alt=""
         aria-hidden
         draggable={false}
@@ -150,7 +165,7 @@ export function StageSeal({
   return (
     <Link
       href={`/stages/${stage.slug}`}
-      aria-label={`Panggung ${stage.name} — belum dibuka`}
+      aria-label={terbuka ? `Panggung ${stage.name}` : `Panggung ${stage.name} — belum dibuka`}
       className={kelas}
       style={gaya}
     >

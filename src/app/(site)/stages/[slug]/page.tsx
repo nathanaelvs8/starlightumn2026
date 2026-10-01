@@ -18,9 +18,11 @@ import { stages, findStage, type Stage } from "@/lib/stages";
  * Di daftar /stages logonya kegembok; begitu masuk ke sini, segelnya
  * kebuka — logonya berwarna dan lingkaran sihirnya ikut nyala.
  *
- * Background-nya FIXED per panggung, sama kayak /stages dan /faq. Masih
- * numpang gambar divisi sampai aset khusus panggung dikirim (mapping-nya
- * ada di src/lib/stages.ts).
+ * Background-nya FIXED, sama kayak /stages dan /faq. Gambarnya langit
+ * aurora (asset.stages.bgDetail) — beda sama daftar /stages yang tetap
+ * pakai background lama. Diatur per panggung lewat `bg` di
+ * src/lib/stages.ts, jadi kalau nanti ada gambar khusus tinggal ganti di
+ * sana.
  */
 
 /** Bikin ketiga halaman jadi statis pas build — nggak ada query sama sekali. */
@@ -48,7 +50,16 @@ export default function StagePage({ params }: { params: { slug: string } }) {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${stage.bg}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-night/60" />
+      {/* Peredup: default tipis (25%) — background aurora-nya sengaja
+          yang berwarna, jangan ditutup lagi. Background yang terang
+          banget (Lonielle / Enchanted) pasang `redup` lebih tebal di
+          src/lib/stages.ts. Kartu & teksnya udah punya kaca gelap /
+          bayangan sendiri. */}
+      <div
+        aria-hidden
+        className="fixed inset-0 -z-10"
+        style={{ background: `rgb(var(--c-night-rgb) / ${(stage.redup ?? 25) / 100})` }}
+      />
 
       <Container className="pb-32 pt-8 sm:pb-40 sm:pt-12">
         <Hero stage={stage} />
@@ -60,7 +71,7 @@ export default function StagePage({ params }: { params: { slug: string } }) {
                 <h2>, sementara "Trailer <nama>" di bawah yang jadi <h1>,
                 jadi daftar heading-nya kebalik. Ukuran hurufnya nggak
                 berubah: semuanya dari className, bukan dari tag-nya. */}
-            <h1 className="mt-4 text-center font-display text-3xl text-white [text-shadow:0_0_18px_rgba(255,154,77,0.35)] sm:text-4xl">
+            <h1 className="mt-4 text-center font-display text-3xl text-white [text-shadow:0_0_18px_rgba(190,184,255,0.45)] sm:text-4xl">
               {stage.name}
             </h1>
             <div className="mt-6 flex flex-col gap-5">
@@ -105,7 +116,7 @@ export default function StagePage({ params }: { params: { slug: string } }) {
         {/* ---------- Moments ---------- */}
         <Reveal>
           <Panel className="mt-16 sm:mt-24">
-            <h2 className="text-center font-display text-3xl text-white [text-shadow:0_0_18px_rgba(255,154,77,0.35)] sm:text-4xl">
+            <h2 className="text-center font-display text-3xl text-white [text-shadow:0_0_18px_rgba(190,184,255,0.45)] sm:text-4xl">
               Moments
             </h2>
             <Moments foto={stage.moments} nama={stage.name} />
@@ -141,10 +152,10 @@ function Hero({ stage }: { stage: Stage }) {
         className="relative grid aspect-square place-items-center"
         style={{ width: "min(92vw, 720px)" }}
       >
-        {/* Lingkarannya sengaja api di semua panggung, bukan warna
-            panggungnya masing-masing — biar kerasa satu mantra yang
-            sama, cuma isinya yang beda. Warna panggung tetap kepakai
-            buat kabut di belakang logo & berlian di kartu. */}
+        {/* Lingkarannya sengaja putih (sihir langit) di semua panggung,
+            bukan warna panggungnya masing-masing — biar kerasa satu
+            mantra yang sama, cuma isinya yang beda. Warna panggung tetap
+            kepakai buat kabut di belakang logo & berlian di kartu. */}
         <MagicCircle className="absolute inset-0 h-full w-full opacity-75" />
         <span
           aria-hidden

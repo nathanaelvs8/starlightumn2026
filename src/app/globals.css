@@ -16,7 +16,11 @@
 
 @layer base {
   body {
-    background: var(--c-page);
+    /* Biru malam, bukan --c-page (putih, sisa wireframe). Semua halaman
+       punya background gelap sendiri, jadi warna ini cuma kelihatan
+       kalau ada yang bolong — mis. efek mantul pas scroll mentok di
+       iPhone. Lebih baik bolongnya kelihatan gelap daripada putih. */
+    background: var(--c-night);
     color: var(--c-ink);
     font-family: var(--f-body);
     -webkit-font-smoothing: antialiased;
@@ -103,6 +107,22 @@
     letter-spacing: var(--text-tracking);
     text-align: center;
     text-wrap: pretty;
+    /* Dipasang di paragrafnya (bukan di .star-face) supaya bayangannya
+       ngelilingin kedua lapisan sekaligus — lapisan putih timbulnya
+       tetap kelihatan, nggak ketutup. */
+    filter: var(--halo-text);
+  }
+
+  /*
+   * Di HP barisnya sempit. Jarak huruf 0.08em bikin tiap baris cuma
+   * muat 4-5 kata, paragrafnya jadi tinggi banget dan kerasa numpuk.
+   * Dirapetin dikit + jarak baris dilonggarin, isinya nggak berubah.
+   */
+  @media (max-width: 639px) {
+    .prose-starlight {
+      letter-spacing: var(--text-tracking-hp);
+      line-height: 1.75;
+    }
   }
 
   /* Bar abu-abu pengganti teks yang belum ada */
@@ -338,73 +358,153 @@
     animation-iteration-count: infinite;
   }
 
+  /* Awan dekor homepage (Awan.tsx): hanyut pelan kiri-kanan, bolak-balik.
+     Jaraknya lewat --geser biar awan kiri & kanan bisa beda arah. */
+  @keyframes awan-hanyut {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(var(--geser, 22px));
+    }
+  }
+
+  .awan-hanyut {
+    animation-name: awan-hanyut;
+    animation-duration: 20s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+  }
+
   /**
    * Lingkaran sihir (MagicCircle.tsx).
    *
-   * transform-origin ditulis dalam satuan viewBox (200 200 = pusat),
-   * dan transform-box: view-box bikin browser ngartiin angka itu di
-   * sistem koordinat SVG-nya. Tanpa itu, <g> yang isinya busur
-   * setengah lingkaran bakal muter ngelilingi titik tengah KOTAK
-   * ISINYA sendiri, bukan pusat lingkaran — hasilnya goyang, bukan
-   * muter di tempat.
+   * Yang diputer itu <div> pembungkus tiap cincin, BUKAN <g> di dalam
+   * svg. Div yang `will-change: transform` jadi lapisan sendiri: cincin
+   * + glow-nya digambar sekali, terus lapisannya diputer utuh di GPU.
+   * Kalau yang diputer <g> di dalam svg, browser ngegambar ulang
+   * seluruh svg (plus filter glow-nya) tiap frame — itu yang dulu bikin
+   * /stages patah-patah.
    */
-  .seal-spin,
-  .seal-spin-rev {
-    transform-box: view-box;
-    transform-origin: 200px 200px;
+  .sihir-putar,
+  .sihir-putar-balik {
+    transform-origin: 50% 50%;
     animation-iteration-count: infinite;
     animation-timing-function: linear;
     will-change: transform;
   }
 
-  .seal-spin {
-    animation-name: seal-spin;
+  .sihir-putar {
+    animation-name: sihir-putar;
   }
-  .seal-spin-rev {
-    animation-name: seal-spin-rev;
+  .sihir-putar-balik {
+    animation-name: sihir-putar-balik;
   }
 
-  @keyframes seal-spin {
+  @keyframes sihir-putar {
     to {
       transform: rotate(360deg);
     }
   }
-  @keyframes seal-spin-rev {
+  @keyframes sihir-putar-balik {
     to {
       transform: rotate(-360deg);
     }
   }
 
   /**
-   * Kedipan bara.
+   * Rasi bintang /stages (RasiLangit.tsx).
    *
-   * Titik-titiknya sengaja NGGAK rata (0 / 17 / 41 / 58 / 79 / 100) dan
-   * durasinya bilangan ganjil, biar polanya nggak ketebak. Kalau
-   * naik-turunnya rapi, hasilnya kerasa kayak lampu rusak — bukan api.
+   * Tiap rasi punya data-fase yang diganti timer di RasiLangit.tsx:
+   *   gambar   garis digores + bintang muncul — animasi SEKALI jalan
+   *   utuh     semua tampil, DIAM (nggak ada animasi yang jalan)
+   *   pudar    pembungkusnya pudar
+   *   (kosong) nggak kelihatan
+   *
+   * Sengaja bukan animasi `infinite`: ±100 animasi yang jalan terus
+   * (walaupun cuma opacity/transform) tetap makan ±10% main thread.
+   * Animasi yang udah kelar (fill forwards) nggak dicicil lagi.
    */
-  @keyframes seal-ember {
-    0% {
-      opacity: 0.88;
+
+  /* Lapisan semua rasi. Paling terang segini aja — rasinya bagian dari
+     background, bukan hiasan yang minta dilihat. Mau lebih samar/jelas,
+     ubah di sini. */
+  .rasi-langit {
+    opacity: 0.55;
+  }
+
+  .rasi {
+    opacity: 0;
+  }
+  .rasi[data-fase="gambar"] {
+    animation: rasi-masuk 0.8s ease-out forwards;
+  }
+  .rasi[data-fase="utuh"] {
+    opacity: 1;
+  }
+  .rasi[data-fase="pudar"] {
+    animation: rasi-keluar 2.4s ease-in forwards;
+  }
+  @keyframes rasi-masuk {
+    from {
+      opacity: 0;
     }
-    17% {
+    to {
       opacity: 1;
     }
-    41% {
-      opacity: 0.8;
+  }
+  @keyframes rasi-keluar {
+    from {
+      opacity: 1;
     }
-    58% {
-      opacity: 0.97;
-    }
-    79% {
-      opacity: 0.85;
-    }
-    100% {
-      opacity: 0.88;
+    to {
+      opacity: 0;
     }
   }
 
-  .seal-ember {
-    animation: seal-ember 6.7s ease-in-out infinite;
+  /*
+   * Garis digores (scaleX 0 → 1 dari pangkalnya) & bintang pop.
+   *
+   * Nama keyframes-nya beda-beda per elemen (--anim, dibikin di
+   * RasiLangit.tsx): jeda gilirannya DITANAM di dalam keyframes, bukan
+   * pakai animation-delay — delay bikin main thread ngecek tiap frame
+   * (diukur: ±2x lebih berat). Makanya semua durasinya sama, 3.6s =
+   * LAMA_GAMBAR di RasiLangit.tsx.
+   */
+  .rasi-gores {
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+  .rasi-bintang {
+    opacity: 0;
+    transform-origin: center;
+  }
+  .rasi[data-fase="gambar"] .rasi-gores,
+  .rasi[data-fase="gambar"] .rasi-bintang {
+    animation: var(--anim) 3.6s linear both;
+  }
+  .rasi[data-fase="utuh"] .rasi-gores,
+  .rasi[data-fase="pudar"] .rasi-gores {
+    transform: none;
+  }
+  .rasi[data-fase="utuh"] .rasi-bintang,
+  .rasi[data-fase="pudar"] .rasi-bintang {
+    opacity: 1;
+  }
+
+  /* Napas pelan lingkaran sihir: terang-redup halus, bukan kedip api. */
+  @keyframes sihir-napas {
+    from {
+      opacity: 0.8;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .sihir-napas {
+    animation: sihir-napas 7s ease-in-out infinite alternate;
   }
 
   /* Titik cahaya di sudut segitiga — napas pelan. */

@@ -50,13 +50,18 @@ export function Footer() {
         className="relative z-10 bg-footer bg-cover bg-bottom bg-no-repeat text-footer-ink lg:bg-[length:100%_auto]"
         style={{ backgroundImage: `url("${asset.shared.footerBg}")` }}
       >
-                <Container className="flex flex-col items-center py-32 text-center font-alice sm:py-16">
-          {/* Logo — hover-pop dipasang di Asset-nya, bukan di pembungkus */}
+        {/* pt-32 di HP buat ngasih ruang ornamen sulur di atas footer
+            (di HP dia 165% lebar layar, jadi lebih tinggi). Bawahnya
+            cukup pb-16 — dulu 32 juga, sisa ruang kosongnya kegedean. */}
+        <Container className="flex flex-col items-center pb-16 pt-32 text-center font-alice sm:py-16">
+          {/* Logo — hover-pop dipasang di Asset-nya, bukan di pembungkus.
+              140px di HP, 220px dari sm: dulu 220px di semua layar, jadi
+              di HP 390px logonya makan lebih dari setengah lebar layar. */}
           <Asset
             src={asset.logo.footer}
             alt="Starlight UMN 2026"
-            size="sm"
-            className="hover-pop"
+            size="xs"
+            className="hover-pop sm:max-w-[220px]"
           />
 
           {/* Tagline — teks, pakai font paragraf (Alice) */}

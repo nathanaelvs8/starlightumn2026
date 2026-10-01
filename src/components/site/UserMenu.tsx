@@ -2,6 +2,22 @@
 
 import { useState } from "react";
 
+/**
+ * Bulatan inisial akun. Dipakai di chip akun (desktop) DAN di navbar +
+ * menu HP, biar tanda "udah login"-nya sama di semua layar.
+ */
+export function Avatar({ name, className }: { name: string; className?: string }) {
+  const inisial = name.trim().charAt(0).toUpperCase() || "?";
+  return (
+    <span
+      aria-hidden
+      className={`grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-cyan-300 to-blue-500 font-alice text-sm font-bold text-night shadow-[0_0_12px_rgba(120,190,255,0.5)] ${className ?? ""}`}
+    >
+      {inisial}
+    </span>
+  );
+}
+
 export function UserMenu({
   name,
   onLogout,
@@ -21,9 +37,7 @@ export function UserMenu({
         aria-expanded={open}
         className="flex items-center gap-2.5 rounded-pill border border-cyan-300/30 bg-white/5 py-1.5 pl-1.5 pr-4 backdrop-blur transition-colors hover:border-cyan-300/60 hover:bg-white/10"
       >
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-cyan-300 to-blue-500 font-alice text-sm font-bold text-night shadow-[0_0_12px_rgba(120,190,255,0.5)]">
-          {firstName.charAt(0).toUpperCase()}
-        </span>
+        <Avatar name={firstName} />
         <span className="max-w-[130px] truncate font-alice text-sm text-white/90">
           {firstName}
         </span>

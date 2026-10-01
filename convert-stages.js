@@ -9,7 +9,15 @@
  *      kebuka, biar ukurannya ketebak dan filenya ringan.
  *   2. Gold frame — diputar 90° jadi mendatar, terus diregangin 8% ke
  *      bawah supaya lubang tengahnya pas 16:9 (aslinya 1.92:1).
- *   3. Background halaman stages — dikecilin dari 4961px.
+ *   3. Background halaman daftar /stages — dikecilin dari 4961px.
+ *   4. Background halaman satu panggung (/stages/<slug>) —
+ *      "Background panjang.png" (panorama 4926x1749, langit aurora yang
+ *      lebih berwarna & terang). Dikecilin berdasarkan TINGGI, bukan
+ *      lebar: dipasang `cover` di layar yang jauh lebih "kotak" dari
+ *      gambarnya, jadi yang nentuin tajam-nggak itu tingginya. 1400px
+ *      masih tajam sampai layar 1440p.
+ *
+ * `node convert-stages.js aurora` = cuma nomor 4.
  */
 
 const sharp = require("sharp");
@@ -91,7 +99,18 @@ async function frame() {
   );
 }
 
+/** Background halaman satu panggung (langit aurora). */
+async function aurora() {
+  await sharp(SRC + "Background panjang.png")
+    .resize({ height: 1400, withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toFile(OUT + "bg-aurora.webp");
+  console.log("bg-aurora.webp           tinggi 1749px → 1400px");
+}
+
 async function main() {
+  if (process.argv[2] === "aurora") return aurora();
+
   await require("fs/promises").mkdir(OUT, { recursive: true });
 
   // Kebuka (berwarna) — dipakai di halaman stage-nya.
@@ -111,6 +130,8 @@ async function main() {
     .webp({ quality: 80 })
     .toFile(OUT + "bg.webp");
   console.log("bg.webp                  4961px → 2400px");
+
+  await aurora();
 }
 
 main().catch((e) => {

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Asset } from "@/components/ui/Asset";
 import { Container } from "@/components/ui/Container";
-import { UserMenu } from "./UserMenu";
+import { Avatar, UserMenu } from "./UserMenu";
 import { asset } from "@/lib/assets";
 import clsx from "@/lib/clsx";
 
@@ -92,6 +92,24 @@ export function NavbarClient({
             </div>
           )}
 
+          {/* HP: tanda udah login — avatar inisial di sebelah hamburger.
+              Chip akun yang lengkap (nama + panah) cuma muat di layar
+              lebar; tanpa ini, di HP nggak ada tanda sama sekali kalau
+              orangnya udah masuk. Diketuk = buka menu (isinya ada nama
+              akun & Logout). */}
+          {loggedIn && name && (
+            <button
+              type="button"
+              onClick={() => setOpen((o) => !o)}
+              aria-expanded={open}
+              aria-controls="menu-mobile"
+              aria-label={`Akun: ${name}`}
+              className="absolute right-14 grid h-11 w-11 place-items-center rounded-full lg:hidden"
+            >
+              <Avatar name={name} />
+            </button>
+          )}
+
           {/* Tombol hamburger */}
           <button
             type="button"
@@ -99,7 +117,7 @@ export function NavbarClient({
             aria-expanded={open}
             aria-controls="menu-mobile"
             aria-label={open ? "Tutup menu" : "Buka menu"}
-            className="absolute right-0 grid h-11 w-11 place-items-center rounded-pill border border-white/30 text-white transition-colors hover:bg-white/10 lg:hidden"
+            className="absolute right-0 grid h-11 w-11 place-items-center rounded-pill border border-white/30 text-white transition-colors lg:hidden [@media(hover:hover)]:hover:bg-white/10"
           >
             <span aria-hidden className="relative block h-3.5 w-5">
               <span
@@ -125,18 +143,54 @@ export function NavbarClient({
         </nav>
       </Container>
 
-      {/* Panel mobile */}
-      <Container className="lg:hidden">
+      {/*
+        Panel mobile — MELAYANG (absolute) di bawah navbar, bukan ikut
+        alur halaman.
+
+        Dulu dia ikut alur di dalam header yang sticky: pas kebuka, tinggi
+        header nambah ±400px dan SELURUH halaman kedorong ke bawah. Ruang
+        kosong di atasnya nunjukin warna dasar body (putih), jadi menu &
+        navbar yang tembus pandang kelihatan abu-abu di atas putih.
+
+        px-3 sm:px-5 = padding header-nya, biar posisi & lebar panelnya
+        sama persis kayak sebelumnya.
+      */}
+      <div className="absolute inset-x-0 top-full px-3 sm:px-5 lg:hidden">
+      <Container>
         <div
           id="menu-mobile"
           className={clsx(
             "mt-2 overflow-hidden rounded-lg border bg-black/40 backdrop-blur transition-all duration-300 ease-out",
             open
-              ? "max-h-[480px] border-white/20 opacity-100"
+              ? "max-h-[560px] border-white/20 opacity-100"
               : "pointer-events-none max-h-0 border-transparent opacity-0",
           )}
         >
+          {/*
+            Efek hover di menu HP pakai [@media(hover:hover)] — cuma
+            nyala di perangkat yang beneran punya mouse. Di layar sentuh
+            `hover:` itu "nyangkut" setelah diketuk: item yang terakhir
+            disentuh tetap kesorot, jadi kelihatan ada DUA item aktif.
+          */}
           <ul className="flex flex-col gap-1 p-2">
+            {/* Akun yang lagi masuk — pengganti chip akun desktop. */}
+            {loggedIn && name && (
+              <li
+                className={clsx(
+                  "mb-1 flex items-center gap-3 border-b border-white/10 px-4 pb-3 pt-2 transition-all duration-300",
+                  open ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0",
+                )}
+              >
+                <Avatar name={name} />
+                <div className="min-w-0">
+                  <p className="font-alice text-[11px] uppercase tracking-[0.2em] text-white/55">
+                    Masuk sebagai
+                  </p>
+                  <p className="truncate font-alice text-base text-white">{name}</p>
+                </div>
+              </li>
+            )}
+
             {withVote.map((item, i) => (
               <li key={item.href}>
                 <Link
@@ -147,10 +201,10 @@ export function NavbarClient({
                     "block rounded-md px-4 py-3 font-alice text-lg uppercase tracking-wide transition-all duration-300",
                     isActive(item.href)
                       ? "bg-white/15 text-white"
-                      : "text-white/75 hover:bg-white/10 hover:text-white",
+                      : "text-white/75 [@media(hover:hover)]:hover:bg-white/10 [@media(hover:hover)]:hover:text-white",
                     open ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0",
                   )}
-                  style={{ transitionDelay: open ? `${i * 45}ms` : "0ms" }}
+                  style={{ transitionDelay: open ? `${(i + 1) * 45}ms` : "0ms" }}
                 >
                   {item.label}
                 </Link>
@@ -163,7 +217,7 @@ export function NavbarClient({
                 <button
                   type="button"
                   onClick={() => setKonfirmLogout(true)}
-                  className="block w-full rounded-md px-4 py-3 text-left font-alice text-lg uppercase tracking-wide text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                  className="block w-full rounded-md px-4 py-3 text-left font-alice text-lg uppercase tracking-wide text-red-400 transition-colors [@media(hover:hover)]:hover:bg-red-500/10 [@media(hover:hover)]:hover:text-red-300"
                 >
                   Logout
                 </button>
@@ -171,7 +225,7 @@ export function NavbarClient({
                 <Link
                   href="/login"
                   onClick={() => setOpen(false)}
-                  className="block rounded-md px-4 py-3 font-alice text-lg uppercase tracking-wide text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+                  className="block rounded-md px-4 py-3 font-alice text-lg uppercase tracking-wide text-white/75 transition-colors [@media(hover:hover)]:hover:bg-white/10 [@media(hover:hover)]:hover:text-white"
                 >
                   Login
                 </Link>
@@ -180,6 +234,7 @@ export function NavbarClient({
           </ul>
         </div>
       </Container>
+      </div>
 
             {/* Modal konfirmasi logout */}
       {konfirmLogout && (
