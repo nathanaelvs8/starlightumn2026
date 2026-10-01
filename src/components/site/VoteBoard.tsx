@@ -69,18 +69,18 @@ export function VoteBoard() {
         const d = await res.json().catch(() => ({}));
         setKabar({
           tipe: "galat",
-          teks: d.error ?? "Suaramu gagal tersimpan. Coba sekali lagi.",
+          teks: d.error ?? "Suara Anda gagal tersimpan. Silakan coba lagi.",
         });
         setSaving(null);
         return;
       }
 
       await muat();
-      setKabar({ tipe: "ok", teks: `Suaramu untuk ${nama} sudah tercatat.` });
+      setKabar({ tipe: "ok", teks: `Suara Anda untuk ${nama} telah tercatat.` });
     } catch {
       setKabar({
         tipe: "galat",
-        teks: "Koneksi terputus. Cek jaringanmu, lalu coba lagi.",
+        teks: "Koneksi terputus. Periksa jaringan Anda, lalu coba lagi.",
       });
     } finally {
       setSaving(null);
@@ -102,9 +102,6 @@ export function VoteBoard() {
         <TitleGlow className="text-center text-4xl sm:text-5xl">
           Voting Selesai
         </TitleGlow>
-        <p className="mt-3 text-center font-alice text-white/70">
-          Terima kasih atas partisipasi Anda. Berikut hasil akhir voting.
-        </p>
 
         <div className="mx-auto mt-10 max-w-2xl space-y-3">
           {urut.map((t, i) => {
@@ -131,7 +128,7 @@ export function VoteBoard() {
                   />
                 ) : (
                   <div className="grid h-14 w-14 place-items-center rounded-lg bg-white/10 font-alice text-xs text-white/40">
-                    No foto
+                    Tanpa foto
                   </div>
                 )}
                 <p className="flex-1 font-alice text-white">
@@ -143,14 +140,14 @@ export function VoteBoard() {
                   )}
                 </p>
                 <span className="font-alice text-sm text-cyan-200/80">
-                  {t.vote_count} vote
+                  {t.vote_count} suara
                 </span>
               </div>
             );
           })}
           {urut.length === 0 && (
             <p className="text-center font-alice text-white/50">
-              Nggak ada tim.
+              Belum ada tim.
             </p>
           )}
         </div>
@@ -229,7 +226,7 @@ export function VoteBoard() {
                 />
               ) : (
                 <div className="grid aspect-video w-full place-items-center bg-white/10 font-alice text-sm text-white/40">
-                  No foto
+                  Tanpa foto
                 </div>
               )}
 
@@ -237,7 +234,7 @@ export function VoteBoard() {
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-alice text-white">{t.name}</p>
                   <span className="font-alice text-sm text-cyan-200/80">
-                    {t.vote_count} vote
+                    {t.vote_count} suara
                   </span>
                 </div>
 
@@ -252,7 +249,7 @@ export function VoteBoard() {
                   }`}
                 >
                   {dipilih
-                    ? "✓ Pilihanmu"
+                    ? "✓ Pilihan Anda"
                     : saving === t.id
                       ? "Menyimpan…"
                       : "Pilih tim ini"}

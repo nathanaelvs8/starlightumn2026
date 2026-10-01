@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Container } from "@/components/ui/Container";
 import { TitleGlow } from "@/components/ui/TitleGlow";
 import { AdminUsers } from "@/components/site/AdminUsers";
+import { AdminRegistrasi } from "@/components/site/AdminRegistrasi";
 import { asset } from "@/lib/assets";
 import Link from "next/link";
 
@@ -38,7 +39,7 @@ export default async function AdminPage() {
           Admin
         </TitleGlow>
         <p className="mt-3 text-center font-alice text-white/70">
-          Daftar user terdaftar
+          Pengelolaan konten dan data Starlight UMN 2026
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -54,7 +55,14 @@ export default async function AdminPage() {
           </Link>
         </div>
 
+        <div className="mx-auto mt-10 max-w-3xl">
+          <AdminRegistrasi />
+        </div>
+
         <div className="mt-10">
+          <h2 className="mb-4 text-center font-alice text-sm uppercase tracking-[0.12em] text-cyan-200/80">
+            Pengguna Terdaftar
+          </h2>
           <AdminUsers />
         </div>
       </Container>

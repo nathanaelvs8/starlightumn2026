@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { SmallSeal } from "./MagicCircle";
 import { asset } from "@/lib/assets";
-import type { Stage } from "@/lib/stages";
+import { tanggalPanggung, type Stage } from "@/lib/stages";
 import clsx from "@/lib/clsx";
 
 /**
@@ -43,15 +43,33 @@ export function StageSeal({
    * tautan itu HTML nggak sah dan bikin tap target-nya rebutan.
    */
   tanpaLink,
+  admin,
 }: {
   stage: Stage;
   size: string;
   className?: string;
   priority?: boolean;
   tanpaLink?: boolean;
+  /**
+   * Yang buka halaman admin? Panggung yang masih disegel cuma bisa
+   * diklik admin (buat ngecek isinya sebelum dibuka). Buat pengunjung
+   * lain segelnya diem — bukan tautan, nggak ada efek sentuh.
+   */
+  admin?: boolean;
 }) {
+  /**
+   * Panggung yang segelnya udah kebuka (`terbuka` di src/lib/stages.ts)
+   * pakai logo BERWARNA tanpa rantai & gembok, dan cincinnya nyala
+   * penuh. Sisanya logo kekunci yang abu-abu.
+   */
+  const terbuka = !!stage.terbuka;
+  const bisaDibuka = terbuka || !!admin;
+  const logo = terbuka ? asset.stages.logo(stage.slug) : asset.stages.logoLocked(stage.slug);
+
   const kelas = clsx(
-    "group relative grid aspect-square place-items-center outline-offset-8",
+    "relative grid aspect-square place-items-center outline-offset-8",
+    /* Tanpa `group`, semua efek group-hover/active di bawah mati sendiri. */
+    bisaDibuka && "group",
     className,
   );
   const gaya = { width: size, ["--accent" as string]: stage.accent };
@@ -84,25 +102,32 @@ export function StageSeal({
         style={{ background: stage.accent }}
       />
 
+      {/* Cincinnya selalu putih (sihir langit), warna panggung cuma
+          dipakai buat kabut & glow logo pas disentuh. Yang udah kebuka
+          cincinnya nyala penuh; yang kekunci redup sampai disentuh. */}
       <SmallSeal
-        accent={stage.accent}
-        className="absolute inset-0 h-full w-full opacity-45 transition-opacity duration-500 group-hover:opacity-100 group-active:opacity-100"
+        className={clsx(
+          "absolute inset-0 h-full w-full transition-opacity duration-500 group-hover:opacity-100 group-active:opacity-100",
+          terbuka ? "opacity-90" : "opacity-45",
+        )}
       />
 
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={asset.stages.logoLocked(stage.slug)}
+        src={logo}
         alt=""
         draggable={false}
         loading={priority ? "eager" : "lazy"}
         className="relative w-[84%] transition-transform duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-[1.04] group-active:-translate-y-1.5 group-active:scale-[1.04]"
         style={{
-          /* Karya aslinya sengaja diredupin biar kerasa "mati". Di atas
-             latar segelap ini jadi kelewat tenggelam, jadi dinaikin
-             dikit — rantainya yang udah nyaris putih boleh saja mentok,
-             emang maunya berkilau. */
-          filter:
-            "brightness(1.3) contrast(1.12) drop-shadow(0 6px 22px rgba(0,0,0,0.55))",
+          /* Logo kekunci aslinya sengaja diredupin biar kerasa "mati".
+             Di atas latar segelap ini jadi kelewat tenggelam, jadi
+             dinaikin dikit — rantainya yang udah nyaris putih boleh saja
+             mentok, emang maunya berkilau. Logo berwarna (kebuka) udah
+             terang dari sananya, cukup bayangannya aja. */
+          filter: terbuka
+            ? "drop-shadow(0 6px 22px rgba(0,0,0,0.55))"
+            : "brightness(1.3) contrast(1.12) drop-shadow(0 6px 22px rgba(0,0,0,0.55))",
         }}
       />
 
@@ -111,7 +136,7 @@ export function StageSeal({
           keganti warna. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={asset.stages.logoLocked(stage.slug)}
+        src={logo}
         alt=""
         aria-hidden
         draggable={false}
@@ -129,12 +154,21 @@ export function StageSeal({
           sebelah segel sebagai teks beneran, jadi kalau dipasang lagi
           di sini malah ketumpuk. */}
       {!tanpaLink && (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute bottom-[16%] font-alice text-xs uppercase tracking-[0.25em] text-white/0 transition-all duration-500 group-hover:text-white/75"
-        >
-          Lihat Panggung
-        </span>
+        <>
+          {/* Tanggal panggungnya, di tempat yang sama — gantian sama
+              petunjuknya: tanggal pas diam, "Lihat Panggung" pas disentuh. */}
+          <span className="pointer-events-none absolute bottom-[16%] font-alice text-xs uppercase tracking-[0.25em] text-emas/90 transition-opacity duration-500 group-hover:opacity-0">
+            {tanggalPanggung(stage)}
+          </span>
+          {bisaDibuka && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute bottom-[16%] font-alice text-xs uppercase tracking-[0.25em] text-white/0 transition-all duration-500 group-hover:text-white/75"
+            >
+              {terbuka ? "Lihat Panggung" : "Pratinjau Admin"}
+            </span>
+          )}
+        </>
       )}
     </>
   );
@@ -147,10 +181,20 @@ export function StageSeal({
     );
   }
 
+  /* Masih disegel & bukan admin: cuma gambar, bukan tautan. */
+  if (!bisaDibuka) {
+    return (
+      <div className={kelas} style={gaya}>
+        <span className="sr-only">{`Panggung ${stage.name} — belum dibuka`}</span>
+        {isi}
+      </div>
+    );
+  }
+
   return (
     <Link
       href={`/stages/${stage.slug}`}
-      aria-label={`Panggung ${stage.name} — belum dibuka`}
+      aria-label={`Panggung ${stage.name}, ${tanggalPanggung(stage)}${terbuka ? "" : " — belum dibuka"}`}
       className={kelas}
       style={gaya}
     >

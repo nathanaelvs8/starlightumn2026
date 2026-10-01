@@ -39,6 +39,12 @@ import clsx from "@/lib/clsx";
  *
  * === `flipX` ===
  * Balik gambar background mendatar. Isi nggak ikut kebalik.
+ *
+ * === Tanpa `bg` ===
+ * Band-nya TEMBUS PANDANG, jadi background pembungkusnya yang kelihatan.
+ * Homepage pakai ini: satu langit dipasang di pembungkus semua band,
+ * biar nggak ada garis sambungan di perbatasan band. Warna dasar
+ * `bg-band` cuma dipasang kalau band-nya punya gambar sendiri.
  */
 export function Band({
   bg,
@@ -81,7 +87,8 @@ export function Band({
     */
     <section
       className={clsx(
-        "relative grid grid-cols-[minmax(0,1fr)] overflow-hidden bg-band",
+        "relative grid grid-cols-[minmax(0,1fr)] overflow-hidden",
+        bg && "bg-band",
         className,
       )}
     >

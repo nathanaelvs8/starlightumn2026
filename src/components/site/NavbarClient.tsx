@@ -5,16 +5,23 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Asset } from "@/components/ui/Asset";
 import { Container } from "@/components/ui/Container";
-import { UserMenu } from "./UserMenu";
+import { Avatar, UserMenu } from "./UserMenu";
 import { asset } from "@/lib/assets";
 import clsx from "@/lib/clsx";
 
-/** Menu utama. Vote disisipin pas login, Login/UserMenu di bawah. */
+/**
+ * Menu utama. Login/UserMenu di bawah.
+ *
+ * Vote SELALU tampil. Dulu cuma muncul setelah login, jadi pengunjung
+ * nggak pernah tau ada voting — apalagi tau kalau harus login dulu.
+ * Sekarang yang belum login dikasih penjelasan + tombol Masuk di /vote.
+ */
 const MENU_BASE = [
   { href: "/", label: "Home" },
   { href: "/division", label: "Division" },
   { href: "/stages", label: "Stages" },
   { href: "/mini-gerda", label: "Mini Gerda" },
+  { href: "/vote", label: "Vote" },
   { href: "/faq", label: "FAQ" },
 ];
 
@@ -34,17 +41,8 @@ export function NavbarClient({
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-    // Vote disisipin antara Mini Gerda dan FAQ, cuma kalau udah login.
-  const withVote = loggedIn
-    ? [
-        ...MENU_BASE.slice(0, 4), // Home, Division, Stages, Mini Gerda
-        { href: "/vote", label: "Vote" },
-        ...MENU_BASE.slice(4), // FAQ
-      ]
-    : MENU_BASE;
-
   // Kalau belum login, Login ikut jadi item menu di tengah.
-  const menu = loggedIn ? withVote : [...withVote, { href: "/login", label: "Login" }];
+  const menu = loggedIn ? MENU_BASE : [...MENU_BASE, { href: "/login", label: "Login" }];
 
   return (
     <header className="sticky top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
@@ -60,19 +58,26 @@ export function NavbarClient({
               src={asset.logo.nav}
               alt="Starlight UMN 2026"
               draggable={false}
-              className="w-[78px] sm:w-[110px] lg:w-[150px]"
+              /* Di HP dulu 78px — pas setinggi navbar, tulisan "Starlight"-
+                 nya jadi kecil banget. Sekarang sedikit nongol keluar
+                 pil navbar, sama kayak versi laptop (150px di navbar 76px). */
+              className="w-[96px] sm:w-[120px] lg:w-[150px]"
             />
           </Link>
 
-          {/* Menu desktop */}
-          <ul className="hidden items-center gap-8 lg:flex xl:gap-11">
+          {/* Menu desktop.
+              Ukurannya naik bertahap: sejak Vote selalu tampil (7 item
+              pas belum login), di 1024px menunya nabrak logo dan di
+              1280px nempel. Dari 1366px ke atas ukurannya sama kayak
+              dulu. */}
+          <ul className="hidden items-center gap-5 lg:flex min-[1280px]:gap-8 min-[1366px]:gap-11">
             {menu.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
                   aria-current={isActive(item.href) ? "page" : undefined}
                   className={clsx(
-                    "nav-link font-alice text-xl uppercase tracking-wide xl:text-2xl",
+                    "nav-link font-alice text-lg uppercase tracking-wide min-[1280px]:text-xl min-[1366px]:text-2xl",
                     isActive(item.href)
                       ? "text-white"
                       : "text-white/70 hover:text-white",
@@ -92,6 +97,24 @@ export function NavbarClient({
             </div>
           )}
 
+          {/* HP: tanda udah login — avatar inisial di sebelah hamburger.
+              Chip akun yang lengkap (nama + panah) cuma muat di layar
+              lebar; tanpa ini, di HP nggak ada tanda sama sekali kalau
+              orangnya udah masuk. Diketuk = buka menu (isinya ada nama
+              akun & Logout). */}
+          {loggedIn && name && (
+            <button
+              type="button"
+              onClick={() => setOpen((o) => !o)}
+              aria-expanded={open}
+              aria-controls="menu-mobile"
+              aria-label={`Akun: ${name}`}
+              className="absolute right-14 grid h-11 w-11 place-items-center rounded-full lg:hidden"
+            >
+              <Avatar name={name} />
+            </button>
+          )}
+
           {/* Tombol hamburger */}
           <button
             type="button"
@@ -99,7 +122,7 @@ export function NavbarClient({
             aria-expanded={open}
             aria-controls="menu-mobile"
             aria-label={open ? "Tutup menu" : "Buka menu"}
-            className="absolute right-0 grid h-11 w-11 place-items-center rounded-pill border border-white/30 text-white transition-colors hover:bg-white/10 lg:hidden"
+            className="absolute right-0 grid h-11 w-11 place-items-center rounded-pill border border-white/30 text-white transition-colors lg:hidden [@media(hover:hover)]:hover:bg-white/10"
           >
             <span aria-hidden className="relative block h-3.5 w-5">
               <span
@@ -125,19 +148,55 @@ export function NavbarClient({
         </nav>
       </Container>
 
-      {/* Panel mobile */}
-      <Container className="lg:hidden">
+      {/*
+        Panel mobile — MELAYANG (absolute) di bawah navbar, bukan ikut
+        alur halaman.
+
+        Dulu dia ikut alur di dalam header yang sticky: pas kebuka, tinggi
+        header nambah ±400px dan SELURUH halaman kedorong ke bawah. Ruang
+        kosong di atasnya nunjukin warna dasar body (putih), jadi menu &
+        navbar yang tembus pandang kelihatan abu-abu di atas putih.
+
+        px-3 sm:px-5 = padding header-nya, biar posisi & lebar panelnya
+        sama persis kayak sebelumnya.
+      */}
+      <div className="absolute inset-x-0 top-full px-3 sm:px-5 lg:hidden">
+      <Container>
         <div
           id="menu-mobile"
           className={clsx(
             "mt-2 overflow-hidden rounded-lg border bg-black/40 backdrop-blur transition-all duration-300 ease-out",
             open
-              ? "max-h-[480px] border-white/20 opacity-100"
+              ? "max-h-[560px] border-white/20 opacity-100"
               : "pointer-events-none max-h-0 border-transparent opacity-0",
           )}
         >
+          {/*
+            Efek hover di menu HP pakai [@media(hover:hover)] — cuma
+            nyala di perangkat yang beneran punya mouse. Di layar sentuh
+            `hover:` itu "nyangkut" setelah diketuk: item yang terakhir
+            disentuh tetap kesorot, jadi kelihatan ada DUA item aktif.
+          */}
           <ul className="flex flex-col gap-1 p-2">
-            {withVote.map((item, i) => (
+            {/* Akun yang lagi masuk — pengganti chip akun desktop. */}
+            {loggedIn && name && (
+              <li
+                className={clsx(
+                  "mb-1 flex items-center gap-3 border-b border-white/10 px-4 pb-3 pt-2 transition-all duration-300",
+                  open ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0",
+                )}
+              >
+                <Avatar name={name} />
+                <div className="min-w-0">
+                  <p className="font-alice text-[11px] uppercase tracking-[0.2em] text-white/55">
+                    Masuk sebagai
+                  </p>
+                  <p className="truncate font-alice text-base text-white">{name}</p>
+                </div>
+              </li>
+            )}
+
+            {MENU_BASE.map((item, i) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
@@ -147,10 +206,10 @@ export function NavbarClient({
                     "block rounded-md px-4 py-3 font-alice text-lg uppercase tracking-wide transition-all duration-300",
                     isActive(item.href)
                       ? "bg-white/15 text-white"
-                      : "text-white/75 hover:bg-white/10 hover:text-white",
+                      : "text-white/75 [@media(hover:hover)]:hover:bg-white/10 [@media(hover:hover)]:hover:text-white",
                     open ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0",
                   )}
-                  style={{ transitionDelay: open ? `${i * 45}ms` : "0ms" }}
+                  style={{ transitionDelay: open ? `${(i + 1) * 45}ms` : "0ms" }}
                 >
                   {item.label}
                 </Link>
@@ -163,7 +222,7 @@ export function NavbarClient({
                 <button
                   type="button"
                   onClick={() => setKonfirmLogout(true)}
-                  className="block w-full rounded-md px-4 py-3 text-left font-alice text-lg uppercase tracking-wide text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                  className="block w-full rounded-md px-4 py-3 text-left font-alice text-lg uppercase tracking-wide text-red-400 transition-colors [@media(hover:hover)]:hover:bg-red-500/10 [@media(hover:hover)]:hover:text-red-300"
                 >
                   Logout
                 </button>
@@ -171,7 +230,7 @@ export function NavbarClient({
                 <Link
                   href="/login"
                   onClick={() => setOpen(false)}
-                  className="block rounded-md px-4 py-3 font-alice text-lg uppercase tracking-wide text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+                  className="block rounded-md px-4 py-3 font-alice text-lg uppercase tracking-wide text-white/75 transition-colors [@media(hover:hover)]:hover:bg-white/10 [@media(hover:hover)]:hover:text-white"
                 >
                   Login
                 </Link>
@@ -180,6 +239,7 @@ export function NavbarClient({
           </ul>
         </div>
       </Container>
+      </div>
 
             {/* Modal konfirmasi logout */}
       {konfirmLogout && (

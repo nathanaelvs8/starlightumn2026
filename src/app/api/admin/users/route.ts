@@ -10,7 +10,7 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Belum login" }, { status: 401 });
+    return NextResponse.json({ error: "Anda belum masuk. Silakan masuk terlebih dahulu." }, { status: 401 });
   }
 
   const { data: profile } = await supabase
@@ -20,7 +20,7 @@ export async function GET() {
     .single();
 
   if (profile?.role !== "admin") {
-    return NextResponse.json({ error: "Bukan admin" }, { status: 403 });
+    return NextResponse.json({ error: "Akses ditolak. Fitur ini khusus admin." }, { status: 403 });
   }
 
   // 2. Baru ambil semua user pakai service role (cuma di server)

@@ -14,6 +14,19 @@ type Salah = Partial<Record<Kolom, string>>;
 
 const PASSWORD_MIN = 6; // sama kayak batas bawaan Supabase
 
+/**
+ * Habis login mau dibawa ke mana. `/login?next=/vote` → balik ke /vote.
+ * Cuma terima path di situs ini sendiri (diawali "/" tapi bukan "//"
+ * atau "/\" — browser baca dua-duanya sebagai alamat situs lain), biar
+ * link login nggak bisa dipakai buat ngelempar orang ke situs lain.
+ * Dibaca langsung dari URL pas dibutuhin — bukan useSearchParams, yang
+ * di Next 14 maksa halaman ini dibungkus Suspense.
+ */
+function tujuanSetelahMasuk() {
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next && /^\/(?![/\\])/.test(next) ? next : "/";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -27,13 +40,10 @@ export default function LoginPage() {
   const [otp, setOtp] = useState("");
 
   // tahap: "form" (isi data / email) → "otp" (masukin kode)
-  // dipakai register DAN lupa password
-  const [tahap, setTahap] = useState<"form" | "otp">("form");
-
-  // Lupa password: kode reset cuma bisa dipakai SEKALI. Kalau kodenya
-  // udah lolos tapi password barunya ditolak (misal sama kayak yang
-  // lama), jangan cek kode lagi — sesinya udah kebuka, tinggal simpan.
-  const kodeLolos = useRef(false);
+  //        → "baru" (khusus lupa password: bikin password baru)
+  // "baru" cuma bisa dicapai SETELAH kodenya lolos dicek — jadi orang
+  // nggak ngisi password baru dulu baru ketahuan kodenya salah.
+  const [tahap, setTahap] = useState<"form" | "otp" | "baru">("form");
 
   const [loading, setLoading] = useState(false);
   const [pesan, setPesan] = useState<{ tipe: "error" | "ok"; teks: string } | null>(
@@ -48,7 +58,7 @@ export default function LoginPage() {
 
   /*
     Semua panggilan ke Supabase lewat sini. Kalau internetnya putus atau
-    ada error tak terduga, tombolnya nggak nyangkut di "Tunggu…" selamanya
+    ada error tak terduga, tombolnya nggak nyangkut di "Mohon tunggu…" selamanya
     dan orangnya tetap dapat pesan yang jelas.
   */
   const jalankan = async (aksi: () => Promise<void>) => {
@@ -69,12 +79,13 @@ export default function LoginPage() {
     const s: Salah = {};
     if (mode === "register") {
       if (!nama.trim()) s.nama = "Nama wajib diisi.";
-      if (!hp) s.hp = "No HP wajib diisi.";
-      else if (!/^08\d{8,12}$/.test(hp)) s.hp = "No HP diawali 08, panjangnya 10–14 angka.";
+      if (!hp) s.hp = "Nomor HP wajib diisi.";
+      else if (!/^08\d{8,12}$/.test(hp))
+        s.hp = "Nomor HP harus diawali 08 dan terdiri dari 10–14 angka.";
     }
     if (!emailBersih) s.email = "Email wajib diisi.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailBersih))
-      s.email = "Format email belum bener, contoh: nama@email.com";
+      s.email = "Format email tidak valid. Contoh: nama@email.com";
     if (mode !== "lupa") {
       if (!password) s.password = "Password wajib diisi.";
       else if (mode === "register" && password.length < PASSWORD_MIN)
@@ -106,13 +117,13 @@ export default function LoginPage() {
       // cuma satu: `identities` kosong. Tanpa cek ini, orangnya dibawa ke
       // layar OTP dan nungguin kode yang nggak akan pernah datang.
       if (data.user?.identities?.length === 0) {
-        setPesan({ tipe: "error", teks: "Email ini udah terdaftar. Silakan login." });
+        setPesan({ tipe: "error", teks: "Email ini sudah terdaftar. Silakan login." });
         return;
       }
       setTahap("otp");
       setPesan({
         tipe: "ok",
-        teks: "Kode verifikasi udah dikirim ke email kamu.",
+        teks: "Kode verifikasi telah dikirim ke email Anda.",
       });
     });
 
@@ -128,11 +139,11 @@ export default function LoginPage() {
         setPesan({ tipe: "error", teks: terjemahkan(error) });
         return;
       }
-      router.push("/");
+      router.push(tujuanSetelahMasuk());
       router.refresh();
     });
 
-  // Lupa password 1/2: kirim kode reset ke email
+  // Lupa password 1/3: kirim kode reset ke email
   const kirimKodeReset = () =>
     jalankan(async () => {
       const { error } = await supabase.auth.resetPasswordForEmail(emailBersih);
@@ -140,40 +151,49 @@ export default function LoginPage() {
         setPesan({ tipe: "error", teks: terjemahkan(error) });
         return;
       }
-      kodeLolos.current = false;
       setOtp("");
-      setPassword(""); // kolomnya sekarang buat password BARU
       setSalah({});
       setTahap("otp");
       // Supabase nggak ngasih tau email itu terdaftar atau nggak (biar
-      // nggak bisa dipakai ngecek email orang), jadi kalimatnya "kalau".
+      // nggak bisa dipakai ngecek email orang), jadi kalimatnya "jika".
       setPesan({
         tipe: "ok",
-        teks: "Kalau email ini terdaftar, kodenya udah dikirim. Cek juga folder spam.",
+        teks: "Jika email tersebut terdaftar, kode telah dikirimkan. Silakan periksa juga folder spam.",
       });
     });
 
-  // Lupa password 2/2: cek kode, lalu simpan password baru → langsung login
+  // Lupa password 2/3: cek kodenya dulu. Lolos → baru boleh bikin
+  // password baru. (Kode reset cuma bisa dipakai SEKALI; setelah lolos,
+  // sesinya udah kebuka, jadi tahap 3 nggak perlu ngecek kode lagi.)
+  const verifikasiKodeReset = () =>
+    jalankan(async () => {
+      const { error } = await supabase.auth.verifyOtp({
+        email: emailBersih,
+        token: otp,
+        type: "recovery",
+      });
+      if (error) {
+        setPesan({ tipe: "error", teks: terjemahkan(error) });
+        return;
+      }
+      setPassword(""); // kolomnya sekarang buat password BARU
+      setSalah({});
+      setTahap("baru");
+      setPesan({
+        tipe: "ok",
+        teks: "Kode berhasil diverifikasi. Silakan buat password baru.",
+      });
+    });
+
+  // Lupa password 3/3: simpan password baru → langsung login
   const simpanPasswordBaru = () =>
     jalankan(async () => {
-      if (!kodeLolos.current) {
-        const { error } = await supabase.auth.verifyOtp({
-          email: emailBersih,
-          token: otp,
-          type: "recovery",
-        });
-        if (error) {
-          setPesan({ tipe: "error", teks: terjemahkan(error) });
-          return;
-        }
-        kodeLolos.current = true;
-      }
       const { error } = await supabase.auth.updateUser({ password });
       if (error) {
         setPesan({ tipe: "error", teks: terjemahkan(error) });
         return;
       }
-      router.push("/");
+      router.push(tujuanSetelahMasuk());
       router.refresh();
     });
 
@@ -184,11 +204,10 @@ export default function LoginPage() {
         mode === "lupa"
           ? await supabase.auth.resetPasswordForEmail(emailBersih)
           : await supabase.auth.resend({ type: "signup", email: emailBersih });
-      if (!error) kodeLolos.current = false;
       setPesan(
         error
           ? { tipe: "error", teks: terjemahkan(error) }
-          : { tipe: "ok", teks: "Kode baru udah dikirim." },
+          : { tipe: "ok", teks: "Kode baru telah dikirim." },
       );
     });
 
@@ -212,8 +231,8 @@ export default function LoginPage() {
         setPesan({
           tipe: "ok",
           teks: gagalKirim
-            ? "Email kamu belum diverifikasi. Masukin kode yang dikirim waktu daftar, atau tekan Kirim ulang kode."
-            : "Email kamu belum diverifikasi. Kode baru udah dikirim — masukin di sini.",
+            ? "Email Anda belum diverifikasi. Masukkan kode yang dikirim saat pendaftaran, atau tekan Kirim ulang kode."
+            : "Email Anda belum diverifikasi. Kode baru telah dikirim, silakan masukkan di bawah ini.",
         });
         return;
       }
@@ -221,7 +240,7 @@ export default function LoginPage() {
         setPesan({ tipe: "error", teks: terjemahkan(error) });
         return;
       }
-      router.push("/");
+      router.push(tujuanSetelahMasuk());
       router.refresh();
     });
 
@@ -248,10 +267,13 @@ export default function LoginPage() {
   const kirimOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || otp.length < 6) return;
-    if (mode !== "lupa") {
-      verifikasi();
-      return;
-    }
+    if (mode === "lupa") verifikasiKodeReset();
+    else verifikasi();
+  };
+
+  const kirimPasswordBaru = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
     const s: Salah = {};
     if (!password) s.password = "Password baru wajib diisi.";
     else if (password.length < PASSWORD_MIN)
@@ -265,7 +287,6 @@ export default function LoginPage() {
     setPesan(null);
     setSalah({});
     setOtp("");
-    kodeLolos.current = false;
   };
 
   const judul = { login: "Login", register: "Register", lupa: "Lupa Password" }[mode];
@@ -283,8 +304,39 @@ export default function LoginPage() {
         <div className="w-full max-w-md rounded-2xl border border-cyan-300/30 bg-white/5 p-8 backdrop-blur sm:p-10">
           <TitleGlow className="text-center text-3xl sm:text-4xl">{judul}</TitleGlow>
 
-          {/* ---- TAHAP OTP (register / lupa password, setelah kode dikirim) ---- */}
-          {mode !== "login" && tahap === "otp" ? (
+          {/* ---- TAHAP PASSWORD BARU (lupa password, setelah kode lolos) ---- */}
+          {mode === "lupa" && tahap === "baru" ? (
+            <form
+              ref={formRef}
+              onSubmit={kirimPasswordBaru}
+              noValidate
+              className="mt-8 flex flex-col gap-4"
+            >
+              <p className="text-center font-alice text-sm text-white/70">
+                Buat password baru untuk akun <br />
+                <span className="text-white">{emailBersih}</span>
+              </p>
+
+              <PasswordField
+                label="Password Baru"
+                value={password}
+                onChange={ubah("password", setPassword)}
+                autoComplete="new-password"
+                error={salah.password}
+              />
+
+              <Pesan pesan={pesan} />
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 rounded-pill bg-cyan-400 px-6 py-3 font-alice font-bold uppercase tracking-wide text-night transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {loading ? "Mohon tunggu…" : "Simpan Password"}
+              </button>
+            </form>
+          ) : /* ---- TAHAP OTP (register / lupa password, setelah kode dikirim) ---- */
+          mode !== "login" && tahap === "otp" ? (
             <form
               ref={formRef}
               onSubmit={kirimOtp}
@@ -292,7 +344,7 @@ export default function LoginPage() {
               className="mt-8 flex flex-col gap-4"
             >
               <p className="text-center font-alice text-sm text-white/70">
-                Masukin kode yang dikirim ke <br />
+                Masukkan kode yang dikirim ke <br />
                 <span className="text-white">{emailBersih}</span>
               </p>
 
@@ -307,16 +359,6 @@ export default function LoginPage() {
                 className="rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-center font-alice text-2xl tracking-[0.3em] text-white placeholder:text-base placeholder:tracking-normal placeholder:text-white/40 focus:border-cyan-300/60 focus:outline-none"
               />
 
-              {mode === "lupa" && (
-                <PasswordField
-                  label="Password Baru"
-                  value={password}
-                  onChange={ubah("password", setPassword)}
-                  autoComplete="new-password"
-                  error={salah.password}
-                />
-              )}
-
               <Pesan pesan={pesan} />
 
               <button
@@ -324,7 +366,7 @@ export default function LoginPage() {
                 disabled={loading || otp.length < 6}
                 className="mt-2 rounded-pill bg-cyan-400 px-6 py-3 font-alice font-bold uppercase tracking-wide text-night transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                {loading ? "Tunggu…" : mode === "lupa" ? "Simpan Password" : "Verifikasi"}
+                {loading ? "Mohon tunggu…" : mode === "lupa" ? "Verifikasi Kode" : "Verifikasi"}
               </button>
 
               <button
@@ -346,7 +388,8 @@ export default function LoginPage() {
             >
               {mode === "lupa" && (
                 <p className="text-center font-alice text-sm text-white/70">
-                  Masukin email akun kamu. Kami kirim kode buat bikin password baru.
+                  Masukkan email akun Anda. Kami akan mengirimkan kode untuk membuat
+                  password baru.
                 </p>
               )}
 
@@ -361,7 +404,7 @@ export default function LoginPage() {
                     error={salah.nama}
                   />
                   <Field
-                    label="No HP"
+                    label="Nomor HP"
                     value={hp}
                     onChange={ubah("hp", (v) => setHp(v.replace(/[^0-9]/g, "")))}
                     type="tel"
@@ -411,7 +454,7 @@ export default function LoginPage() {
                 className="mt-2 rounded-pill bg-cyan-400 px-6 py-3 font-alice font-bold uppercase tracking-wide text-night transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {loading
-                  ? "Tunggu…"
+                  ? "Mohon tunggu…"
                   : { login: "Masuk", register: "Daftar", lupa: "Kirim Kode" }[mode]}
               </button>
             </form>
@@ -421,8 +464,8 @@ export default function LoginPage() {
             {
               {
                 login: "Belum punya akun? ",
-                register: "Udah punya akun? ",
-                lupa: "Udah inget password? ",
+                register: "Sudah punya akun? ",
+                lupa: "Sudah ingat password? ",
               }[mode]
             }
             <button
@@ -446,27 +489,27 @@ export default function LoginPage() {
  */
 function terjemahkan(error: AuthError | null): string {
   if (!error || error.name === "AuthRetryableFetchError" || error.status === 0) {
-    return "Nggak bisa nyambung ke server. Cek koneksi internet kamu, lalu coba lagi.";
+    return "Tidak dapat terhubung ke server. Periksa koneksi internet Anda, lalu coba lagi.";
   }
   switch (error.code) {
     case "invalid_credentials":
       return "Email atau password salah.";
     case "user_already_exists":
     case "email_exists":
-      return "Email ini udah terdaftar. Silakan login.";
+      return "Email ini sudah terdaftar. Silakan login.";
     case "weak_password":
-      return "Password terlalu lemah. Coba yang lebih panjang, campur huruf dan angka.";
+      return "Password terlalu lemah. Gunakan password yang lebih panjang dengan kombinasi huruf dan angka.";
     case "otp_expired":
-      return "Kodenya salah atau udah kedaluwarsa. Coba kirim ulang kode.";
+      return "Kode salah atau sudah kedaluwarsa. Silakan kirim ulang kode.";
     case "same_password":
-      return "Password baru harus beda dari password lama.";
+      return "Password baru harus berbeda dari password lama.";
     case "over_email_send_rate_limit":
     case "over_request_rate_limit":
-      return "Terlalu banyak percobaan. Tunggu sebentar, lalu coba lagi.";
+      return "Terlalu banyak percobaan. Mohon tunggu sebentar, lalu coba lagi.";
     case "email_address_invalid":
-      return "Format email belum bener, contoh: nama@email.com";
+      return "Format email tidak valid. Contoh: nama@email.com";
     case "signup_disabled":
-      return "Pendaftaran lagi ditutup.";
+      return "Pendaftaran sedang ditutup.";
   }
   return error.message;
 }
@@ -623,7 +666,7 @@ function PasswordField({
       </div>
       {capsLock && (
         <p id={`${id}-caps`} className="text-sm text-amber-200">
-          Caps Lock lagi nyala.
+          Caps Lock sedang aktif.
         </p>
       )}
       {error && (

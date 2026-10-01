@@ -12,6 +12,30 @@ type Team = {
 
 type Voter = { user_id: string; name: string; email: string };
 
+type StatusVoting = "tutup" | "buka" | "selesai";
+
+/* Warna aktifnya sama kayak saklar lama: hijau = buka, merah = selesai. */
+const STATUS: { id: StatusVoting; label: string; keterangan: string; warna: string }[] = [
+  {
+    id: "tutup",
+    label: "Belum Dibuka",
+    keterangan: "Pengunjung melihat pesan bahwa voting belum dibuka.",
+    warna: "bg-white/20 text-white",
+  },
+  {
+    id: "buka",
+    label: "Dibuka",
+    keterangan: "Pengunjung dapat memberikan suara.",
+    warna: "bg-green-500/80 text-white",
+  },
+  {
+    id: "selesai",
+    label: "Selesai",
+    keterangan: "Voting ditutup dan pengunjung melihat hasil akhir.",
+    warna: "bg-red-500/80 text-white",
+  },
+];
+
 export function VoteAdmin() {
   const supabase = createClient();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -61,7 +85,7 @@ export function VoteAdmin() {
       .from("team-photos")
       .upload(namaFile, f, { upsert: false });
     if (error) {
-      alert("Gagal upload foto: " + error.message);
+      alert("Foto gagal diunggah: " + error.message);
       return null;
     }
     const { data } = supabase.storage.from("team-photos").getPublicUrl(namaFile);
@@ -82,7 +106,7 @@ export function VoteAdmin() {
    * dibuka padahal belum, dan baru sadar pas ada yang komplain.
    */
   const simpanSetelan = async (
-    patch: { is_open: boolean } | { is_finished: boolean },
+    patch: { is_open: boolean; is_finished: boolean },
     batalkan: () => void,
   ) => {
     try {
@@ -101,20 +125,33 @@ export function VoteAdmin() {
     }
   };
 
-  const toggleVoting = async () => {
-    const baru = !isOpen;
-    setIsOpen(baru);
-    await simpanSetelan({ is_open: baru }, () => setIsOpen(!baru));
-  };
+  /*
+    Status voting = SATU pilihan dari tiga, bukan dua saklar.
 
-  const toggleSelesai = async () => {
-    const baru = !isFinished;
-    setIsFinished(baru);
-    await simpanSetelan({ is_finished: baru }, () => setIsFinished(!baru));
+    Dulu "Buka" dan "Selesai" saklar terpisah, jadi bisa nyala dua-duanya
+    sekaligus — dan di database pernah kejadian (is_open & is_finished
+    sama-sama true). Pengunjung lihat "Voting Selesai" padahal voting
+    belum dimulai. Dengan satu pilihan, dua kolomnya selalu dikirim
+    bareng dan nggak mungkin bentrok lagi.
+  */
+  const status: StatusVoting = isFinished ? "selesai" : isOpen ? "buka" : "tutup";
+
+  const ubahStatus = async (baru: StatusVoting) => {
+    if (baru === status) return;
+    const lama = { isOpen, isFinished };
+    setIsOpen(baru === "buka");
+    setIsFinished(baru === "selesai");
+    await simpanSetelan(
+      { is_open: baru === "buka", is_finished: baru === "selesai" },
+      () => {
+        setIsOpen(lama.isOpen);
+        setIsFinished(lama.isFinished);
+      },
+    );
   };
 
   const tambah = async () => {
-    if (!nama.trim()) return alert("Nama tim wajib diisi");
+    if (!nama.trim()) return alert("Nama tim wajib diisi.");
     setUploading(true);
     let photo_url: string | null = null;
     if (file) {
@@ -164,7 +201,7 @@ export function VoteAdmin() {
   };
 
   const hapus = async (id: string) => {
-    if (!confirm("Hapus tim ini? Semua vote ke tim ini juga ikut terhapus."))
+    if (!confirm("Hapus tim ini? Seluruh suara untuk tim ini juga akan terhapus."))
       return;
     await fetch("/api/admin/vote-teams", {
       method: "DELETE",
@@ -175,7 +212,7 @@ export function VoteAdmin() {
   };
 
   const hapusVote = async (userId: string, namaPemilih: string) => {
-    if (!confirm(`Hapus vote dari ${namaPemilih}?`)) return;
+    if (!confirm(`Hapus suara dari ${namaPemilih}?`)) return;
     await fetch("/api/admin/vote-voters", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -190,68 +227,40 @@ export function VoteAdmin() {
 
   return (
     <div className="space-y-8">
-      {/* Toggle buka/tutup voting */}
-      <div className="flex items-center justify-between rounded-xl border border-white/15 bg-white/5 p-4">
-        <div>
-          <p className="font-alice text-white">Status Voting</p>
-          <p className="font-alice text-sm text-white/60">
-            {isOpen
-              ? "Voting DIBUKA — user bisa vote sekarang."
-              : "Voting DITUTUP — user lihat pesan tunggu."}
-          </p>
-        </div>
+      {/* Status voting — satu pilihan dari tiga (lihat ubahStatus). */}
+      <div className="rounded-xl border border-white/15 bg-white/5 p-4">
+        <p className="font-alice text-white">Status Voting</p>
+        <p className="font-alice text-sm text-white/60">
+          {STATUS.find((s) => s.id === status)?.keterangan}
+        </p>
         {/*
-          role="switch" + aria-checked itu yang bikin screen reader
-          membacakan ini sebagai saklar dan menyebut posisinya
-          ("nyala"/"mati"). Tanpa itu yang kedengeran cuma "tombol",
-          tanpa cara apa pun buat tau voting lagi buka atau tutup —
-          padahal tombol ini yang nentuin apa yang dilihat semua
-          pengunjung. Tampilannya nggak berubah sama sekali.
+          role="radiogroup" + role="radio" + aria-checked: screen reader
+          membacakan ketiganya sebagai satu kelompok pilihan dan menyebut
+          mana yang lagi aktif.
         */}
-        <button
-          type="button"
-          role="switch"
-          aria-checked={isOpen}
-          aria-label="Buka voting untuk pengunjung"
-          onClick={toggleVoting}
-          className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${
-            isOpen ? "bg-green-500/80" : "bg-white/20"
-          }`}
+        <div
+          role="radiogroup"
+          aria-label="Status voting"
+          className="mt-4 grid grid-cols-3 gap-1 rounded-lg border border-white/10 bg-night/60 p-1"
         >
-          <span
-            className={`absolute top-1 h-6 w-6 rounded-full bg-white transition-all ${
-              isOpen ? "left-7" : "left-1"
-            }`}
-          />
-        </button>
-      </div>
-
-            {/* Toggle voting selesai */}
-      <div className="flex items-center justify-between rounded-xl border border-white/15 bg-white/5 p-4">
-        <div>
-          <p className="font-alice text-white">Voting Selesai</p>
-          <p className="font-alice text-sm text-white/60">
-            {isFinished
-              ? "Ditandai SELESAI — user lihat halaman hasil akhir."
-              : "Kalau dinyalain, voting ditutup & user lihat halaman hasil."}
-          </p>
+          {STATUS.map((s) => {
+            const aktif = s.id === status;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                role="radio"
+                aria-checked={aktif}
+                onClick={() => ubahStatus(s.id)}
+                className={`rounded-md px-2 py-2.5 font-alice text-xs uppercase tracking-wide transition-colors sm:text-sm ${
+                  aktif ? s.warna : "text-white/60 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {s.label}
+              </button>
+            );
+          })}
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={isFinished}
-          aria-label="Tandai voting selesai dan tampilkan hasil akhir"
-          onClick={toggleSelesai}
-          className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${
-            isFinished ? "bg-red-500/80" : "bg-white/20"
-          }`}
-        >
-          <span
-            className={`absolute top-1 h-6 w-6 rounded-full bg-white transition-all ${
-              isFinished ? "left-7" : "left-1"
-            }`}
-          />
-        </button>
       </div>
 
       {/* Form tambah tim */}
@@ -287,7 +296,7 @@ export function VoteAdmin() {
         <div className="mb-3 flex items-center justify-between">
           <p className="font-alice text-white">Daftar Tim</p>
           <p className="font-alice text-sm text-white/60">
-            Total vote: {totalVote}
+            Total suara: {totalVote}
           </p>
         </div>
         <div className="space-y-3">
@@ -311,7 +320,7 @@ export function VoteAdmin() {
                       />
                     ) : (
                       <div className="grid h-14 w-14 place-items-center rounded-lg bg-white/10 font-alice text-xs text-white/40">
-                        No foto
+                        Tanpa foto
                       </div>
                     )}
 
@@ -355,7 +364,7 @@ export function VoteAdmin() {
                             onClick={() => setBuka(terbuka ? null : t.id)}
                             className="font-alice text-sm text-cyan-200/80 hover:text-cyan-200"
                           >
-                            {t.vote_count} vote · {terbuka ? "tutup" : "lihat pemilih"}
+                            {t.vote_count} suara · {terbuka ? "tutup" : "lihat pemilih"}
                           </button>
                         </div>
                         <button
@@ -381,7 +390,7 @@ export function VoteAdmin() {
                     <div className="mt-3 border-t border-white/10 pt-3">
                       {daftarPemilih.length === 0 ? (
                         <p className="font-alice text-sm text-white/50">
-                          Belum ada yang vote tim ini.
+                          Belum ada suara untuk tim ini.
                         </p>
                       ) : (
                         <ul className="space-y-2">
@@ -403,7 +412,7 @@ export function VoteAdmin() {
                                 onClick={() => hapusVote(v.user_id, v.name)}
                                 className="shrink-0 rounded-md border border-red-400/40 px-3 py-1 font-alice text-xs text-red-400 transition-colors hover:bg-red-500/10"
                               >
-                                Hapus vote
+                                Hapus suara
                               </button>
                             </li>
                           ))}

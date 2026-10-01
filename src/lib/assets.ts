@@ -32,6 +32,12 @@ export const asset = {
 
   home: {
     bandHero: "/images/home/band-1-hero.webp",
+    /**
+     * Langit SELURUH homepage, satu gambar diulang ke bawah tanpa garis
+     * sambungan (hero + cerminan tegaknya — lihat convert-langit.js).
+     * band-2 & band-3 udah nggak dipakai; filenya dibiarin buat arsip.
+     */
+    langit: "/images/home/langit.webp",
     bandAbout: "/images/home/band-2-about.webp",
     bandConcept: "/images/home/band-3-concept.webp",
 
@@ -52,6 +58,19 @@ export const asset = {
 
     identity2026: "/images/home/identity-2026.webp",
     conceptArt: "/images/home/concept.webp",
+
+    /*
+     * Awan kecil buat dekor, dipotong dari separator (lihat
+     * convert-awan.js). Urutannya: 1-4 gumpalan lebar, 5-6 kecil.
+     */
+    awan: [
+      "/images/home/awan-1.webp",
+      "/images/home/awan-2.webp",
+      "/images/home/awan-3.webp",
+      "/images/home/awan-4.webp",
+      "/images/home/awan-5.webp",
+      "/images/home/awan-6.webp",
+    ],
   },
 
   division: {
@@ -63,6 +82,12 @@ export const asset = {
   stages: {
     /** Background halaman daftar /stages. */
     bg: "/images/stages/bg.webp",
+
+    /**
+     * Background halaman satu panggung (/stages/<slug>) — langit aurora,
+     * lebih berwarna & terang. Dipasang lewat `bg` di src/lib/stages.ts.
+     */
+    bgDetail: "/images/stages/bg-aurora.webp",
 
     /** Logo berwarna — dipakai di halaman stage-nya sendiri. */
     logo: (slug: string) => `/images/stages/${slug}.webp`,

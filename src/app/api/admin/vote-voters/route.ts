@@ -7,7 +7,7 @@ async function pastikanAdmin() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Belum login", status: 401 as const };
+  if (!user) return { error: "Anda belum masuk. Silakan masuk terlebih dahulu.", status: 401 as const };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -15,7 +15,7 @@ async function pastikanAdmin() {
     .eq("id", user.id)
     .single();
   if (profile?.role !== "admin")
-    return { error: "Bukan admin", status: 403 as const };
+    return { error: "Akses ditolak. Fitur ini khusus admin.", status: 403 as const };
 
   return { ok: true as const };
 }
@@ -69,7 +69,7 @@ export async function DELETE(req: Request) {
 
   const { user_id } = await req.json();
   if (!user_id)
-    return NextResponse.json({ error: "user_id wajib" }, { status: 400 });
+    return NextResponse.json({ error: "ID pengguna wajib diisi." }, { status: 400 });
 
   const admin = createAdmin(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -28,6 +28,7 @@ const config: Config = {
         night: "rgb(var(--c-night-rgb) / <alpha-value>)",
         abyss: "rgb(var(--c-abyss-rgb) / <alpha-value>)",
         ember: "rgb(var(--c-ember-rgb) / <alpha-value>)",
+        emas: "rgb(var(--c-emas-rgb) / <alpha-value>)",
       },
       borderRadius: {
         sm: "var(--r-sm)",

@@ -34,18 +34,20 @@ export default async function AdminGerdaPage() {
       <div aria-hidden className="fixed inset-0 -z-10 bg-night/60" />
 
       <Container className="py-16 sm:py-20">
-        <Link
-          href="/admin"
-          className="font-alice text-sm text-cyan-300 underline"
-        >
-          ← Balik ke Admin
-        </Link>
+        <div className="flex justify-center">
+          <Link
+            href="/admin"
+            className="font-alice text-sm text-cyan-200/80 transition-colors hover:text-cyan-200"
+          >
+            ← Kembali ke Admin
+          </Link>
+        </div>
 
         <TitleGlow className="mt-4 text-center text-4xl sm:text-5xl">
           Mini Gerda
         </TitleGlow>
         <p className="mt-3 text-center font-alice text-white/70">
-          Kelola anggota tiap divisi
+          Kelola anggota setiap divisi
         </p>
 
         <div className="mt-10">

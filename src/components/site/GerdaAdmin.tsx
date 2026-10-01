@@ -38,7 +38,7 @@ export function GerdaAdmin() {
 
   const tambah = async () => {
     if (!nama.trim() || !nim.trim()) {
-      setMsg("Nama & NIM wajib diisi");
+      setMsg("Nama dan NIM wajib diisi.");
       return;
     }
     setBusy(true);
@@ -55,7 +55,7 @@ export function GerdaAdmin() {
       load();
     } else {
       const d = await r.json();
-      setMsg(d.error ?? "Gagal nambah");
+      setMsg(d.error ?? "Anggota gagal ditambahkan. Silakan coba lagi.");
     }
   };
 
@@ -89,7 +89,7 @@ export function GerdaAdmin() {
       Data ketikannya sengaja NGGAK dibuang: barisnya tetap di mode
       edit biar bisa langsung dicoba simpan lagi.
     */
-    alert("Perubahan gagal disimpan. Coba simpan lagi.");
+    alert("Perubahan gagal disimpan. Silakan coba lagi.");
   };
 
   const hapus = async (id: string) => {
@@ -105,7 +105,7 @@ export function GerdaAdmin() {
       load();
       return;
     }
-    alert("Anggota gagal dihapus. Coba lagi.");
+    alert("Anggota gagal dihapus. Silakan coba lagi.");
   };
 
   // kelompokin per divisi

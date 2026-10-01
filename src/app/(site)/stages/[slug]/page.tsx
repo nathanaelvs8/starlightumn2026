@@ -1,12 +1,14 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { isAdmin } from "@/lib/admin";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { TitleGlow } from "@/components/ui/TitleGlow";
 import { MagicCircle } from "@/components/site/MagicCircle";
 import { VideoFrame } from "@/components/site/VideoFrame";
+import { DekorPanggung } from "@/components/site/DekorPanggung";
 import { asset } from "@/lib/assets";
-import { stages, findStage, type Stage } from "@/lib/stages";
+import { stages, findStage, tanggalPanggung, type Stage } from "@/lib/stages";
 
 /**
  * Halaman satu panggung.
@@ -18,14 +20,20 @@ import { stages, findStage, type Stage } from "@/lib/stages";
  * Di daftar /stages logonya kegembok; begitu masuk ke sini, segelnya
  * kebuka — logonya berwarna dan lingkaran sihirnya ikut nyala.
  *
- * Background-nya FIXED per panggung, sama kayak /stages dan /faq. Masih
- * numpang gambar divisi sampai aset khusus panggung dikirim (mapping-nya
- * ada di src/lib/stages.ts).
+ * Background-nya FIXED, sama kayak /stages dan /faq. Gambarnya langit
+ * aurora (asset.stages.bgDetail) — beda sama daftar /stages yang tetap
+ * pakai background lama. Diatur per panggung lewat `bg` di
+ * src/lib/stages.ts, jadi kalau nanti ada gambar khusus tinggal ganti di
+ * sana.
  */
 
-/** Bikin ketiga halaman jadi statis pas build — nggak ada query sama sekali. */
+/**
+ * Panggung yang SUDAH dibuka (`terbuka` di src/lib/stages.ts) dibikin
+ * statis pas build. Yang masih disegel dirender per permintaan, karena
+ * harus ngecek dulu yang buka itu admin atau bukan.
+ */
 export function generateStaticParams() {
-  return stages.map((s) => ({ slug: s.slug }));
+  return stages.filter((s) => s.terbuka).map((s) => ({ slug: s.slug }));
 }
 
 export function generateMetadata({ params }: { params: { slug: string } }) {
@@ -37,9 +45,13 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
   };
 }
 
-export default function StagePage({ params }: { params: { slug: string } }) {
+export default async function StagePage({ params }: { params: { slug: string } }) {
   const stage = findStage(params.slug);
   if (!stage) notFound();
+
+  /* Masih disegel → cuma admin yang boleh lihat (buat ngecek isinya
+     sebelum dibuka). Pengunjung lain dibalikin ke daftar panggung. */
+  if (!stage.terbuka && !(await isAdmin())) redirect("/stages");
 
   return (
     <>
@@ -48,7 +60,16 @@ export default function StagePage({ params }: { params: { slug: string } }) {
         className="fixed inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${stage.bg}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-night/60" />
+      {/* Peredup: default tipis (25%) — background aurora-nya sengaja
+          yang berwarna, jangan ditutup lagi. Background yang terang
+          banget (Lonielle / Enchanted) pasang `redup` lebih tebal di
+          src/lib/stages.ts. Kartu & teksnya udah punya kaca gelap /
+          bayangan sendiri. */}
+      <div
+        aria-hidden
+        className="fixed inset-0 -z-10"
+        style={{ background: `rgb(var(--c-night-rgb) / ${(stage.redup ?? 25) / 100})` }}
+      />
 
       <Container className="pb-32 pt-8 sm:pb-40 sm:pt-12">
         <Hero stage={stage} />
@@ -60,7 +81,7 @@ export default function StagePage({ params }: { params: { slug: string } }) {
                 <h2>, sementara "Trailer <nama>" di bawah yang jadi <h1>,
                 jadi daftar heading-nya kebalik. Ukuran hurufnya nggak
                 berubah: semuanya dari className, bukan dari tag-nya. */}
-            <h1 className="mt-4 text-center font-display text-3xl text-white [text-shadow:0_0_18px_rgba(255,154,77,0.35)] sm:text-4xl">
+            <h1 className="mt-4 text-center font-display text-3xl text-white [text-shadow:0_0_18px_rgba(190,184,255,0.45)] sm:text-4xl">
               {stage.name}
             </h1>
             <div className="mt-6 flex flex-col gap-5">
@@ -102,15 +123,21 @@ export default function StagePage({ params }: { params: { slug: string } }) {
           </Reveal>
         </section>
 
-        {/* ---------- Moments ---------- */}
-        <Reveal>
-          <Panel className="mt-16 sm:mt-24">
-            <h2 className="text-center font-display text-3xl text-white [text-shadow:0_0_18px_rgba(255,154,77,0.35)] sm:text-4xl">
-              Moments
-            </h2>
-            <Moments foto={stage.moments} nama={stage.name} />
-          </Panel>
-        </Reveal>
+        {/* ---------- Moments ----------
+            Cuma tampil kalau fotonya udah ada (`moments` di
+            src/lib/stages.ts). Selama kosong, bagian ini disembunyiin —
+            kotak-kotak "Foto" kosong kelihatan kayak halaman belum jadi.
+            Begitu fotonya diisi, bagiannya muncul sendiri. */}
+        {stage.moments.length > 0 && (
+          <Reveal>
+            <Panel className="mt-16 sm:mt-24">
+              <h2 className="text-center font-display text-3xl text-white [text-shadow:0_0_18px_rgba(190,184,255,0.45)] sm:text-4xl">
+                Moments
+              </h2>
+              <Moments foto={stage.moments} nama={stage.name} />
+            </Panel>
+          </Reveal>
+        )}
 
         <Reveal>
           <div className="mt-12 text-center">
@@ -136,16 +163,17 @@ export default function StagePage({ params }: { params: { slug: string } }) {
  */
 function Hero({ stage }: { stage: Stage }) {
   return (
-    <div className="flex justify-center">
+    <div className="relative flex justify-center">
+      {/* Dekor ngikutin vibe panggungnya — di belakang lingkaran & logo. */}
+      <DekorPanggung slug={stage.slug} />
       <div
         className="relative grid aspect-square place-items-center"
         style={{ width: "min(92vw, 720px)" }}
       >
-        {/* Lingkarannya sengaja api di semua panggung, bukan warna
-            panggungnya masing-masing — biar kerasa satu mantra yang
-            sama, cuma isinya yang beda. Warna panggung tetap kepakai
-            buat kabut di belakang logo & berlian di kartu. */}
-        <MagicCircle className="absolute inset-0 h-full w-full opacity-75" />
+        {/* Lingkarannya pakai warna logo panggungnya (`accent`), biar
+            nyatu sama logo di tengahnya. Di daftar /stages tetap putih —
+            di sana tiga panggung satu lingkaran. */}
+        <MagicCircle warna={stage.accent} className="absolute inset-0 h-full w-full opacity-75" />
         <span
           aria-hidden
           className="pointer-events-none absolute inset-[18%] rounded-full opacity-25 blur-3xl"
@@ -159,6 +187,11 @@ function Hero({ stage }: { stage: Stage }) {
           className="logo-pop relative w-[68%]"
           style={{ filter: "drop-shadow(0 8px 30px rgba(0,0,0,0.5))" }}
         />
+        {/* Tanggal panggungnya — di ruang kosong bawah logo, gaya yang
+            sama kayak tanggal di segel /stages. */}
+        <p className="absolute bottom-[25%] font-alice text-xs uppercase tracking-[0.25em] text-emas [text-shadow:0_1px_10px_rgba(0,0,0,0.7)] sm:text-sm">
+          {tanggalPanggung(stage)}
+        </p>
       </div>
     </div>
   );
@@ -207,32 +240,24 @@ function Berlian({ accent }: { accent: string }) {
 }
 
 /**
- * Galeri dokumentasi. Selama fotonya belum ada, yang tampil kotak
- * kosong — biar susunannya udah kelihatan duluan.
+ * Galeri dokumentasi. Cuma dipanggil kalau fotonya udah ada (lihat
+ * bagian Moments di atas).
  */
 function Moments({ foto, nama }: { foto: string[]; nama: string }) {
-  const isi = foto.length > 0 ? foto : Array.from({ length: 8 }).map(() => "");
-
   return (
     <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-      {isi.map((src, i) => (
+      {foto.map((src, i) => (
         <div
           key={i}
           className="aspect-[4/3] overflow-hidden rounded-lg border border-white/10 bg-white/[0.06]"
         >
-          {src ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={src}
-              alt={`Dokumentasi ${nama} ${i + 1}`}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.2em] text-white/40 sm:text-xs">
-              Foto
-            </div>
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src}
+            alt={`Dokumentasi ${nama} ${i + 1}`}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+          />
         </div>
       ))}
     </div>

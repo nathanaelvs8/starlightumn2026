@@ -29,10 +29,24 @@
    * Hasilnya huruf kelihatan timbul ke arah atas.
    */
   --c-text-core: #dfd4d9; /* muka huruf, bagian tengah */
-  --c-text-edge: #777278; /* muka huruf, ujung kiri-kanan */
+  /*
+   * Ujung kiri-kanan. DULU #777278 — di atas langit malam kontrasnya
+   * cuma ±3,5:1, jadi kata pertama & terakhir tiap baris kelihatan
+   * pudar (paling parah di HP, barisnya selebar layar). Sekarang masih
+   * lebih redup dari tengah, jadi gradasinya tetap ada, tapi kebaca.
+   */
+  --c-text-edge: #b4a9ba;
   --c-text-under: #ffffff; /* lapisan putih di bawahnya */
   --text-3d: 0.05em; /* seberapa jauh digeser — makin besar makin timbul */
   --text-tracking: 0.08em; /* jarak antar huruf */
+  --text-tracking-hp: 0.035em; /* jarak antar huruf di HP (< 640px) */
+  /*
+   * Bayangan gelap tipis di sekeliling huruf paragraf. Di langit yang
+   * gelap nyaris nggak kelihatan; baru kerja pas hurufnya lewat di atas
+   * bercak nebula yang terang — di situ dia yang bikin teksnya kebaca.
+   */
+  --halo-text: drop-shadow(0 0 2px rgb(3 8 26 / 0.85))
+    drop-shadow(0 1px 8px rgb(3 8 26 / 0.55));
   --glow-text: 0 0 6px rgba(178, 200, 255, 0.12);
 
   /* --- Garis & aksi ------------------------------------------------- */
@@ -49,7 +63,8 @@
    *
    * --c-night   biru malam, dasar semua scrim & panel
    * --c-abyss   biru paling pekat, buat sumur gelap di belakang logo
-   * --c-ember   oranye bara lingkaran sihir (lihat MagicCircle.tsx)
+   * --c-ember   oranye bara — sekarang cuma dipakai focus ring
+   *             (lingkaran sihir udah putih, lihat MagicCircle.tsx)
    */
   /*
    * Ditulis sebagai KANAL RGB telanjang, bukan hex.
@@ -63,6 +78,13 @@
    * Buat CSS biasa yang butuh warnanya utuh, pakai --c-night.
    */
   --c-night-rgb: 10 20 48; /* #0a1430 */
+  /*
+   * Emas — sisi Auradon dari logo (setengah ungu = The Isle, setengah
+   * emas = Auradon). Dipakai HEMAT: tombol utama & penanda penting aja,
+   * biar tetap kerasa istimewa. Diambil dari emas logonya (#e1b97d),
+   * dinaikin dikit biar nyala di atas langit malam.
+   */
+  --c-emas-rgb: 236 196 122; /* #ecc47a */
   --c-abyss-rgb: 3 8 26; /* #03081a */
   --c-ember-rgb: 255 154 77; /* #ff9a4d */
 
