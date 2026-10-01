@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const BEBAS = ["/segera-hadir", "/login", "/auth", "/api"];
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -25,10 +27,34 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // WAJIB dipanggil — ini yang nge-refresh session tiap request,
-  // biar server selalu tau siapa yang login. Tanpa ini, auth.uid()
-  // kosong dan query profil (nama, role) gagal.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return response;
+  const path = request.nextUrl.pathname;
+  if (BEBAS.some((p) => path.startsWith(p))) return response;
+
+  const { data: setelan } = await supabase
+    .from("vote_settings")
+    .select("situs_terbuka")
+    .eq("id", 1)
+    .single();
+
+  const terbuka = setelan ? !!setelan.situs_terbuka : true;
+  if (terbuka) return response;
+
+  if (user) {
+    const { data: profil } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    if (profil?.role === "admin") return response;
+  }
+
+  const url = request.nextUrl.clone();
+  url.pathname = "/segera-hadir";
+  const rewrite = NextResponse.rewrite(url);
+  response.cookies.getAll().forEach((c) => rewrite.cookies.set(c));
+  return rewrite;
 }

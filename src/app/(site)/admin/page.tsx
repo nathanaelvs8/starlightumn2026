@@ -4,6 +4,7 @@ import { Container } from "@/components/ui/Container";
 import { TitleGlow } from "@/components/ui/TitleGlow";
 import { AdminUsers } from "@/components/site/AdminUsers";
 import { AdminRegistrasi } from "@/components/site/AdminRegistrasi";
+import { AdminSitus } from "@/components/site/AdminSitus";
 import { asset } from "@/lib/assets";
 import Link from "next/link";
 
@@ -54,8 +55,8 @@ export default async function AdminPage() {
             Kelola Voting →
           </Link>
         </div>
-
-        <div className="mx-auto mt-10 max-w-3xl">
+        <div className="mx-auto mt-10 max-w-3xl space-y-4">
+          <AdminSitus />
           <AdminRegistrasi />
         </div>
 
