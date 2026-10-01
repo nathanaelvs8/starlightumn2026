@@ -543,6 +543,34 @@
     animation: logo-pop 850ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
 
+  /* Hero homepage: logo melayang pelan + cahaya dua warna di belakangnya
+     yang "bernapas". Dua-duanya bolak-balik (alternate), bukan loop
+     patah, jadi geraknya nggak pernah nyentak. */
+  .hero-melayang {
+    animation: hero-melayang 7s ease-in-out infinite alternate;
+  }
+  @keyframes hero-melayang {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-10px);
+    }
+  }
+  .hero-halo {
+    animation: hero-halo 6s ease-in-out infinite alternate;
+  }
+  @keyframes hero-halo {
+    from {
+      opacity: 0.6;
+      transform: scale(0.94);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1.04);
+    }
+  }
+
   /**
    * Dekor hero halaman panggung (DekorPanggung.tsx).
    *

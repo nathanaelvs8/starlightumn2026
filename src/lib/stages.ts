@@ -149,9 +149,3 @@ export function tanggalPanggung(s: Pick<Stage, "mulai" | "selesai">) {
   if (y1 === y2 && m1 === m2) return `${d1}–${d2} ${BULAN[m1 - 1]} ${y1}`;
   return `${d1} ${BULAN[m1 - 1]} – ${d2} ${BULAN[m2 - 1]} ${y2}`;
 }
-
-/** Rentang seluruh acara, dari panggung pertama sampai terakhir: "3 Oktober – 4 November 2026". */
-export function rentangAcara() {
-  const akhir = stages[stages.length - 1];
-  return tanggalPanggung({ mulai: stages[0].mulai, selesai: akhir.selesai ?? akhir.mulai });
-}

@@ -7,7 +7,6 @@ import { Comets } from "@/components/site/Comets";
 import { Awan } from "@/components/site/Awan";
 import { asset } from "@/lib/assets";
 import { copy } from "@/lib/copy";
-import { rentangAcara } from "@/lib/stages";
 import { SPONSOR, MEDIA_PARTNER } from "@/lib/sponsor";
 import { createClient } from "@/lib/supabase/server";
 
@@ -48,15 +47,6 @@ async function votingDibuka() {
     .eq("id", 1)
     .single();
   return !!data?.is_open && !data?.is_finished;
-}
-
-/** Kerlip empat sudut emas — bentuk kerlip yang sama dipakai di seluruh situs. */
-function KerlipEmas() {
-  return (
-    <svg aria-hidden viewBox="0 0 12 12" className="h-2.5 w-2.5 shrink-0 text-emas sm:h-3 sm:w-3">
-      <path d="M6 0Q6.9 5.1 12 6Q6.9 6.9 6 12Q5.1 6.9 0 6Q5.1 5.1 6 0Z" fill="currentColor" />
-    </svg>
-  );
 }
 
 export default async function HomePage() {
@@ -100,31 +90,37 @@ export default async function HomePage() {
           <Awan n={6} sisi="kanan" atas="80%" lebar="clamp(140px, 18vw, 350px)" keluar={0.3} redup={0.75} balik durasi={26} jeda={9} className="sm:hidden" />
           <Awan n={6} sisi="kanan" atas="58%" lebar="clamp(140px, 18vw, 350px)" keluar={0.3} redup={0.75} balik durasi={26} jeda={9} className="hidden sm:block" />
 
-          {/* Logonya yang jadi pusat — dulu 360px, sekarang lebih besar
-              karena hero-nya nggak lagi dibagi sama kotak & tombol. */}
-          <h1 className="logo-pop">
+          {/*
+            Hero = logo aja, TANPA tulisan. Sempat ada subjudul + kotak
+            "panggung terdekat" + tombol — kesannya kayak template generik.
+            Biar nggak kosong, logonya digedein, melayang pelan, dan ada
+            cahaya dua warna di belakangnya: ungu di kiri (sisi "Star"),
+            emas di kanan (sisi "light") — ngikutin dua warna logonya.
+
+            `isolate` biar cahayanya (-z-10) tetap di DEPAN langit tapi di
+            BELAKANG logo. Pop (sekali jalan) di <h1>, melayang di <img> —
+            dipisah karena dua-duanya pakai transform.
+          */}
+          <h1 className="logo-pop relative isolate">
+            <span
+              aria-hidden
+              className="hero-halo pointer-events-none absolute -inset-x-[30%] -inset-y-[20%] -z-10"
+              style={{
+                background:
+                  "radial-gradient(closest-side at 36% 50%, rgba(150,95,255,0.38), transparent), radial-gradient(closest-side at 64% 50%, rgb(var(--c-emas-rgb) / 0.32), transparent)",
+              }}
+            />
             <img
               src={asset.logo.main}
               alt="Starlight UMN 2026"
               draggable={false}
-              className="mx-auto w-[300px] sm:w-[360px] lg:w-[440px]"
+              className="hero-melayang mx-auto w-[300px] sm:w-[380px] lg:w-[460px]"
             />
           </h1>
 
-          {/*
-            Cuma tanggal acaranya, gaya poster: satu baris, tanpa kotak.
-            Sempat ada subjudul + kotak "panggung terdekat" + tombol
-            Lihat Panggung — kesannya kayak template generik, dan
-            Stages udah ada di navbar.
-          */}
-          <p className="flex items-center gap-3 font-alice text-sm uppercase tracking-[0.3em] text-white/90 [filter:var(--halo-text)] sm:gap-4 sm:text-base">
-            <KerlipEmas />
-            {rentangAcara()}
-            <KerlipEmas />
-          </p>
-
           {/* Tombol cuma muncul kalau ada yang perlu dilakukan: voting
-              lagi dibuka, atau registrasi penonton dinyalain admin. */}
+              lagi dibuka, atau registrasi penonton dinyalain admin.
+              Selain itu hero-nya bersih, cuma logo. */}
           {(voting || registrasi) && (
             <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
               {voting && <ButtonLink href="/vote">Vote Sekarang</ButtonLink>}
