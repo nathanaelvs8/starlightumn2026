@@ -16,10 +16,18 @@ function Comet({
         top,
         animationDelay: delay,
         animationDuration: durasi,
-        transform: `scale(${scale})`,
       }}
     >
-      <svg width="180" height="60" viewBox="0 0 180 60" fill="none" className="block">
+      {/* Skala di <svg>, bukan di pembungkus — transform pembungkusnya
+          dipakai animasi geraknya (lihat .comet-wrap di globals.css). */}
+      <svg
+        width="180"
+        height="60"
+        viewBox="0 0 180 60"
+        fill="none"
+        className="block"
+        style={{ transform: `scale(${scale})` }}
+      >
         <defs>
           {/* ekor V: transparan di pangkal (kiri, lebar) → terang di kepala (kanan) */}
           <linearGradient id="cometEkor" x1="0" y1="0" x2="1" y2="0">
@@ -77,13 +85,16 @@ function Comet({
 
 export function Comets() {
   // durasi = total siklus (lintas + jeda). Makin gede makin jarang lewat.
+  // Delay-nya NEGATIF (mulai di tengah siklus), bukan positif: komet
+  // yang lagi "nunggu giliran" bikin browser ngecek tiap frame. Fasenya
+  // sama kayak urutan lama (0s, 4s, 9s, 13s, 18s, 22s): delay -(durasi − lama).
   const list = [
     { top: "8%", delay: "0s", durasi: "22s", scale: 0.8 },
-    { top: "20%", delay: "4s", durasi: "26s", scale: 0.55 },
-    { top: "34%", delay: "9s", durasi: "24s", scale: 0.7 },
-    { top: "50%", delay: "13s", durasi: "28s", scale: 0.6 },
-    { top: "64%", delay: "18s", durasi: "23s", scale: 0.75 },
-    { top: "78%", delay: "22s", durasi: "27s", scale: 0.5 },
+    { top: "20%", delay: "-22s", durasi: "26s", scale: 0.55 },
+    { top: "34%", delay: "-15s", durasi: "24s", scale: 0.7 },
+    { top: "50%", delay: "-15s", durasi: "28s", scale: 0.6 },
+    { top: "64%", delay: "-5s", durasi: "23s", scale: 0.75 },
+    { top: "78%", delay: "-5s", durasi: "27s", scale: 0.5 },
   ];
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">

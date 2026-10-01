@@ -123,13 +123,13 @@ export function DivisionCoverflow() {
         @media (prefers-reduced-motion: reduce){ .div-anim{animation:none !important} }
       `}</style>
 
-      <div aria-hidden className="fixed inset-0 -z-20 bg-night" />
+      <div aria-hidden className="latar-layar -z-20 bg-night" />
 
       {layers.map((src, i) => (
         <div
           key={i}
           aria-hidden
-          className="fixed inset-0 -z-10 bg-cover bg-center transition-opacity duration-[1100ms] ease-in-out"
+          className="latar-layar -z-10 bg-cover bg-center transition-opacity duration-[1100ms] ease-in-out"
           style={{
             backgroundImage: src ? `url("${src}")` : undefined,
             opacity: front === i ? 1 : 0,
@@ -137,15 +137,38 @@ export function DivisionCoverflow() {
         />
       ))}
 
-      <div aria-hidden className="fixed inset-0 -z-10 bg-night/40" />
+      <div aria-hidden className="latar-layar -z-10 bg-night/40" />
 
+      {/* Khusus HP: tepi layar digelapin halus (vignette). Di layar tegak
+          yang kelihatan cuma bagian TENGAH gambar latar — bagian yang
+          paling terang & paling rata — jadi kesannya pucat dan datar.
+          Tepi yang lebih gelap ngasih kedalaman & bikin kartunya nyala. */}
       <div
         aria-hidden
-        className="div-anim pointer-events-none fixed inset-0 -z-10"
+        className="latar-layar -z-10 sm:hidden"
+        style={{
+          background:
+            "radial-gradient(ellipse 110% 65% at 50% 42%, transparent 35%, rgb(var(--c-night-rgb) / 0.6) 100%)",
+        }}
+      />
+
+      {/*
+        Dua lapis rasi bintang (yang kedua dicerminkan).
+
+        Gambarnya lebar banget (1920×682). Di HP yang layarnya tegak,
+        `cover` cuma nampilin ±16% bagian tengahnya — rasi-rasinya
+        kepotong semua, sisa satu-dua di pinggir. Jadi di HP (max-sm)
+        gambarnya dikecilin (300% lebar layar) dan diulang ke bawah, dan
+        tiap lapis ngambil potongan yang beda (kiri / kanan gambar).
+        Hasilnya rasinya kelihatan nyebar di seluruh layar.
+      */}
+      <div
+        aria-hidden
+        className="div-anim pointer-events-none latar-layar -z-10"
         style={{ animation: "divTwinkleA 7s ease-in-out infinite" }}
       >
         <div
-          className="div-anim h-full w-full bg-cover bg-center"
+          className="div-anim h-full w-full bg-cover bg-center max-sm:bg-[length:300%_auto] max-sm:bg-[position:20%_0] max-sm:bg-repeat-y"
           style={{
             backgroundImage: `url("${asset.division.bintang}")`,
             animation: "divDrift 42s ease-in-out infinite",
@@ -155,14 +178,14 @@ export function DivisionCoverflow() {
 
       <div
         aria-hidden
-        className="div-anim pointer-events-none fixed inset-0 -z-10"
+        className="div-anim pointer-events-none latar-layar -z-10"
         style={{
           transform: "scaleX(-1)",
           animation: "divTwinkleB 5s ease-in-out infinite",
         }}
       >
         <div
-          className="div-anim h-full w-full bg-cover bg-center"
+          className="div-anim h-full w-full bg-cover bg-center max-sm:bg-[length:300%_auto] max-sm:bg-[position:80%_45%] max-sm:bg-repeat-y"
           style={{
             backgroundImage: `url("${asset.division.bintang}")`,
             animation: "divDrift 28s ease-in-out infinite",

@@ -62,6 +62,28 @@
 
 @layer components {
   /**
+   * Lapisan background yang nempel di layar (dulu `fixed inset-0`).
+   *
+   * Di HP, `inset-0` bikin tingginya = layar SAAT address bar browser
+   * tampil. Pas di-scroll address bar-nya sembunyi dan layarnya
+   * memanjang, tapi background-nya nggak ikut — di bawahnya nongol
+   * strip biru tua, kesannya background-nya "keangkat".
+   *
+   * Sekarang tingginya = layar saat address bar SEMBUNYI (100lvh), jadi
+   * selalu nutup penuh, dan ukurannya nggak berubah-ubah pas address bar
+   * muncul/hilang (gambar cover-nya nggak ikut lompat). 100vh = cadangan
+   * buat browser lama — di Chrome & Safari HP nilainya juga layar penuh.
+   */
+  .latar-layar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    height: 100lvh;
+  }
+
+  /**
    * Teks paragraf timbul, dibikin dari DUA lapisan teks yang ditumpuk
    * (lihat komponen Paragraf di page.tsx).
    *
@@ -328,11 +350,97 @@
     animation: fade 350ms ease-out both;
   }
 
-  /* Komet: masuk pelan dari kiri-atas, agak cepat di tengah, melambat
-     di ujung kanan-bawah, lewat jalur melengkung. Easing bikin natural. */
+  /*
+   * Komet: masuk pelan dari kiri-atas, agak cepat di tengah, melambat di
+   * ujung kanan-bawah, lewat jalur melengkung (M -100 -60 Q 500 200 1500 700).
+   *
+   * Dulu digerakkan pakai offset-path + offset-distance. Browser nggak bisa
+   * nyerahin animasi offset-distance ke GPU — tiap frame dihitung ulang di
+   * main thread (diukur: ±23% main thread di homepage, cuma buat 6 komet).
+   * Sekarang jalurnya diubah jadi titik-titik transform (geser + putar
+   * ngikutin arah jalur), easing-nya udah "ditanam" di jarak antar titik,
+   * jadi timing-nya linear. Dibuat pakai skrip; bentuk jalurnya sama.
+   *
+   * Opacity dasarnya 0: kalau "kurangi animasi" nyala, kometnya nggak
+   * nongol diam di pojok.
+   */
   @keyframes comet-lintas {
     0% {
-      offset-distance: 0%;
+      transform: translate(-189.7px, -89.9px) rotate(23.43deg);
+    }
+    4.167% {
+      transform: translate(-185.2px, -87.9px) rotate(23.45deg);
+    }
+    8.333% {
+      transform: translate(-170.1px, -81.4px) rotate(23.52deg);
+    }
+    12.5% {
+      transform: translate(-144.4px, -70.2px) rotate(23.62deg);
+    }
+    16.667% {
+      transform: translate(-107.2px, -53.8px) rotate(23.77deg);
+    }
+    20.833% {
+      transform: translate(-57.7px, -31.9px) rotate(23.96deg);
+    }
+    25% {
+      transform: translate(4.9px, -3.9px) rotate(24.18deg);
+    }
+    29.167% {
+      transform: translate(80.3px, 30.1px) rotate(24.41deg);
+    }
+    33.333% {
+      transform: translate(168.5px, 70.3px) rotate(24.66deg);
+    }
+    37.5% {
+      transform: translate(267.9px, 116.3px) rotate(24.91deg);
+    }
+    41.667% {
+      transform: translate(377.7px, 167.5px) rotate(25.15deg);
+    }
+    45.833% {
+      transform: translate(494.4px, 222.6px) rotate(25.38deg);
+    }
+    50% {
+      transform: translate(614.9px, 280.0px) rotate(25.59deg);
+    }
+    54.167% {
+      transform: translate(735.4px, 338.0px) rotate(25.78deg);
+    }
+    58.333% {
+      transform: translate(851.3px, 394.2px) rotate(25.94deg);
+    }
+    62.5% {
+      transform: translate(960.3px, 447.4px) rotate(26.09deg);
+    }
+    66.667% {
+      transform: translate(1058.8px, 495.7px) rotate(26.20deg);
+    }
+    70.833% {
+      transform: translate(1145.4px, 538.4px) rotate(26.30deg);
+    }
+    75% {
+      transform: translate(1219.8px, 575.3px) rotate(26.38deg);
+    }
+    79.167% {
+      transform: translate(1280.7px, 605.5px) rotate(26.44deg);
+    }
+    83.333% {
+      transform: translate(1329.7px, 629.9px) rotate(26.49deg);
+    }
+    87.5% {
+      transform: translate(1366.2px, 648.1px) rotate(26.52deg);
+    }
+    91.667% {
+      transform: translate(1391.0px, 660.5px) rotate(26.55deg);
+    }
+    95.833% {
+      transform: translate(1405.5px, 667.8px) rotate(26.56deg);
+    }
+    100% {
+      transform: translate(1410.0px, 670.0px) rotate(26.57deg);
+    }
+    0% {
       opacity: 0;
     }
     12% {
@@ -342,7 +450,6 @@
       opacity: 0.9;
     }
     100% {
-      offset-distance: 100%;
       opacity: 0;
     }
   }
@@ -350,11 +457,9 @@
   .comet-wrap {
     position: absolute;
     left: 0;
-    offset-path: path("M -100 -60 Q 500 200 1500 700");
-    offset-rotate: auto; /* kepala ngarah sesuai jalur */
+    opacity: 0;
     animation-name: comet-lintas;
-    /* ease-in-out bikin: pelan masuk, cepat tengah, pelan keluar */
-    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+    animation-timing-function: linear;
     animation-iteration-count: infinite;
   }
 
@@ -557,6 +662,56 @@
       transform: translateY(-10px);
     }
   }
+  /*
+   * Lampu sorot panggung di hero (LampuSorot di page.tsx). Sumber
+   * cahayanya di ujung bawah (transform-origin), berkasnya nyapu pelan
+   * kiri-kanan. translateX(-50%) ikut ditulis di keyframes karena
+   * transform-nya ditimpa animasi.
+   */
+  .lampu-kiri {
+    transform-origin: 50% 100%;
+    animation: lampu-kiri 9s ease-in-out infinite alternate;
+  }
+  .lampu-kanan {
+    transform-origin: 50% 100%;
+    animation: lampu-kanan 11s ease-in-out infinite alternate;
+  }
+  @keyframes lampu-kiri {
+    from {
+      transform: translateX(-50%) rotate(16deg);
+    }
+    to {
+      transform: translateX(-50%) rotate(34deg);
+    }
+  }
+  @keyframes lampu-kanan {
+    from {
+      transform: translateX(-50%) rotate(-34deg);
+    }
+    to {
+      transform: translateX(-50%) rotate(-16deg);
+    }
+  }
+
+  /*
+   * Kedalaman pas scroll: logo hero geraknya lebih lambat dari halaman
+   * dan pelan-pelan pudar. Cuma jalan di browser yang dukung animasi
+   * berbasis scroll (Chrome/Edge baru); yang lain logonya diam biasa.
+   */
+  @supports (animation-timeline: scroll()) {
+    .hero-gulir {
+      animation: hero-gulir linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0px 100vh;
+    }
+    @keyframes hero-gulir {
+      to {
+        transform: translateY(22vh) scale(0.94);
+        opacity: 0.35;
+      }
+    }
+  }
+
   .hero-halo {
     animation: hero-halo 6s ease-in-out infinite alternate;
   }
@@ -706,6 +861,10 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  /* Animasi berbasis scroll nggak kena aturan durasi di atas — matiin langsung. */
+  .hero-gulir {
+    animation: none !important;
   }
 }
 

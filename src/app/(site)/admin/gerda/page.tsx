@@ -28,10 +28,10 @@ export default async function AdminGerdaPage() {
     <>
       <div
         aria-hidden
-        className="fixed inset-0 -z-10 bg-cover bg-center"
+        className="latar-layar -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${asset.home.bandAbout}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-night/60" />
+      <div aria-hidden className="latar-layar -z-10 bg-night/60" />
 
       <Container className="py-16 sm:py-20">
         <div className="flex justify-center">

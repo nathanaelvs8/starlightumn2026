@@ -415,7 +415,7 @@ export function GerdaFlow() {
   const Background = (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10"
+      className="pointer-events-none latar-layar -z-10"
       style={{
         backgroundImage: `url("${asset.gerda.background}")`,
         backgroundSize: "cover",

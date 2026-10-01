@@ -8,7 +8,8 @@ import { MagicCircle } from "@/components/site/MagicCircle";
 import { VideoFrame } from "@/components/site/VideoFrame";
 import { DekorPanggung } from "@/components/site/DekorPanggung";
 import { asset } from "@/lib/assets";
-import { stages, findStage, tanggalPanggung, type Stage } from "@/lib/stages";
+import { findStage, tanggalPanggung, type Stage } from "@/lib/stages";
+import { stagesDenganStatus } from "@/lib/stagesServer";
 
 /**
  * Halaman satu panggung.
@@ -27,14 +28,12 @@ import { stages, findStage, tanggalPanggung, type Stage } from "@/lib/stages";
  * sana.
  */
 
-/**
- * Panggung yang SUDAH dibuka (`terbuka` di src/lib/stages.ts) dibikin
- * statis pas build. Yang masih disegel dirender per permintaan, karena
- * harus ngecek dulu yang buka itu admin atau bukan.
- */
-export function generateStaticParams() {
-  return stages.filter((s) => s.terbuka).map((s) => ({ slug: s.slug }));
-}
+/*
+  Dirender per permintaan: segel tiap panggung dibuka/ditutup admin dari
+  /admin, jadi statusnya harus dibaca dari database tiap kali halaman
+  dibuka — kalau statis, perubahannya baru kelihatan setelah build ulang.
+*/
+export const dynamic = "force-dynamic";
 
 export function generateMetadata({ params }: { params: { slug: string } }) {
   const stage = findStage(params.slug);
@@ -46,7 +45,7 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
 }
 
 export default async function StagePage({ params }: { params: { slug: string } }) {
-  const stage = findStage(params.slug);
+  const stage = (await stagesDenganStatus()).find((s) => s.slug === params.slug);
   if (!stage) notFound();
 
   /* Masih disegel → cuma admin yang boleh lihat (buat ngecek isinya
@@ -57,7 +56,7 @@ export default async function StagePage({ params }: { params: { slug: string } }
     <>
       <div
         aria-hidden
-        className="fixed inset-0 -z-10 bg-cover bg-center"
+        className="latar-layar -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${stage.bg}")` }}
       />
       {/* Peredup: default tipis (25%) — background aurora-nya sengaja
@@ -67,7 +66,7 @@ export default async function StagePage({ params }: { params: { slug: string } }
           bayangan sendiri. */}
       <div
         aria-hidden
-        className="fixed inset-0 -z-10"
+        className="latar-layar -z-10"
         style={{ background: `rgb(var(--c-night-rgb) / ${(stage.redup ?? 25) / 100})` }}
       />
 

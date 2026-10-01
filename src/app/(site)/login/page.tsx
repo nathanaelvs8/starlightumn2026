@@ -295,10 +295,10 @@ export default function LoginPage() {
     <>
       <div
         aria-hidden
-        className="fixed inset-0 -z-10 bg-cover bg-center"
+        className="latar-layar -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${asset.home.bandAbout}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-night/60" />
+      <div aria-hidden className="latar-layar -z-10 bg-night/60" />
 
       <Container className="flex min-h-[80svh] items-center justify-center py-16">
         <div className="w-full max-w-md rounded-2xl border border-cyan-300/30 bg-white/5 p-8 backdrop-blur sm:p-10">

@@ -63,8 +63,12 @@ export const TITIK_SEAL = 37.5;
 /** Sama, dalam satuan viewBox (400 → 1% = 4). Diturunkan, bukan ditulis ulang. */
 const R_SEGITIGA = TITIK_SEAL * 4;
 
-/** Sudut ketiga titik: atas, kanan-bawah, kiri-bawah. */
-const SUDUT = [-90, 30, 150];
+/**
+ * Sudut ketiga titik, urut sama kayak `stages` di src/lib/stages.ts:
+ * atas (Lonielle), kiri-bawah (Twizzle), kanan-bawah (Enchantia) — jadi
+ * dua panggung bawahnya kebaca kiri → kanan sesuai urutan acara.
+ */
+const SUDUT = [-90, 150, 30];
 
 /** Posisi tiap titik seal dalam persen (buat dipakai halaman /stages). */
 export const POSISI_SEAL = SUDUT.map((deg) => {

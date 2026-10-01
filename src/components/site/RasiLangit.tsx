@@ -246,7 +246,7 @@ export function RasiLangit() {
   }, []);
 
   return (
-    <div aria-hidden className="rasi-langit pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div aria-hidden className="rasi-langit pointer-events-none latar-layar -z-10 overflow-hidden">
       <style>{KEYFRAMES}</style>
 
       {TEMPAT.map((t, i) => {

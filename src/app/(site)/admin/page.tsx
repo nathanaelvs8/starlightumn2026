@@ -5,6 +5,7 @@ import { TitleGlow } from "@/components/ui/TitleGlow";
 import { AdminUsers } from "@/components/site/AdminUsers";
 import { AdminRegistrasi } from "@/components/site/AdminRegistrasi";
 import { AdminSitus } from "@/components/site/AdminSitus";
+import { AdminPanggung } from "@/components/site/AdminPanggung";
 import { asset } from "@/lib/assets";
 import Link from "next/link";
 
@@ -30,10 +31,10 @@ export default async function AdminPage() {
     <>
       <div
         aria-hidden
-        className="fixed inset-0 -z-10 bg-cover bg-center"
+        className="latar-layar -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${asset.home.bandAbout}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-night/60" />
+      <div aria-hidden className="latar-layar -z-10 bg-night/60" />
 
       <Container className="py-16 sm:py-20">
         <TitleGlow className="text-center text-4xl sm:text-5xl">
@@ -57,6 +58,7 @@ export default async function AdminPage() {
         </div>
         <div className="mx-auto mt-10 max-w-3xl space-y-4">
           <AdminSitus />
+          <AdminPanggung />
           <AdminRegistrasi />
         </div>
 

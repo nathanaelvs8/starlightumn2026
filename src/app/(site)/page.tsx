@@ -82,6 +82,7 @@ export default async function HomePage() {
       }}
     >
       <Band>
+        <LampuSorot />
         <Comets />
         <Container className="relative flex min-h-[100svh] flex-col items-center justify-center gap-6 pb-14 pt-[110px] text-center sm:pb-20 sm:pt-[130px]">
           <Awan n={5} sisi="kiri" atas="24%" lebar="clamp(110px, 21vw, 390px)" keluar={0.35} redup={0.8} durasi={22} />
@@ -98,25 +99,32 @@ export default async function HomePage() {
             emas di kanan (sisi "light") — ngikutin dua warna logonya.
 
             `isolate` biar cahayanya (-z-10) tetap di DEPAN langit tapi di
-            BELAKANG logo. Pop (sekali jalan) di <h1>, melayang di <img> —
-            dipisah karena dua-duanya pakai transform.
+            BELAKANG logo. Tiap gerakan di elemennya sendiri karena
+            semuanya pakai transform: geser-pas-scroll di pembungkus
+            (.hero-gulir), pop sekali jalan di <h1>, melayang di <span>
+            (logo + kerlip di ujung bintangnya ikut melayang bareng).
           */}
-          <h1 className="logo-pop relative isolate">
-            <span
-              aria-hidden
-              className="hero-halo pointer-events-none absolute -inset-x-[30%] -inset-y-[20%] -z-10"
-              style={{
-                background:
-                  "radial-gradient(closest-side at 36% 50%, rgba(150,95,255,0.38), transparent), radial-gradient(closest-side at 64% 50%, rgb(var(--c-emas-rgb) / 0.32), transparent)",
-              }}
-            />
-            <img
-              src={asset.logo.main}
-              alt="Starlight UMN 2026"
-              draggable={false}
-              className="hero-melayang mx-auto w-[300px] sm:w-[380px] lg:w-[460px]"
-            />
-          </h1>
+          <div className="hero-gulir">
+            <h1 className="logo-pop relative isolate">
+              <span
+                aria-hidden
+                className="hero-halo pointer-events-none absolute -inset-x-[30%] -inset-y-[20%] -z-10"
+                style={{
+                  background:
+                    "radial-gradient(closest-side at 36% 50%, rgba(150,95,255,0.38), transparent), radial-gradient(closest-side at 64% 50%, rgb(var(--c-emas-rgb) / 0.32), transparent)",
+                }}
+              />
+              <span className="hero-melayang relative block">
+                <img
+                  src={asset.logo.main}
+                  alt="Starlight UMN 2026"
+                  draggable={false}
+                  className="mx-auto w-[300px] sm:w-[380px] lg:w-[460px]"
+                />
+                <KerlipUjungBintang />
+              </span>
+            </h1>
+          </div>
 
           {/* Tombol cuma muncul kalau ada yang perlu dilakukan: voting
               lagi dibuka, atau registrasi penonton dinyalain admin.
@@ -244,6 +252,80 @@ export default async function HomePage() {
         </Container>
       </Band>
     </div>
+  );
+}
+
+/**
+ * Lampu sorot panggung di hero — Starlight itu kompetisi bakat, jadi
+ * logonya "disorot" kayak di atas panggung. Dua berkas dari pojok bawah,
+ * nyilang di belakang logo dan nyapu pelan: ungu dari kiri (sisi Isle),
+ * emas dari kanan (sisi Auradon), sama kayak dua warna logonya.
+ *
+ * Bentuk berkasnya dari conic-gradient yang berpusat di sumber cahaya
+ * (tepinya udah lembut dari gradasinya, nggak perlu filter blur yang
+ * berat), lalu dipudarkan ke ujung atas pakai mask.
+ */
+function LampuSorot() {
+  const pudar = "linear-gradient(to top, #000 0%, rgba(0,0,0,0.6) 50%, transparent 100%)";
+  const berkas = (warna: string) => ({
+    background: `conic-gradient(from -14deg at 50% 100%, transparent 0deg, ${warna} 7deg, ${warna} 21deg, transparent 28deg)`,
+    maskImage: pudar,
+    WebkitMaskImage: pudar,
+  });
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      <span
+        className="lampu-kiri absolute bottom-0 left-[6%] block h-[115%] [aspect-ratio:1/2]"
+        style={berkas("rgba(165,110,255,0.3)")}
+      />
+      <span
+        className="lampu-kanan absolute bottom-0 left-[94%] block h-[115%] [aspect-ratio:1/2]"
+        style={berkas("rgb(var(--c-emas-rgb) / 0.28)")}
+      />
+    </div>
+  );
+}
+
+/**
+ * Kerlip di lima ujung bintang logo, gantian nyala. Posisinya persen
+ * dari kotak gambar logo (starlight-hero.webp): ujung atas, lengan
+ * kiri-kanan, kaki kiri-kanan. Warnanya ngikutin sisi logonya — ungu di
+ * kiri, emas di kanan, putih hangat di puncak.
+ */
+const UJUNG_BINTANG = [
+  { x: 50.6, y: 15, warna: "#fff3d6", ukuran: 22, durasi: 3.4, mulai: 0 },
+  { x: 14, y: 41, warna: "#d8c2ff", ukuran: 16, durasi: 4.2, mulai: 1.3 },
+  { x: 86, y: 42, warna: "#ffe2a0", ukuran: 18, durasi: 3.8, mulai: 2.4 },
+  { x: 26, y: 85, warna: "#d8c2ff", ukuran: 14, durasi: 4.6, mulai: 3.1 },
+  { x: 72.5, y: 85, warna: "#ffe2a0", ukuran: 15, durasi: 4, mulai: 0.7 },
+];
+
+function KerlipUjungBintang() {
+  return (
+    <>
+      {UJUNG_BINTANG.map((k, i) => (
+        <span
+          key={i}
+          aria-hidden
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+          style={{ left: `${k.x}%`, top: `${k.y}%` }}
+        >
+          <span
+            className="dekor-kerlip block"
+            style={{ animationDuration: `${k.durasi}s`, animationDelay: `-${k.mulai}s` }}
+          >
+            <svg
+              viewBox="0 0 12 12"
+              width={k.ukuran}
+              height={k.ukuran}
+              style={{ filter: `drop-shadow(0 0 5px ${k.warna}) drop-shadow(0 0 12px ${k.warna})` }}
+            >
+              <path d="M6 0Q6.9 5.1 12 6Q6.9 6.9 6 12Q5.1 6.9 0 6Q5.1 5.1 6 0Z" fill={k.warna} />
+            </svg>
+          </span>
+        </span>
+      ))}
+    </>
   );
 }
 

@@ -51,8 +51,11 @@ export type Stage = {
   redup?: number;
   /**
    * Segelnya udah kebuka? Di daftar /stages panggung yang terbuka pakai
-   * logo BERWARNA (tanpa rantai & gembok); sisanya logo kekunci. Nyalain
-   * pas panggungnya udah/lagi berlangsung.
+   * logo BERWARNA (tanpa rantai & gembok) dan halamannya bisa dibuka
+   * semua orang; sisanya logo kekunci & cuma admin yang bisa masuk.
+   *
+   * Yang dipakai situs = saklar di /admin (lihat src/lib/stagesServer.ts).
+   * Nilai di file ini cuma CADANGAN selama kolom databasenya belum ada.
    */
   terbuka?: boolean;
   /**

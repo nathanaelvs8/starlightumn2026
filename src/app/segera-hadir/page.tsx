@@ -9,10 +9,10 @@ export default function SegeraHadirPage() {
     <main className="relative flex min-h-[100svh] flex-col items-center justify-center px-6 text-center">
       <div
         aria-hidden
-        className="fixed inset-0 -z-10 bg-cover bg-center"
+        className="latar-layar -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${asset.home.bandHero}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-[#0a1430]/50" />
+      <div aria-hidden className="latar-layar -z-10 bg-[#0a1430]/50" />
 
       <img
         src={asset.logo.main}

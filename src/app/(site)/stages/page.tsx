@@ -6,24 +6,27 @@ import { MagicCircle, POSISI_SEAL, WARNA_SIHIR, GLOW_SIHIR } from "@/components/
 import { StageSeal } from "@/components/site/StageSeal";
 import { RasiLangit } from "@/components/site/RasiLangit";
 import { asset } from "@/lib/assets";
-import { stages, tanggalPanggung, type Stage } from "@/lib/stages";
+import { tanggalPanggung, type Stage } from "@/lib/stages";
+import { stagesDenganStatus } from "@/lib/stagesServer";
 import { isAdmin } from "@/lib/admin";
 import clsx from "@/lib/clsx";
 
 export const metadata = { title: "Stages · Starlight UMN 2026" };
 
 /**
- * Daftar panggung — ketiganya masih KEKUNCI.
+ * Daftar panggung. Mana yang segelnya udah kebuka diatur admin di
+ * /admin (lihat src/lib/stagesServer.ts).
  *
  * === Susunannya ===
  *
  * Bukan tiga gambar ditaruh sejajar, tapi satu lingkaran sihir dengan
  * tiga seal di sudut segitiga yang tertulis di dalamnya. Urutannya
- * searah jarum jam ngikutin urutan acara (urutan di src/lib/stages.ts):
+ * ngikutin urutan acara (urutan di src/lib/stages.ts): atas dulu, lalu
+ * dua yang bawah dibaca kiri → kanan.
  *
- *        Lonielle (atas)          3–4 Okt  — segelnya udah kebuka
+ *        Lonielle (atas)          3–4 Okt
  *         ╱        ╲
- *   Enchantia  ─  Twizzle
+ *   Twizzle   ─   Enchantia
  *  (kiri-bawah)   (kanan-bawah)   Twizzle 8–9 Okt, Enchantia 4 Nov
  *
  * Titik sudutnya dihitung sekali di MagicCircle.tsx (POSISI_SEAL), terus
@@ -72,8 +75,8 @@ const SEAL = 52;
 
 export default async function StagesPage() {
   /* Admin boleh masuk ke panggung yang masih disegel; yang lain cuma
-     bisa buka yang `terbuka`. */
-  const admin = await isAdmin();
+     bisa buka yang `terbuka` (diatur di /admin). */
+  const [admin, stages] = await Promise.all([isAdmin(), stagesDenganStatus()]);
 
   return (
     <>
@@ -81,10 +84,10 @@ export default async function StagesPage() {
           pola di /division dan /faq. Footer naik nutupin pas mentok. */}
       <div
         aria-hidden
-        className="fixed inset-0 -z-10 bg-cover bg-center"
+        className="latar-layar -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url("${asset.stages.bg}")` }}
       />
-      <div aria-hidden className="fixed inset-0 -z-10 bg-night/55" />
+      <div aria-hidden className="latar-layar -z-10 bg-night/55" />
       {/* Rasi-rasi kecil yang digambar satu-satu di pinggir langit —
           tiga panggung di tengah itu rasi paling besarnya. */}
       <RasiLangit />
