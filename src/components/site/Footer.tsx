@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Asset } from "@/components/ui/Asset";
 import { Container } from "@/components/ui/Container";
@@ -19,8 +20,8 @@ const ADDRESS = [
 
 const COPYRIGHT = "\u00a9 Starlight UMN 2026";
 
-/** TODO: ganti nama tim website tahun ini. */
-const CREDIT = "Developed and Managed by \u2014";
+/** Divisi website tahun ini \u2014 namanya nyambung langsung ke kartunya di halaman Division. */
+const CREDIT = { teks: "Developed and Managed by", tim: "Enchanted", href: "/division?divisi=enchanted" };
 
 /* ------------------------------------------------------------------- */
 
@@ -101,7 +102,15 @@ export function Footer() {
           {/* Copyright */}
           <div className="flex flex-col gap-1 text-[11px] text-footer-ink/75 sm:text-xs">
             <span>{COPYRIGHT}</span>
-            <span>{CREDIT}</span>
+            <span>
+              {CREDIT.teks}{" "}
+              <Link
+                href={CREDIT.href}
+                className="underline decoration-footer-ink/40 underline-offset-2 transition-colors hover:text-footer-ink hover:decoration-footer-ink"
+              >
+                {CREDIT.tim}
+              </Link>
+            </span>
           </div>
         </Container>
       </footer>

@@ -19,10 +19,15 @@ const SCALE = [1, 0.74, 0.62, 0.52];
 const OPACITY = [1, 1, 1, 1];
 const OPACITY_HP = [1, 0.9, 0, 0];
 
-export function DivisionCoverflow() {
-  const [active, setActive] = useState(0);
+/** `awal` = indeks kartu yang kebuka pertama (dari ?divisi=, lihat page.tsx). */
+export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
+  const [active, setActive] = useState(awal);
   const total = divisions.length;
   const accent = divisions[active].color;
+
+  /* Link ke ?divisi= pas udah di halaman ini (mis. kredit di footer):
+     komponennya nggak dipasang ulang, cuma `awal`-nya yang berubah. */
+  useEffect(() => setActive(awal), [awal]);
 
   const go = (dir: number) => setActive((p) => (p + dir + total) % total);
 
@@ -39,7 +44,7 @@ export function DivisionCoverflow() {
   };
 
   const [layers, setLayers] = useState<[string, string]>([
-    asset.division.bg(divisions[0].name),
+    asset.division.bg(divisions[awal].name),
     "",
   ]);
   const [front, setFront] = useState(0);
