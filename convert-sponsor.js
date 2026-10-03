@@ -22,7 +22,6 @@ const path = require("path");
 
 const [SUMBER, PDF] = process.argv.slice(2);
 const KELUAR = path.join(__dirname, "public/images/sponsor");
-fs.mkdirSync(KELUAR, { recursive: true });
 
 const baca = (f) => fs.readFileSync(path.join(SUMBER, f));
 
@@ -122,14 +121,15 @@ function tintaJadiPutih(img) {
   return img;
 }
 
-/** Simpan: potong tepi transparan, maks 640×280, WebP. */
-async function simpan(nama, img) {
+/** Simpan: potong tepi transparan, maks 640×280 (default), WebP. */
+async function simpan(nama, img, keluar = KELUAR, [lebar, tinggi] = [640, 280]) {
+  fs.mkdirSync(keluar, { recursive: true });
   const png = await img.png().toBuffer();
   const rapi = await sharp(png).trim({ threshold: 1 }).toBuffer();
   const hasil = await sharp(rapi)
-    .resize(640, 280, { fit: "inside", withoutEnlargement: true })
+    .resize(lebar, tinggi, { fit: "inside", withoutEnlargement: true })
     .webp({ quality: 90, alphaQuality: 100 })
-    .toFile(path.join(KELUAR, `${nama}.webp`));
+    .toFile(path.join(keluar, `${nama}.webp`));
   console.log(nama.padEnd(20), `${hasil.width}x${hasil.height}`, `${(hasil.size / 1024).toFixed(0)}KB`);
 }
 
@@ -140,7 +140,11 @@ async function dariPdf(file) {
   return sharp(buf).extract({ left: 4, top: 4, width: m.width - 8, height: m.height - 8 }).toBuffer();
 }
 
-(async () => {
+// Alat-alat di atas dipakai juga sama convert-media-partner.js.
+module.exports = { mentah, keSharp, buangLatar, miripPutih, miripHitam, hitamJadiPutih, jadiPutih, tintaJadiPutih, simpan };
+
+// Bagian sponsor cuma jalan kalau file ini dijalanin langsung (bukan di-require).
+if (require.main === module) (async () => {
   // Putih dari sananya — dibiarin putih.
   await simpan("bsm-rental", keSharp(await mentah(baca("BSM Rental Hi-Ress (White).png"))));
   await simpan("msp", keSharp(await mentah(baca("MSP white (2,161 x 2,161).png"))));

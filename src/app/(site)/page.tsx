@@ -242,7 +242,8 @@ export default async function HomePage() {
             langit. Panel kaca (atau kotak per logo) jadi elemen paling
             mencolok, nutupin ilustrasi latar, dan logo yang punya latar
             sendiri jadi kelihatan "kotak di dalam kotak". File logonya
-            udah disiapin buat latar gelap (convert-sponsor.js).
+            udah disiapin buat latar gelap (convert-sponsor.js &
+            convert-media-partner.js).
           */}
           {(SPONSOR.length > 0 || MEDIA_PARTNER.length > 0) && (
             <div className="mt-20 space-y-14 sm:mt-28 sm:space-y-20">
@@ -388,7 +389,9 @@ function DaftarLogo({
           Us, Theme, ...) — sekarang Sponsor berdiri sebagai bagian
           sendiri di atas langit, bukan judul kecil di dalam panel. */}
       <Reveal>
-        <TitleGlow as="h2" className="text-center text-3xl sm:text-4xl">
+        {/* Ukurannya sama kayak "About Us" & "Tagline" — sama-sama judul
+            bagian utama homepage. */}
+        <TitleGlow as="h2" className="text-center text-4xl sm:text-5xl">
           {judul}
         </TitleGlow>
       </Reveal>
@@ -403,8 +406,18 @@ function DaftarLogo({
            layar & keluar di tepi seberang (ujungnya dipudarkan .marquee).
            Geseran mendatarnya dipotong overflow-hidden di Band. */
         <div className="relative left-1/2 mt-8 w-screen -translate-x-1/2 space-y-6 sm:mt-10 sm:space-y-10">
+          {/* Lama satu putaran ngikutin jumlah logo di barisnya, biar
+              temponya sama berapa pun isinya (sponsor 7 logo = 34 & 40
+              detik; media partner 13 logo kalau dipatok 34 detik jadi
+              ngebut). */}
           {baris.map((isi, i) => (
-            <Marquee key={i} logo={isi} balik={i % 2 === 1} besar={besar} detik={34 + i * 6} />
+            <Marquee
+              key={i}
+              logo={isi}
+              balik={i % 2 === 1}
+              besar={besar}
+              detik={Math.round(isi.length * (4.9 + i * 0.85))}
+            />
           ))}
         </div>
       )}
@@ -472,7 +485,8 @@ function ItemLogo({ l, besar, salinan }: { l: LogoSponsor; besar?: boolean; sali
       >
         {/* Sengaja BUKAN loading="lazy": logo yang mulai di luar layar
             sebelah kanan baru dimuat pas udah jalan masuk, jadi nongol
-            telat sebagai tempat kosong. Totalnya cuma ±300KB. */}
+            telat sebagai tempat kosong. Totalnya ±850KB (sponsor ±300KB
+            + media partner ±550KB). */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={l.src}

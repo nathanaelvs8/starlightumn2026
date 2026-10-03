@@ -2,7 +2,12 @@
 import { TitleGlow } from "@/components/ui/TitleGlow";
 import { asset } from "@/lib/assets";
 
-export const metadata = { title: "Segera Hadir · Starlight UMN 2026" };
+/*
+  Sengaja NGGAK nyetel judul sendiri — pakai judul & deskripsi situs dari
+  src/app/layout.tsx. Pas situs ditutup, halaman ini tampil di alamat "/",
+  dan kalau Google lagi mampir, yang kesimpen di hasil pencarian jadi
+  "Segera Hadir · ..." (pernah kejadian).
+*/
 
 export default function SegeraHadirPage() {
   return (
