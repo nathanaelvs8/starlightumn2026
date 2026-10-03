@@ -648,6 +648,113 @@
     animation: logo-pop 850ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
 
+  /* Transisi antar halaman (src/app/(site)/template.tsx). `backwards`, bukan
+     `both`: habis animasi selesai pembungkusnya balik "normal" — nggak
+     terus-terusan jadi lapisan sendiri. */
+  .halaman-masuk {
+    animation: halaman-masuk 450ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  @keyframes halaman-masuk {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /*
+   * Halaman panggung: "segelnya kebuka" pas halaman dibuka — lingkaran
+   * sihirnya muter terbuka dari kecil, cahaya warna panggungnya nyala
+   * sebentar, baru logonya muncul (logo-pop dengan jeda, lihat
+   * stages/[slug]/page.tsx).
+   */
+  .segel-buka {
+    animation: segel-buka 1.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  @keyframes segel-buka {
+    from {
+      opacity: 0;
+      transform: scale(0.7) rotate(-45deg);
+    }
+    55% {
+      opacity: 1;
+    }
+  }
+  .segel-kilat {
+    animation: segel-kilat 1.6s ease-out backwards;
+  }
+  @keyframes segel-kilat {
+    from {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+    35% {
+      opacity: 0.85;
+      transform: scale(1.15);
+    }
+  }
+
+  /* Ganti langkah di halaman login (form → kode OTP → password baru). */
+  .langkah-masuk {
+    animation: langkah-masuk 380ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  @keyframes langkah-masuk {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  /* Percikan bintang pas suara berhasil tercatat (VoteBoard). Arah tiap
+     kerlip diisi lewat --dx / --dy. */
+  .percik {
+    animation: percik 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  @keyframes percik {
+    from {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(0.3);
+    }
+    to {
+      opacity: 0;
+      transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1);
+    }
+  }
+
+  /*
+   * Judul .title-ignite yang dibungkus <Reveal>: animasinya DITAHAN
+   * sampai Reveal-nya tampil. Dulu animasinya jalan pas halaman kebuka,
+   * padahal judulnya masih tersembunyi di bawah — pas di-scroll ke sana,
+   * efek "nyala"-nya udah lewat dan nggak pernah kelihatan.
+   */
+  [data-tampil="false"] .title-ignite {
+    animation-play-state: paused;
+  }
+
+  /*
+   * Marquee logo sponsor (DaftarLogo di page.tsx). Ujung kiri-kanannya
+   * dipudarkan, jadi logo muncul & hilang pelan, bukan kepotong tajam.
+   * Durasi & arahnya diisi per jalur lewat style inline.
+   */
+  .marquee {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+  }
+  .marquee-jalur {
+    display: flex;
+    width: max-content;
+    animation-name: marquee-jalan;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  @media (hover: hover) {
+    .marquee:hover .marquee-jalur {
+      animation-play-state: paused;
+    }
+  }
+  @keyframes marquee-jalan {
+    to {
+      transform: translateX(-50%);
+    }
+  }
   /* Hero homepage: logo melayang pelan + cahaya dua warna di belakangnya
      yang "bernapas". Dua-duanya bolak-balik (alternate), bukan loop
      patah, jadi geraknya nggak pernah nyentak. */
@@ -865,6 +972,24 @@
   /* Animasi berbasis scroll nggak kena aturan durasi di atas — matiin langsung. */
   .hero-gulir {
     animation: none !important;
+  }
+  /* Marquee sponsor: diam, logonya berjejer turun ke bawah. */
+  .marquee-jalur,
+  .marquee-jalur > ul {
+    width: auto;
+    flex-wrap: wrap;
+    flex-shrink: 1;
+    justify-content: center;
+  }
+  .marquee-jalur {
+    animation: none !important;
+  }
+  .marquee-salinan {
+    display: none !important;
+  }
+  .marquee {
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 }
 

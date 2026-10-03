@@ -236,17 +236,18 @@ export default async function HomePage() {
 
           {/*
             Sponsor & Media Partner — cuma tampil kalau daftarnya udah
-            diisi (src/lib/sponsor.ts). Dulu isinya 16 kotak abu-abu
-            "Logo sponsor" + judul hitam di atas latar gelap (nyaris nggak
-            kebaca), tepat sebelum footer: kesan terakhirnya "belum jadi".
+            diisi (src/lib/sponsor.ts).
+
+            Sengaja TANPA kotak/panel: logonya jalan langsung di atas
+            langit. Panel kaca (atau kotak per logo) jadi elemen paling
+            mencolok, nutupin ilustrasi latar, dan logo yang punya latar
+            sendiri jadi kelihatan "kotak di dalam kotak". File logonya
+            udah disiapin buat latar gelap (convert-sponsor.js).
           */}
           {(SPONSOR.length > 0 || MEDIA_PARTNER.length > 0) && (
-            <div className="mt-20 rounded-xl border border-white/15 bg-night/45 p-6 backdrop-blur sm:mt-28 sm:p-10">
-              <DaftarLogo judul="Sponsor" logo={SPONSOR} besar />
-              {SPONSOR.length > 0 && MEDIA_PARTNER.length > 0 && (
-                <hr className="my-8 border-white/10" />
-              )}
-              <DaftarLogo judul="Media Partner" logo={MEDIA_PARTNER} />
+            <div className="mt-20 space-y-14 sm:mt-28 sm:space-y-20">
+              <DaftarLogo judul="Our Sponsor" logo={SPONSOR} besar />
+              <DaftarLogo judul="Our Media Partner" logo={MEDIA_PARTNER} />
             </div>
           )}
         </Container>
@@ -357,36 +358,131 @@ function Separator({ naik = -60 }: { naik?: number }) {
 */
 const LEBAR_KOLOM = "max-w-[34rem]";
 
-/** Logo sponsor / media partner. Kosong = nggak dirender. */
+type LogoSponsor = { nama: string; src: string };
+
+/**
+ * Logo sponsor / media partner. Kosong = nggak dirender.
+ *
+ * Logonya JALAN terus ke samping (marquee), langsung di atas langit —
+ * tanpa kotak. File logonya udah disiapin buat latar gelap
+ * (convert-sponsor.js). Kalau logonya banyak, dibagi dua baris yang
+ * jalannya berlawanan arah; kalau cuma sedikit (di bawah 6), diam
+ * berjejer — jalur yang terlalu pendek bakal kelihatan bolong pas muter.
+ */
 function DaftarLogo({
   judul,
   logo,
   besar,
 }: {
   judul: string;
-  logo: { nama: string; src: string }[];
+  logo: LogoSponsor[];
   besar?: boolean;
 }) {
   if (logo.length === 0) return null;
+  const tengah = Math.ceil(logo.length / 2);
+  const baris = logo.length > 8 ? [logo.slice(0, tengah), logo.slice(tengah)] : [logo];
+
   return (
     <section>
-      <h2 className="text-center font-display text-2xl text-white sm:text-3xl [text-shadow:0_0_18px_rgba(190,184,255,0.45)]">
-        {judul}
-      </h2>
-      <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-6">
-        {logo.map((l) => (
-          <li key={l.nama}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={l.src}
-              alt={l.nama}
-              loading="lazy"
-              className={besar ? "h-14 w-auto sm:h-20" : "h-10 w-auto sm:h-14"}
-            />
-          </li>
-        ))}
-      </ul>
+      {/* Gaya judulnya sama kayak judul bagian lain di homepage (About
+          Us, Theme, ...) — sekarang Sponsor berdiri sebagai bagian
+          sendiri di atas langit, bukan judul kecil di dalam panel. */}
+      <Reveal>
+        <TitleGlow as="h2" className="text-center text-3xl sm:text-4xl">
+          {judul}
+        </TitleGlow>
+      </Reveal>
+      {logo.length < 6 ? (
+        <ul className="mt-6 flex flex-wrap justify-center sm:mt-8">
+          {logo.map((l) => (
+            <ItemLogo key={l.nama} l={l} besar={besar} />
+          ))}
+        </ul>
+      ) : (
+        /* Selebar LAYAR, bukan selebar Container: logonya masuk dari tepi
+           layar & keluar di tepi seberang (ujungnya dipudarkan .marquee).
+           Geseran mendatarnya dipotong overflow-hidden di Band. */
+        <div className="relative left-1/2 mt-8 w-screen -translate-x-1/2 space-y-6 sm:mt-10 sm:space-y-10">
+          {baris.map((isi, i) => (
+            <Marquee key={i} logo={isi} balik={i % 2 === 1} besar={besar} detik={34 + i * 6} />
+          ))}
+        </div>
+      )}
     </section>
+  );
+}
+
+/**
+ * Satu jalur berjalan. Isinya ditulis DUA kali berdampingan, lalu
+ * jalurnya digeser -50% berulang-ulang: pas salinan kedua sampai di
+ * posisi salinan pertama, animasinya mulai lagi dari awal — sambungannya
+ * nggak kelihatan. Salinan kedua disembunyiin dari screen reader.
+ * Berhenti pas disentuh kursor (biar logonya bisa dilihat), dan diam
+ * berjejer buat yang nyalain "kurangi animasi" (lihat globals.css).
+ *
+ * Semua logo SELALU berwarna penuh. Sempat dicoba "lampu sorot" (cuma
+ * logo di tengah yang berwarna, sisanya abu-abu) — dibatalin: sponsor
+ * bayar biar logonya kelihatan, dan warna itu identitas brand mereka.
+ */
+function Marquee({
+  logo,
+  balik,
+  besar,
+  detik,
+}: {
+  logo: LogoSponsor[];
+  balik?: boolean;
+  besar?: boolean;
+  detik: number;
+}) {
+  return (
+    <div className="marquee overflow-hidden">
+      <div
+        className="marquee-jalur"
+        style={{ animationDuration: `${detik}s`, animationDirection: balik ? "reverse" : "normal" }}
+      >
+        <ul className="flex shrink-0 items-center">
+          {logo.map((l) => (
+            <ItemLogo key={l.nama} l={l} besar={besar} />
+          ))}
+        </ul>
+        <ul aria-hidden className="marquee-salinan flex shrink-0 items-center">
+          {logo.map((l) => (
+            <ItemLogo key={l.nama} l={l} besar={besar} salinan />
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Satu logo. Kotaknya (tak kelihatan) ukurannya sama semua, logonya
+ * dimuat di dalamnya — jadi logo yang melebar & yang bundar kebaca
+ * seimbang. Jaraknya pakai padding, bukan gap, biar lebar satu salinan
+ * pas buat sambungan marquee.
+ */
+function ItemLogo({ l, besar, salinan }: { l: LogoSponsor; besar?: boolean; salinan?: boolean }) {
+  return (
+    <li className="shrink-0 px-4 sm:px-8">
+      <div
+        className={`flex items-center justify-center ${
+          besar ? "h-12 w-28 sm:h-[72px] sm:w-44" : "h-10 w-24 sm:h-14 sm:w-32"
+        }`}
+      >
+        {/* Sengaja BUKAN loading="lazy": logo yang mulai di luar layar
+            sebelah kanan baru dimuat pas udah jalan masuk, jadi nongol
+            telat sebagai tempat kosong. Totalnya cuma ±300KB. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={l.src}
+          alt={salinan ? "" : l.nama}
+          decoding="async"
+          draggable={false}
+          className="max-h-full max-w-full object-contain"
+        />
+      </div>
+    </li>
   );
 }
 

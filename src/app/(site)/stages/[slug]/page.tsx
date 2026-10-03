@@ -172,10 +172,16 @@ function Hero({ stage }: { stage: Stage }) {
         {/* Lingkarannya pakai warna logo panggungnya (`accent`), biar
             nyatu sama logo di tengahnya. Di daftar /stages tetap putih —
             di sana tiga panggung satu lingkaran. */}
-        <MagicCircle warna={stage.accent} className="absolute inset-0 h-full w-full opacity-75" />
+        {/* "Segelnya kebuka" pas halaman dibuka: lingkaran muter terbuka
+            dari kecil (.segel-buka), cahaya warna panggung nyala sebentar
+            (.segel-kilat), lalu logonya muncul belakangan (logo-pop
+            dengan jeda). Lihat globals.css. */}
+        <div className="segel-buka absolute inset-0">
+          <MagicCircle warna={stage.accent} className="absolute inset-0 h-full w-full opacity-75" />
+        </div>
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-[18%] rounded-full opacity-25 blur-3xl"
+          className="segel-kilat pointer-events-none absolute inset-[18%] rounded-full opacity-25 blur-3xl"
           style={{ background: stage.accent }}
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -184,7 +190,7 @@ function Hero({ stage }: { stage: Stage }) {
           alt={stage.name}
           draggable={false}
           className="logo-pop relative w-[68%]"
-          style={{ filter: "drop-shadow(0 8px 30px rgba(0,0,0,0.5))" }}
+          style={{ filter: "drop-shadow(0 8px 30px rgba(0,0,0,0.5))", animationDelay: "380ms" }}
         />
         {/* Tanggal panggungnya — di ruang kosong bawah logo, gaya yang
             sama kayak tanggal di segel /stages. */}

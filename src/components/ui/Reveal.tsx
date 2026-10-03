@@ -39,22 +39,28 @@ import type { CSSProperties, ReactNode } from "react";
 
 /**
  * Jeda sebelum animasi mulai, dihitung sejak elemennya masuk layar.
- * Bikin animasinya kerasa, nggak kelewat gitu aja.
+ * Dulu 400ms — pas scroll agak cepat, isinya kerasa telat nongol.
  */
-const JEDA_AWAL = 400;
+const JEDA_AWAL = 100;
 
 /** Lama gerakannya. Gedein kalau mau lebih pelan. */
-const DURASI = 700;
+const DURASI = 750;
+
+/**
+ * Kurva geraknya: cepat di awal, lalu melambat panjang sampai berhenti
+ * (ease-out). Dulu `ease` biasa — gerakannya kerasa rata & mekanis.
+ */
+const KURVA = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 /* ------------------------------------------------------------------- */
 
-/** Arah datangnya. */
+/** Arah datangnya. Jaraknya dulu 50px — kelewat jauh, kesannya "loncat". */
 type From = "up" | "left" | "right";
 
 const HIDDEN: Record<From, string> = {
-  up: "translateY(50px)",
-  left: "translateX(-50px)",
-  right: "translateX(50px)",
+  up: "translateY(28px)",
+  left: "translateX(-32px)",
+  right: "translateX(32px)",
 };
 
 export function Reveal({
@@ -83,8 +89,19 @@ export function Reveal({
       return;
     }
 
+    /*
+      Timer cadangan kalau observer-nya nggak pernah lapor sama sekali.
+      Begitu observer lapor SEKALI (dia selalu lapor pas mulai ngamatin),
+      timernya dibatalin. Dulu timernya dibiarin jalan: 2,5 detik setelah
+      halaman kebuka SEMUA isi ditampilin, termasuk yang masih jauh di
+      bawah — jadi animasi muncul di bagian bawah halaman nggak pernah
+      kelihatan sama sekali.
+    */
+    const failsafe = window.setTimeout(() => setShown(true), 2500);
+
     const io = new IntersectionObserver(
       ([entry]) => {
+        window.clearTimeout(failsafe);
         // Masuk layar, ATAU udah kelewatan di atas (mis. halaman dibuka
         // dengan posisi scroll di tengah) → tampil, lalu berhenti ngamatin.
         if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) {
@@ -102,9 +119,6 @@ export function Reveal({
 
     io.observe(el);
 
-    // Timer cadangan kalau observer nggak pernah lapor.
-    const failsafe = window.setTimeout(() => setShown(true), 2500);
-
     return () => {
       io.disconnect();
       window.clearTimeout(failsafe);
@@ -114,7 +128,7 @@ export function Reveal({
   const style: CSSProperties = {
     opacity: shown ? 1 : 0,
     transform: shown ? "none" : HIDDEN[from],
-    transition: `opacity ${DURASI}ms ease, transform ${DURASI}ms ease`,
+    transition: `opacity ${DURASI}ms ${KURVA}, transform ${DURASI}ms ${KURVA}`,
     /*
       Tunggu JEDA_AWAL dulu, baru gerak. `delay` dipakai buat bikin
       elemen bawah nyusul setelah yang atas.
@@ -123,8 +137,10 @@ export function Reveal({
     willChange: "opacity, transform",
   };
 
+  /* data-tampil dipakai globals.css buat nahan animasi "nyala" judul
+     (.title-ignite) sampai bagian ini beneran muncul. */
   return (
-    <div ref={ref} style={style} className={className}>
+    <div ref={ref} style={style} className={className} data-tampil={shown}>
       {children}
     </div>
   );

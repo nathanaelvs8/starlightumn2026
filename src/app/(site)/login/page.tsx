@@ -304,6 +304,11 @@ export default function LoginPage() {
         <div className="w-full max-w-md rounded-2xl border border-cyan-300/30 bg-white/5 p-8 backdrop-blur sm:p-10">
           <TitleGlow className="text-center text-3xl sm:text-4xl">{judul}</TitleGlow>
 
+          {/* Ganti langkah (login ↔ daftar, form → kode → password baru)
+              dulu langsung ganti patah. `key` bikin pembungkusnya dipasang
+              ulang tiap ganti, jadi animasi masuknya jalan lagi. Isian
+              disimpan di state halaman, jadi nggak ada yang hilang. */}
+          <div key={`${mode}-${tahap}`} className="langkah-masuk">
           {/* ---- TAHAP PASSWORD BARU (lupa password, setelah kode lolos) ---- */}
           {mode === "lupa" && tahap === "baru" ? (
             <form
@@ -459,6 +464,7 @@ export default function LoginPage() {
               </button>
             </form>
           )}
+          </div>
 
           <p className="mt-6 text-center font-alice text-sm text-white/70">
             {

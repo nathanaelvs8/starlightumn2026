@@ -31,6 +31,8 @@ export function VoteBoard() {
   const [kabar, setKabar] = useState<
     { tipe: "ok" | "galat"; teks: string } | null
   >(null);
+  /** Percikan bintang di tombol tim yang barusan dipilih. `n` = kunci baru tiap vote. */
+  const [percik, setPercik] = useState<{ id: string; n: number } | null>(null);
 
   const muat = async () => {
     const r = await fetch("/api/vote").then((x) => x.json());
@@ -77,6 +79,7 @@ export function VoteBoard() {
 
       await muat();
       setKabar({ tipe: "ok", teks: `Suara Anda untuk ${nama} telah tercatat.` });
+      setPercik({ id: teamId, n: Date.now() });
     } catch {
       setKabar({
         tipe: "galat",
@@ -238,22 +241,25 @@ export function VoteBoard() {
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => vote(t.id)}
-                  disabled={saving === t.id || dipilih}
-                  className={`mt-auto rounded-pill px-4 py-2 font-alice text-sm transition-colors ${
-                    dipilih
-                      ? "cursor-default border border-cyan-300/60 bg-cyan-400/20 text-cyan-100"
-                      : "border border-white/25 bg-white/5 text-white hover:bg-white/15 disabled:opacity-50"
-                  }`}
-                >
-                  {dipilih
-                    ? "✓ Pilihan Anda"
-                    : saving === t.id
-                      ? "Menyimpan…"
-                      : "Pilih tim ini"}
-                </button>
+                <div className="relative mt-auto">
+                  <button
+                    type="button"
+                    onClick={() => vote(t.id)}
+                    disabled={saving === t.id || dipilih}
+                    className={`w-full rounded-pill px-4 py-2 font-alice text-sm transition-colors ${
+                      dipilih
+                        ? "cursor-default border border-cyan-300/60 bg-cyan-400/20 text-cyan-100"
+                        : "border border-white/25 bg-white/5 text-white hover:bg-white/15 disabled:opacity-50"
+                    }`}
+                  >
+                    {dipilih
+                      ? "✓ Pilihan Anda"
+                      : saving === t.id
+                        ? "Menyimpan…"
+                        : "Pilih tim ini"}
+                  </button>
+                  {percik?.id === t.id && <Percikan key={percik.n} />}
+                </div>
               </div>
             </div>
           );
@@ -266,5 +272,47 @@ export function VoteBoard() {
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * Sembilan kerlip yang memancar ke atas dari tombol, sekali jalan, pas
+ * suara berhasil tercatat — ganti dari cuma border kartu yang berubah
+ * warna. Bentuknya kerlip empat sudut yang sama kayak di seluruh situs,
+ * warnanya emas (Auradon) & lavender (Isle). Arahnya dibikin kipas ke
+ * atas karena tombolnya ada di bawah kartu (yang ke bawah bakal kepotong).
+ * Gerakannya di .percik (globals.css).
+ */
+const ARAH_PERCIK = Array.from({ length: 9 }, (_, i) => {
+  const sudut = ((195 + i * 18.75) * Math.PI) / 180;
+  const jauh = 46 + (i % 3) * 10;
+  return {
+    dx: Math.round(Math.cos(sudut) * jauh),
+    dy: Math.round(Math.sin(sudut) * jauh),
+    warna: i % 2 ? "#cdb6ff" : "#ecc47a",
+    ukuran: 10 + (i % 3) * 2,
+  };
+});
+
+function Percikan() {
+  return (
+    <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2">
+      {ARAH_PERCIK.map((p, i) => (
+        <span
+          key={i}
+          className="percik absolute left-0 top-0 block"
+          style={{ ["--dx" as string]: `${p.dx}px`, ["--dy" as string]: `${p.dy}px` }}
+        >
+          <svg
+            viewBox="0 0 12 12"
+            width={p.ukuran}
+            height={p.ukuran}
+            style={{ filter: `drop-shadow(0 0 4px ${p.warna})` }}
+          >
+            <path d="M6 0Q6.9 5.1 12 6Q6.9 6.9 6 12Q5.1 6.9 0 6Q5.1 5.1 6 0Z" fill={p.warna} />
+          </svg>
+        </span>
+      ))}
+    </span>
   );
 }
