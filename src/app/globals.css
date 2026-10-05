@@ -735,6 +735,17 @@
       transform: scale(1.8);
     }
   }
+  /* Halaman tujuannya kelamaan siap: lingkaran sihirnya muncul pelan
+     (baru dipasang komponennya setelah nunggu 150ms). */
+  .portal-tunggu {
+    animation: portal-tunggu 350ms ease-out both;
+  }
+  @keyframes portal-tunggu {
+    from {
+      opacity: 0;
+      transform: scale(0.94) rotate(-12deg);
+    }
+  }
   /* Halaman panggungnya udah kebuka di balik portal → portalnya memudar. */
   .portal-tutup {
     animation: portal-tutup 380ms ease-out 60ms forwards;

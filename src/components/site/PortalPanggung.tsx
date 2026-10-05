@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { MagicCircle } from "@/components/site/MagicCircle";
 import { REDUP_BAWAAN, type Stage } from "@/lib/stages";
 
 /**
@@ -36,9 +37,17 @@ import { REDUP_BAWAAN, type Stage } from "@/lib/stages";
  * === Durasi ===
  *
  * Melebar 600ms, memudar 440ms (jeda 60ms + 380ms). Di antaranya cuma
- * nunggu halaman tujuannya siap — halaman itu udah di-prefetch sejak
- * portalnya mulai kebuka, jadi di versi produksi biasanya langsung.
- * (Di `next dev` prefetch dimatiin Next, jadi di sana kerasa nunggu.)
+ * nunggu halaman tujuannya siap. Di versi produksi halaman itu udah
+ * diunduh begitu segelnya kelihatan di layar (`prefetch` di TautanPortal),
+ * jadi biasanya langsung — terukur ±50ms.
+ *
+ * Kalau ternyata harus nunggu lebih lama (koneksi lambat, server baru
+ * "bangun", atau `next dev` yang ngompilasi halamannya dulu & nggak
+ * prefetch sama sekali), layarnya jangan diam kayak macet: lingkaran
+ * sihir panggungnya muncul pelan, persis di tempat lingkaran hero
+ * halaman tujuannya nanti (.portal-tunggu). Baru dipasang kalau udah
+ * nunggu 150ms — di kasus normal halamannya keburu siap, jadi lingkaran
+ * ini nggak pernah muncul.
  *
  * Yang minta gerakan dikurangi (prefers-reduced-motion) nggak dapet
  * portal sama sekali — tautannya jalan biasa.
@@ -77,11 +86,35 @@ function kurva(p: number) {
   return p < 0.5 ? 4 * p ** 3 : 1 - (-2 * p + 2) ** 3 / 2;
 }
 
+type Kotak = { x: number; y: number; s: number };
+
+/**
+ * Letak lingkaran sihir hero di halaman panggung (Hero di
+ * src/app/(site)/stages/[slug]/page.tsx) begitu halaman itu kebuka:
+ * kotak persegi min(92vw, 720px) di tengah, di bawah navbar plus
+ * padding atas Container-nya (pt-8 / sm:pt-12). Kalau hero di sana
+ * diubah, angka di sini ikut disesuaikan.
+ *
+ * <main> ada di layout yang sama, jadi posisinya bisa diukur dari
+ * halaman sekarang (halaman tujuan dibuka dari paling atas).
+ */
+function kotakHero(lebar: number): Kotak {
+  const main = document.querySelector("main");
+  const atasMain = main ? main.getBoundingClientRect().top + window.scrollY : 0;
+  const s = Math.min(window.innerWidth * 0.92, 720);
+  const pt = window.matchMedia("(min-width: 640px)").matches ? 48 : 32;
+  return { x: lebar / 2 - s / 2, y: atasMain + pt, s };
+}
+
 /** Overlay portalnya. Dipasang sekali di layout situs. */
 export function PortalPanggung() {
   const router = useRouter();
   const pathname = usePathname();
-  const [portal, setPortal] = useState<(PermintaanPortal & { R: number; lebar: number; fase: Fase }) | null>(null);
+  const [portal, setPortal] = useState<
+    (PermintaanPortal & { R: number; lebar: number; hero: Kotak; fase: Fase }) | null
+  >(null);
+  /* Halamannya kelamaan siap → tampilkan lingkaran tunggu. */
+  const [lama, setLama] = useState(false);
   const dunia = useRef<HTMLDivElement>(null);
   const cincin = useRef<HTMLDivElement>(null);
 
@@ -105,7 +138,9 @@ export function PortalPanggung() {
       router.prefetch(d.href);
       /* Lebar tanpa scrollbar — sama kayak .latar-layar (left:0 right:0)
          di halaman tujuannya, biar gambarnya kepotong persis sama. */
-      setPortal({ ...d, R, lebar: document.documentElement.clientWidth, fase: "buka" });
+      const lebar = document.documentElement.clientWidth;
+      setLama(false);
+      setPortal({ ...d, R, lebar, hero: kotakHero(lebar), fase: "buka" });
     };
     window.addEventListener(EVENT_PORTAL, buka);
     return () => window.removeEventListener(EVENT_PORTAL, buka);
@@ -153,6 +188,13 @@ export function PortalPanggung() {
     }
   }, [fase, tujuan, pathname]);
 
+  /* Udah nunggu lebih dari 150ms → pasang lingkaran tunggunya. */
+  useEffect(() => {
+    if (fase !== "tunggu") return;
+    const t = window.setTimeout(() => setLama(true), 150);
+    return () => window.clearTimeout(t);
+  }, [fase]);
+
   /* Jaga-jaga: kalau halaman tujuannya nggak kunjung kebuka (koneksi
      putus dsb.), portalnya jangan sampai nutupin layar selamanya. */
   useEffect(() => {
@@ -163,7 +205,7 @@ export function PortalPanggung() {
 
   if (!portal) return null;
 
-  const { x, y, r0, R, lebar, warna, latar, redup } = portal;
+  const { x, y, r0, R, lebar, hero, warna, latar, redup } = portal;
   const D = 2 * R * LEBIH;
   const peredup = `rgb(var(--c-night-rgb) / ${redup / 100})`;
   /* Keadaan awal sebelum frame pertama; setelah itu diatur efek di atas.
@@ -222,6 +264,17 @@ export function PortalPanggung() {
           }}
         />
       </div>
+
+      {/* Lingkaran sihir pas masih nunggu halamannya — lihat "Durasi"
+          di atas. */}
+      {lama && (
+        <div
+          className="portal-tunggu absolute"
+          style={{ left: hero.x, top: hero.y, width: hero.s, height: hero.s }}
+        >
+          <MagicCircle warna={warna} className="absolute inset-0 h-full w-full opacity-75" />
+        </div>
+      )}
 
       {/* Kilatan di segelnya pas portalnya mulai kebuka. */}
       <div
@@ -291,6 +344,9 @@ export function TautanPortal({
   return (
     <Link
       href={href}
+      /* Diunduh penuh begitu tautannya kelihatan (cuma di versi produksi),
+         biar pas portalnya penuh halamannya udah siap. */
+      prefetch
       className={className}
       style={style}
       {...rest}
