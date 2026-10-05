@@ -8,7 +8,7 @@ import { MagicCircle } from "@/components/site/MagicCircle";
 import { VideoFrame } from "@/components/site/VideoFrame";
 import { DekorPanggung } from "@/components/site/DekorPanggung";
 import { asset } from "@/lib/assets";
-import { findStage, tanggalPanggung, type Stage } from "@/lib/stages";
+import { findStage, tanggalPanggung, REDUP_BAWAAN, type Stage } from "@/lib/stages";
 import { stagesDenganStatus } from "@/lib/stagesServer";
 
 /**
@@ -67,7 +67,7 @@ export default async function StagePage({ params }: { params: { slug: string } }
       <div
         aria-hidden
         className="latar-layar -z-10"
-        style={{ background: `rgb(var(--c-night-rgb) / ${(stage.redup ?? 25) / 100})` }}
+        style={{ background: `rgb(var(--c-night-rgb) / ${(stage.redup ?? REDUP_BAWAAN) / 100})` }}
       />
 
       <Container className="pb-32 pt-8 sm:pb-40 sm:pt-12">
@@ -190,7 +190,7 @@ function Hero({ stage }: { stage: Stage }) {
           alt={stage.name}
           draggable={false}
           className="logo-pop relative w-[68%]"
-          style={{ filter: "drop-shadow(0 8px 30px rgba(0,0,0,0.5))", animationDelay: "380ms" }}
+          style={{ filter: "drop-shadow(0 8px 30px rgba(0,0,0,0.5))", animationDelay: "120ms" }}
         />
         {/* Tanggal panggungnya — di ruang kosong bawah logo, gaya yang
             sama kayak tanggal di segel /stages. */}

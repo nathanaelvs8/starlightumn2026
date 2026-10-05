@@ -1,9 +1,10 @@
 import { Container } from "@/components/ui/Container";
 import { TitleGlow } from "@/components/ui/TitleGlow";
 import { Reveal } from "@/components/ui/Reveal";
-import Link from "next/link";
 import { MagicCircle, POSISI_SEAL, WARNA_SIHIR, GLOW_SIHIR } from "@/components/site/MagicCircle";
 import { StageSeal } from "@/components/site/StageSeal";
+import { TautanPortal } from "@/components/site/PortalPanggung";
+import { KunciPanggung } from "@/components/site/KunciPanggung";
 import { RasiLangit } from "@/components/site/RasiLangit";
 import { asset } from "@/lib/assets";
 import { tanggalPanggung, type Stage } from "@/lib/stages";
@@ -258,7 +259,10 @@ function Baris({
             </span>
           </span>
         ) : (
-          <span className="mt-3 inline-block font-alice text-[10px] uppercase tracking-[0.2em] text-white/40 sm:text-xs">
+          /* Diketuk → nyala emas sebentar, barengan segelnya goyang
+             (lihat KunciPanggung). Tanggalnya udah ada tepat di atas,
+             jadi cukup keterangannya yang ditonjolin. */
+          <span className="mt-3 inline-block font-alice text-[10px] uppercase tracking-[0.2em] text-white/40 transition-colors duration-300 group-data-[ditolak=true]/kunci:text-emas sm:text-xs">
             Segera Dibuka
           </span>
         )}
@@ -274,8 +278,8 @@ function Baris({
   return (
     <Reveal from={kanan ? "right" : "left"}>
       {bisaDibuka ? (
-        <Link
-          href={`/stages/${stage.slug}`}
+        <TautanPortal
+          stage={stage}
           aria-label={
             terbuka
               ? `Panggung ${stage.name}, ${tanggalPanggung(stage)}`
@@ -284,9 +288,9 @@ function Baris({
           className={clsx("group outline-offset-4", kelas)}
         >
           {isi}
-        </Link>
+        </TautanPortal>
       ) : (
-        <div className={kelas}>{isi}</div>
+        <KunciPanggung className={kelas}>{isi}</KunciPanggung>
       )}
     </Reveal>
   );

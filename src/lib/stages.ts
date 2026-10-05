@@ -135,6 +135,14 @@ export const stages: Stage[] = [
   },
 ];
 
+/**
+ * Peredup bawaan di atas background halaman panggung (persen), buat
+ * panggung yang nggak ngisi `redup`. Dipakai halaman panggungnya dan
+ * portal dari /stages — keduanya harus sama persis biar pas portalnya
+ * memudar, latarnya nggak kelihatan ganti.
+ */
+export const REDUP_BAWAAN = 25;
+
 export function findStage(slug: string) {
   return stages.find((s) => s.slug === slug);
 }

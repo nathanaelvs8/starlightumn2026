@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { divisions } from "@/lib/divisions";
 import clsx from "@/lib/clsx";
 import { TitleGlow } from "@/components/ui/TitleGlow";
+import { MagicCircle } from "@/components/site/MagicCircle";
 import { asset } from "@/lib/assets";
 
 const STEP = [0, 250, 390, 530];
@@ -22,6 +24,9 @@ const OPACITY_HP = [1, 0.9, 0, 0];
 /** `awal` = indeks kartu yang kebuka pertama (dari ?divisi=, lihat page.tsx). */
 export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
   const [active, setActive] = useState(awal);
+  /** Layar penuh panggung tim (tombol "Lihat Tim" di panel). */
+  const [bukaTim, setBukaTim] = useState(false);
+  const tombolTim = useRef<HTMLButtonElement>(null);
   const total = divisions.length;
   const accent = divisions[active].color;
 
@@ -134,7 +139,7 @@ export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
         <div
           key={i}
           aria-hidden
-          className="latar-layar -z-10 bg-cover bg-center transition-opacity duration-[1100ms] ease-in-out"
+          className="latar-layar -z-10 bg-cover bg-center transition-opacity duration-[800ms] ease-in-out"
           style={{
             backgroundImage: src ? `url("${src}")` : undefined,
             opacity: front === i ? 1 : 0,
@@ -267,9 +272,8 @@ export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
                   <div
                     className={clsx(
                       "relative h-[215px] w-[168px] overflow-hidden rounded-2xl sm:h-[344px] sm:w-[268px] lg:h-[268px] lg:w-[209px]",
-                      isActive && "animate-card-flip",
+                      isActive && "kartu-aktif",
                     )}
-                    style={undefined}
                   >
                     <img
                       src={asset.division.card(div.name)}
@@ -277,6 +281,25 @@ export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
                       draggable={false}
                       className="h-full w-full object-cover"
                     />
+                    {/* Kilatan cahaya sekali lewat pas kartunya jadi aktif
+                        (dipasang cuma di kartu aktif, jadi jalan tiap ganti).
+                        Dimasker pakai gambar kartunya sendiri: tanpa ini
+                        kilaunya ikut nyinarin area transparan di sekitar
+                        bingkai kartu — muncul kotak terang samar. */}
+                    {isActive && (
+                      <span
+                        aria-hidden
+                        className="kartu-kilau pointer-events-none absolute inset-0"
+                        style={{
+                          WebkitMaskImage: `url("${asset.division.card(div.name)}")`,
+                          maskImage: `url("${asset.division.card(div.name)}")`,
+                          WebkitMaskSize: "cover",
+                          maskSize: "cover",
+                          WebkitMaskPosition: "center",
+                          maskPosition: "center",
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
               </button>
@@ -363,14 +386,14 @@ export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
         style={{
           borderColor: `${accent}55`,
           boxShadow: `0 0 30px ${accent}22`,
-          transition: "border-color 1100ms, box-shadow 1100ms",
+          transition: "border-color 800ms, box-shadow 800ms",
         }}
       >
         <div key={active} className="animate-fade">
           <div
             style={{
               filter: `drop-shadow(0 0 16px ${accent}aa)`,
-              transition: "filter 1100ms",
+              transition: "filter 800ms",
             }}
           >
             <TitleGlow className="text-3xl sm:text-4xl">
@@ -379,7 +402,7 @@ export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
           </div>
           <p
             className="mt-1 font-alice text-sm uppercase tracking-[0.2em]"
-            style={{ color: accent, transition: "color 1100ms" }}
+            style={{ color: accent, transition: "color 800ms" }}
           >
             {divisions[active].role}
           </p>
@@ -387,14 +410,241 @@ export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
             className="mx-auto mt-3 h-px w-16"
             style={{
               backgroundColor: `${accent}88`,
-              transition: "background-color 1100ms",
+              transition: "background-color 800ms",
             }}
           />
           <p className="mt-5 font-alice leading-relaxed text-white/80">
             {divisions[active].desc}
           </p>
         </div>
+
+        {/* Buka panggung tim (layar penuh). */}
+        <button
+          ref={tombolTim}
+          type="button"
+          onClick={() => setBukaTim(true)}
+          className="mt-5 inline-flex items-center rounded-pill border px-5 py-2 font-alice text-xs uppercase tracking-[0.2em] text-white/90 transition-colors sm:text-sm [@media(hover:hover)]:hover:bg-white/10"
+          style={{ borderColor: `${accent}88`, transition: "border-color 800ms, background-color 200ms" }}
+        >
+          Lihat Tim
+        </button>
       </div>
+
+      {bukaTim && (
+        <ModalTim
+          active={active}
+          accent={accent}
+          onGeser={go}
+          onTutup={() => {
+            setBukaTim(false);
+            tombolTim.current?.focus();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Layar penuh "panggung tim" — dibuka dari tombol Lihat Tim.
+ *
+ * Fotonya foto rombongan (sampai ±30 orang), jadi butuh tempat lega
+ * biar wajahnya kebaca — makanya layar penuh, bukan diselipin di
+ * halaman. Panah di dalamnya ganti divisi (kartu di belakang ikut
+ * geser); tombol panah keyboard juga jalan (dari handler halaman).
+ * Esc / klik di luar / tombol × = tutup, fokus balik ke tombol Lihat Tim.
+ * Dipasang lewat portal ke <body> biar `position: fixed`-nya nggak
+ * ketahan pembungkus mana pun.
+ */
+function ModalTim({
+  active,
+  accent,
+  onGeser,
+  onTutup,
+}: {
+  active: number;
+  accent: string;
+  onGeser: (arah: number) => void;
+  onTutup: () => void;
+}) {
+  const tutup = useRef<HTMLButtonElement>(null);
+  const div = divisions[active];
+
+  /* Lewat ref: `onTutup` dari induknya fungsi baru tiap render. Kalau
+     jadi dependency efek di bawah, tiap ganti divisi (panah) fokusnya
+     ketarik balik ke tombol × dan scroll body di-set ulang. */
+  const onTutupRef = useRef(onTutup);
+  onTutupRef.current = onTutup;
+
+  useEffect(() => {
+    tutup.current?.focus();
+    const awalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onTutupRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = awalOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Tim divisi ${div.name}`}
+      className="tim-modal fixed inset-0 z-[100] flex flex-col items-center justify-center bg-night/85 px-4 backdrop-blur-sm"
+      onClick={onTutup}
+    >
+      <button
+        ref={tutup}
+        type="button"
+        onClick={onTutup}
+        aria-label="Tutup"
+        className="absolute right-3 top-3 grid h-12 w-12 place-items-center text-white/75 transition-colors sm:right-7 sm:top-7 [@media(hover:hover)]:hover:text-white"
+      >
+        {/* Garis silang tipis, sama gayanya kayak panah (tanpa bulatan). */}
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden
+          className="h-6 w-6"
+          style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,0.8)) drop-shadow(0 0 8px rgba(190,184,255,0.6))" }}
+        >
+          <path d="M5 5 L19 19 M19 5 L5 19" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+      </button>
+
+      {/* Klik di dalam isi jangan nutup. */}
+      <div className="flex w-full max-w-6xl flex-col items-center" onClick={(e) => e.stopPropagation()}>
+        <div key={active} className="animate-fade text-center">
+          <div style={{ filter: `drop-shadow(0 0 16px ${accent}aa)` }}>
+            <TitleGlow as="h2" className="text-4xl sm:text-5xl">
+              {div.name}
+            </TitleGlow>
+          </div>
+          <p className="mt-1 font-alice text-sm uppercase tracking-[0.2em]" style={{ color: accent }}>
+            {div.role}
+          </p>
+        </div>
+
+        <PanggungTim active={active} accent={accent} />
+
+        <div className="mt-4 flex items-center gap-4">
+          <Arrow dir="left" onClick={() => onGeser(-1)} />
+          <Arrow dir="right" onClick={() => onGeser(1)} />
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/**
+ * PANGGUNG TIM — foto anggota divisi yang lagi dipilih (di dalam
+ * ModalTim). Fotonya PNG transparan, jadi orang-orangnya berdiri
+ * langsung di atas latar, disorot lampu dari atas & disinari cahaya
+ * lantai — dua-duanya warna divisinya. Kakinya dipudarkan ke lantai
+ * biar nggak kelihatan kayak tempelan.
+ *
+ * Ganti divisi: tim lama turun & memudar (.tim-keluar), tim baru naik
+ * (.tim-masuk), lampu sorotnya nyala ulang (.tim-sorot). Dua lapis
+ * ditumpuk biar keluar & masuknya bisa barengan.
+ *
+ * Divisi yang fotonya belum ada: panggungnya tetap ada, isinya tulisan
+ * "Foto tim segera hadir" (sama kayak "Trailer segera hadir" di
+ * halaman panggung).
+ */
+function PanggungTim({ active, accent }: { active: number; accent: string }) {
+  const urut = useRef(0);
+  const [lapis, setLapis] = useState([{ idx: active, id: 0 }]);
+
+  useEffect(() => {
+    setLapis((prev) =>
+      prev[prev.length - 1].idx === active
+        ? prev
+        : [...prev.slice(-1), { idx: active, id: ++urut.current }],
+    );
+    // Siapin foto divisi sebelah-sebelahnya biar pas digeser udah ada.
+    for (const d of [-1, 1]) {
+      const tetangga = divisions[(active + d + divisions.length) % divisions.length];
+      if (tetangga.tim) new window.Image().src = tetangga.tim;
+    }
+  }, [active]);
+
+  return (
+    <div className="relative mt-4 h-[38svh] w-full sm:h-[56svh] sm:max-h-[640px]">
+      {/* Lampu sorot dari atas, warna divisi. Di-key biar nyala ulang
+          tiap ganti divisi. */}
+      <span
+        key={`sorot-${active}`}
+        aria-hidden
+        className="tim-sorot pointer-events-none absolute inset-0"
+        style={{
+          background: `conic-gradient(from 146deg at 50% -8%, transparent 0deg, ${accent}38 14deg, ${accent}38 54deg, transparent 68deg)`,
+          /* Pudar di dua ujung: atasnya muncul dari gelap (bukan kepotong
+             rata di tepi kotak), bawahnya habis sebelum lantai. */
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 30%, #000 55%, transparent 95%)",
+          maskImage: "linear-gradient(to bottom, transparent 0%, #000 30%, #000 55%, transparent 95%)",
+          transition: "background 800ms",
+        }}
+      />
+      {/* Cahaya lantai panggung di kaki mereka. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `radial-gradient(ellipse 48% 15% at 50% 93%, ${accent}66, transparent 72%)`,
+          transition: "background 800ms",
+        }}
+      />
+      {/* Lingkaran sihir di lantai — timnya "dipanggil" naik dari sini.
+          Lingkaran yang sama kayak di halaman Stages, dimiringin
+          (rotateX) biar kebaca sebagai lantai. Di-key per divisi: tiap
+          ganti tim, lingkarannya muter muncul lagi (.lingkaran-lantai). */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-[90%] w-[min(80%,520px)] -translate-x-1/2 -translate-y-1/2"
+      >
+        <div key={`lingkaran-${active}`} className="lingkaran-lantai relative aspect-square w-full">
+          <MagicCircle warna={accent} className="absolute inset-0 h-full w-full" />
+        </div>
+      </div>
+
+      {lapis.map((l, i) => {
+        const div = divisions[l.idx];
+        const keluar = i < lapis.length - 1;
+        return (
+          <div
+            key={l.id}
+            aria-hidden={keluar || undefined}
+            className={clsx(
+              "absolute inset-0 flex items-end justify-center",
+              keluar ? "tim-keluar pointer-events-none" : "tim-masuk",
+            )}
+          >
+            {div.tim ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={div.tim}
+                alt={`Tim divisi ${div.name}`}
+                decoding="async"
+                draggable={false}
+                className="max-h-full max-w-full object-contain"
+                style={{
+                  WebkitMaskImage: "linear-gradient(to top, transparent 0%, #000 13%)",
+                  maskImage: "linear-gradient(to top, transparent 0%, #000 13%)",
+                }}
+              />
+            ) : (
+              <p className="mb-[16%] font-alice text-xs uppercase tracking-[0.25em] text-white/50 sm:text-sm">
+                Foto tim segera hadir
+              </p>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -415,18 +665,45 @@ function Arrow({
   className?: string;
   kecil?: boolean;
 }) {
+  /*
+    Dulu bulatan abu-abu tembus + karakter teks "‹ ›" — tombol bawaan
+    yang generik, nggak nyambung sama dunia kartunya. Sekarang cuma
+    garis panah tipis yang tinggi (kayak ornamen buku dongeng) dengan
+    pendar lavender yang sama kayak garis lingkaran sihir; tanpa
+    bulatan. Area sentuhnya tetap lega walau garisnya tipis.
+  */
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={dir === "left" ? "Sebelumnya" : "Berikutnya"}
       className={clsx(
-        "shrink-0 place-items-center rounded-pill border border-white/30 bg-black/30 text-white backdrop-blur transition-colors [@media(hover:hover)]:hover:bg-black/50",
-        kecil ? "h-9 w-9 text-lg" : "h-11 w-11 text-xl",
+        "group shrink-0 place-items-center text-white/75 transition-colors [@media(hover:hover)]:hover:text-white",
+        kecil ? "h-11 w-9" : "h-16 w-12",
         className,
       )}
     >
-      {dir === "left" ? "‹" : "›"}
+      <svg
+        viewBox="0 0 16 32"
+        aria-hidden
+        className={clsx(
+          "transition-transform duration-300",
+          kecil ? "h-7 w-3.5" : "h-11 w-[22px]",
+          dir === "left"
+            ? "[@media(hover:hover)]:group-hover:-translate-x-1"
+            : "rotate-180 [@media(hover:hover)]:group-hover:translate-x-1",
+        )}
+        style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,0.8)) drop-shadow(0 0 8px rgba(190,184,255,0.6))" }}
+      >
+        <path
+          d="M12.5 2 L3.5 16 L12.5 30"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </button>
   );
 }

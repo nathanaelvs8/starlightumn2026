@@ -4,6 +4,12 @@ export type Division = {
   role: string;
   desc: string;
   color: string;
+  /**
+   * Foto tim (PNG transparan → WebP, dibuat pakai convert-tim.js).
+   * Kosong = fotonya belum ada; di halaman Division panggungnya nampilin
+   * "Foto tim segera hadir".
+   */
+  tim?: string;
 };
 
 export const divisions: Division[] = [
@@ -19,6 +25,7 @@ export const divisions: Division[] = [
     role: "Fresh Money",
     name: "Treasury",
     color: "#8FCB5A",
+    tim: "/images/division/tim-treasury.webp",
     desc: "Penjaga harta kerajaan. Treasury meracik cara-cara kreatif untuk mengumpulkan dana, memutar setiap peluang jadi bahan bakar yang membuat mimpi besar Starlight benar-benar bisa terwujud.",
   },
   {
@@ -40,6 +47,7 @@ export const divisions: Division[] = [
     role: "Acara",
     name: "Wicked",
     color: "#6FD9DE",
+    tim: "/images/division/tim-wicked.webp",
     desc: "Jantung dari seluruh pertunjukan. Wicked merancang alur acara dari awal sampai akhir, meramu setiap momen agar penonton terhanyut dan tak ingin beranjak dari kursinya.",
   },
   {
@@ -47,6 +55,7 @@ export const divisions: Division[] = [
     role: "Visual",
     name: "Dizzy",
     color: "#B98CE0",
+    tim: "/images/division/tim-dizzy.webp",
     desc: "Tangan seniman di balik setiap keindahan. Dizzy menuangkan warna, bentuk, dan imajinasi ke dalam visual Starlight, membuat tema Becoming Unbound terasa hidup di setiap layar dan sudut.",
   },
   {
@@ -61,6 +70,7 @@ export const divisions: Division[] = [
     role: "Dokumentasi",
     name: "Mirror",
     color: "#A96AE0",
+    tim: "/images/division/tim-mirror.webp",
     desc: "Cermin ajaib yang menangkap setiap kilau momen. Mirror merekam tawa, tepuk tangan, dan sorotan panggung, mengabadikan Starlight agar keajaibannya bisa dikenang selamanya.",
   },
   {
@@ -68,6 +78,7 @@ export const divisions: Division[] = [
     role: "Media Sosial",
     name: "Raven",
     color: "#E97FAE",
+    tim: "/images/division/tim-raven.webp",
     desc: "Utusan bersayap yang terbang dari satu layar ke layar lain. Raven merawat kehadiran Starlight di media sosial, menjaga percakapan tetap ramai dan penonton selalu menantikan kabar berikutnya.",
   },
   {
@@ -75,6 +86,7 @@ export const divisions: Division[] = [
     role: "Perlengkapan",
     name: "Relic",
     color: "#8FB6DC",
+    tim: "/images/division/tim-relic.webp",
     desc: "Penjaga segala perkakas dan pusaka acara. Relic memastikan setiap kebutuhan logistik siap di tempatnya, menopang jalannya acara dari balik layar tanpa pernah terlihat panik.",
   },
   {
@@ -82,6 +94,7 @@ export const divisions: Division[] = [
     role: "Liaison Officer",
     name: "Fairies",
     color: "#DFA97F",
+    tim: "/images/division/tim-fairies.webp",
     desc: "Peri pendamping yang selalu ada di sisi tamu. Fairies menuntun para bintang dan undangan sepanjang acara, memastikan setiap orang merasa disambut dan diperhatikan dari awal hingga akhir.",
   },
   {
@@ -89,6 +102,7 @@ export const divisions: Division[] = [
     role: "Keamanan",
     name: "Knights",
     color: "#C9B79E",
+    tim: "/images/division/tim-knights.webp",
     desc: "Kesatria penjaga kerajaan. Knights berdiri di garis depan menjaga keamanan dan ketertiban, memastikan seluruh penonton bisa menikmati keajaiban Starlight dengan tenang dan aman.",
   },
   {
@@ -96,6 +110,7 @@ export const divisions: Division[] = [
     role: "Website",
     name: "Enchanted",
     color: "#E8BE4A",
+    tim: "/images/division/tim-enchanted.webp",
     desc: "Sihir tak kasat mata yang menggerakkan segalanya secara digital. Enchanted membangun dan merawat website Starlight, menjadi gerbang pertama tempat dunia bertemu keajaiban acara ini.",
   },
 ];

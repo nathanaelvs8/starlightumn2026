@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { SmallSeal } from "./MagicCircle";
+import { TautanPortal } from "./PortalPanggung";
+import { KunciPanggung } from "./KunciPanggung";
 import { asset } from "@/lib/assets";
 import { tanggalPanggung, type Stage } from "@/lib/stages";
 import clsx from "@/lib/clsx";
@@ -27,6 +28,10 @@ import clsx from "@/lib/clsx";
  * Tiap efeknya dipasang dua kali: `group-hover` buat mouse dan
  * `group-active` buat jari. Di HP nggak ada hover sama sekali, jadi
  * tanpa yang kedua segelnya bakal diem total pas diketuk.
+ *
+ * Diklik: halaman panggungnya kebuka lewat portal (PortalPanggung.tsx).
+ * Yang masih kekunci nggak bisa dibuka, tapi tetap nanggepin — logonya
+ * goyang & tanggalnya ganti jadi "Dibuka …" (KunciPanggung.tsx).
  */
 export function StageSeal({
   stage,
@@ -117,6 +122,7 @@ export function StageSeal({
         src={logo}
         alt=""
         draggable={false}
+        data-segel-logo
         loading={priority ? "eager" : "lazy"}
         className="relative w-[84%] transition-transform duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-[1.04] group-active:-translate-y-1.5 group-active:scale-[1.04]"
         style={{
@@ -140,6 +146,7 @@ export function StageSeal({
         alt=""
         aria-hidden
         draggable={false}
+        data-segel-kilau
         loading="lazy"
         className="pointer-events-none absolute w-[84%] opacity-0 mix-blend-screen transition-all duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-[1.04] group-hover:opacity-60 group-active:-translate-y-1.5 group-active:scale-[1.04] group-active:opacity-60"
         style={{
@@ -157,9 +164,19 @@ export function StageSeal({
         <>
           {/* Tanggal panggungnya, di tempat yang sama — gantian sama
               petunjuknya: tanggal pas diam, "Lihat Panggung" pas disentuh. */}
-          <span className="pointer-events-none absolute bottom-[16%] font-alice text-xs uppercase tracking-[0.25em] text-emas/90 transition-opacity duration-500 group-hover:opacity-0">
+          <span className="pointer-events-none absolute bottom-[16%] font-alice text-xs uppercase tracking-[0.25em] text-emas/90 transition-opacity duration-500 group-hover:opacity-0 group-data-[ditolak=true]/kunci:opacity-0 group-data-[ditolak=true]/kunci:duration-300">
             {tanggalPanggung(stage)}
           </span>
+          {/* Yang masih kekunci, pas diketuk: tanggalnya ganti jadi kapan
+              segelnya dibuka (lihat KunciPanggung). */}
+          {!bisaDibuka && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute bottom-[16%] whitespace-nowrap font-alice text-xs uppercase tracking-[0.25em] text-emas opacity-0 transition-opacity duration-300 group-data-[ditolak=true]/kunci:opacity-100"
+            >
+              {`Dibuka ${tanggalPanggung({ mulai: stage.mulai })}`}
+            </span>
+          )}
           {bisaDibuka && (
             <span
               aria-hidden
@@ -173,32 +190,34 @@ export function StageSeal({
     </>
   );
 
+  /* `data-segel` = titik pusat portalnya (lihat PortalPanggung). */
   if (tanpaLink) {
     return (
-      <div aria-hidden className={kelas} style={gaya}>
+      <div aria-hidden data-segel className={kelas} style={gaya}>
         {isi}
       </div>
     );
   }
 
-  /* Masih disegel & bukan admin: cuma gambar, bukan tautan. */
+  /* Masih disegel & bukan admin: bukan tautan, cuma goyang pas diketuk. */
   if (!bisaDibuka) {
     return (
-      <div className={kelas} style={gaya}>
+      <KunciPanggung className={kelas} style={gaya}>
         <span className="sr-only">{`Panggung ${stage.name} — belum dibuka`}</span>
         {isi}
-      </div>
+      </KunciPanggung>
     );
   }
 
   return (
-    <Link
-      href={`/stages/${stage.slug}`}
+    <TautanPortal
+      stage={stage}
+      data-segel
       aria-label={`Panggung ${stage.name}, ${tanggalPanggung(stage)}${terbuka ? "" : " — belum dibuka"}`}
       className={kelas}
       style={gaya}
     >
       {isi}
-    </Link>
+    </TautanPortal>
   );
 }

@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
+import { PortalPanggung } from "@/components/site/PortalPanggung";
 
 export default function SiteLayout({
   children,
@@ -26,6 +27,9 @@ export default function SiteLayout({
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
+      {/* Portal /stages → halaman panggung. Di sini, bukan di halamannya,
+          biar nggak ikut hilang pas pindah halaman. */}
+      <PortalPanggung />
     </div>
   );
 }
