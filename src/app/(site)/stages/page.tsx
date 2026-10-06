@@ -28,7 +28,7 @@ export const metadata = { title: "Stages · Starlight UMN 2026" };
  *        Lonielle (atas)          3–4 Okt
  *         ╱        ╲
  *   Twizzle   ─   Enchantia
- *  (kiri-bawah)   (kanan-bawah)   Twizzle 8–9 Okt, Enchantia 4 Nov
+ *  (kiri-bawah)   (kanan-bawah)   Twizzle 26–27 Okt, Enchantia 4 Nov
  *
  * Titik sudutnya dihitung sekali di MagicCircle.tsx (POSISI_SEAL), terus
  * dipakai bareng sama gambar segitiganya. Jadi logonya selalu duduk

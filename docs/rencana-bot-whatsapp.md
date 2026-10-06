@@ -11,7 +11,7 @@
 
 Bot tanya-jawab lewat **WhatsApp** (dan opsional di website) buat
 **penonton**. Penonton cuma ada di panggung **Enchantia — 4 November 2026**
-(panggung terakhir; Lonielle 3–4 Okt & Twizzle 8–9 Okt nggak ada penonton
+(panggung terakhir; Lonielle 3–4 Okt & Twizzle 26–27 Okt nggak ada penonton
 umum).
 
 Alur yang diinginkan:

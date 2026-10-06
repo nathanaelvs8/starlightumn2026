@@ -82,7 +82,7 @@ export const stages: Stage[] = [
    * puncak segitiga (atas-tengah), lanjut searah jarum jam; di HP
    * urutannya dari atas ke bawah.
    *   1. Lonielle   3–4 Oktober 2026
-   *   2. Twizzle    8–9 Oktober 2026
+   *   2. Twizzle    26–27 Oktober 2026
    *   3. Enchantia  4 November 2026
    */
   {
@@ -110,8 +110,8 @@ export const stages: Stage[] = [
     slug: "twizzle",
     name: "Twizzle",
     tagline: "Panggung kedua, tempat setiap suara mulai berani terdengar.",
-    mulai: "2026-10-08",
-    selesai: "2026-10-09",
+    mulai: "2026-10-26",
+    selesai: "2026-10-27",
     desc: [
       "Twizzle terinspirasi dari karakter Dizzy Tremaine dalam Descendants yang dikenal kreatif, ceria, dan penuh warna.",
       "Stage ini melambangkan proses peserta mulai menemukan identitas dan gaya mereka sendiri. Di tahap ini, peserta mulai lebih bebas mengekspresikan kreativitas dan menunjukkan keunikan mereka.",
