@@ -35,6 +35,15 @@ export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
   useEffect(() => setActive(awal), [awal]);
 
   const go = (dir: number) => setActive((p) => (p + dir + total) % total);
+  /* Geser di dalam panggung tim: lompati divisi yang fotonya belum ada
+     (tombol "Lihat Tim"-nya juga disembunyikan, lihat di bawah). */
+  const goTim = (dir: number) =>
+    setActive((p) => {
+      let n = p;
+      do n = (n + dir + total) % total;
+      while (!divisions[n].tim && n !== p);
+      return n;
+    });
 
   const jumpTo = (target: number) => {
     if (target === active) return;
@@ -418,12 +427,17 @@ export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
           </p>
         </div>
 
-        {/* Buka panggung tim (layar penuh). */}
+        {/* Buka panggung tim (layar penuh). Divisi yang fotonya belum ada
+            (`tim` kosong di src/lib/divisions.ts) nggak dapet tombol ini —
+            daripada panggung kosong. Tetap dipasang tapi `invisible`, biar
+            tinggi panelnya nggak loncat pas ganti divisi. */}
         <button
           ref={tombolTim}
           type="button"
           onClick={() => setBukaTim(true)}
-          className="mt-5 inline-flex items-center rounded-pill border px-5 py-2 font-alice text-xs uppercase tracking-[0.2em] text-white/90 transition-colors sm:text-sm [@media(hover:hover)]:hover:bg-white/10"
+          disabled={!divisions[active].tim}
+          aria-hidden={!divisions[active].tim}
+          className={`${divisions[active].tim ? "" : "invisible "}mt-5 inline-flex items-center rounded-pill border px-5 py-2 font-alice text-xs uppercase tracking-[0.2em] text-white/90 transition-colors sm:text-sm [@media(hover:hover)]:hover:bg-white/10`}
           style={{ borderColor: `${accent}88`, transition: "border-color 800ms, background-color 200ms" }}
         >
           Lihat Tim
@@ -434,7 +448,7 @@ export function DivisionCoverflow({ awal = 0 }: { awal?: number }) {
         <ModalTim
           active={active}
           accent={accent}
-          onGeser={go}
+          onGeser={goTim}
           onTutup={() => {
             setBukaTim(false);
             tombolTim.current?.focus();

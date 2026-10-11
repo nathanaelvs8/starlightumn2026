@@ -18,6 +18,7 @@ export const divisions: Division[] = [
     role: "BPH",
     name: "Auradon",
     color: "#B9C6DC",
+    tim: "/images/division/tim-auradon.webp",
     desc: "Singgasana tempat setiap keputusan besar bermula. Auradon memimpin arah acara, menjaga visi tetap menyala, dan memastikan seluruh kerajaan bergerak seirama menuju panggung yang sama.",
   },
   {
@@ -40,6 +41,7 @@ export const divisions: Division[] = [
     role: "Sponsorship",
     name: "Wonderland",
     color: "#5FD79E",
+    tim: "/images/division/tim-wonderland.webp",
     desc: "Dunia penuh keajaiban tempat pertemuan tak terduga terjadi. Wonderland membuka pintu kerja sama dengan para sponsor, mengubah percakapan menjadi dukungan nyata bagi acara.",
   },
   {
@@ -63,6 +65,7 @@ export const divisions: Division[] = [
     role: "Dekorasi",
     name: "Lumiere",
     color: "#D96A3F",
+    tim: "/images/division/tim-lumiere.webp",
     desc: "Cahaya yang menghidupkan ruang. Lumiere menyulap panggung dan area acara dengan dekorasi yang memikat, menghadirkan suasana magis begitu penonton melangkah masuk.",
   },
   {
