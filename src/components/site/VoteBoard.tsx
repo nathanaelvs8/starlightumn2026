@@ -128,6 +128,27 @@ export function VoteBoard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, ditutupPada]);
 
+  /*
+    Data ikut berubah tanpa muat ulang: langsung pas orangnya balik ke tab
+    ini, dan tiap 60 detik selama voting dibuka. Sengaja jarang (admin tiap
+    5 detik): pengunjungnya banyak, dan tiap ambil data = beberapa kueri.
+  */
+  const menyimpanKini = useRef(false);
+  menyimpanKini.current = saving !== null;
+  const muatTerbaru = useRef(muat);
+  muatTerbaru.current = muat;
+  useEffect(() => {
+    const segarkan = () => {
+      if (document.visibilityState === "visible" && !menyimpanKini.current) muatTerbaru.current(true);
+    };
+    const t = status === "buka" ? window.setInterval(segarkan, 60_000) : undefined;
+    document.addEventListener("visibilitychange", segarkan);
+    return () => {
+      window.clearInterval(t);
+      document.removeEventListener("visibilitychange", segarkan);
+    };
+  }, [status]);
+
   const vote = async (teamId: string) => {
     if (saving) return;
     setSaving(teamId);

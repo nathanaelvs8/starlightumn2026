@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { EditorTimVote } from "@/components/site/EditorTimVote";
 import { dariIsianWib, formatWaktuTutup, keIsianWib, statusVoting } from "@/lib/statusVoting";
@@ -79,7 +79,22 @@ export function VoteAdmin() {
     Sekarang galat ditampilkan apa adanya, dengan tombol coba lagi.
   */
   const [galatMuat, setGalatMuat] = useState<string | null>(null);
-  const muat = async () => {
+  /** Jam data terakhir berhasil diambil, & pembaruan otomatis terakhir gagal atau nggak. */
+  const [diperbarui, setDiperbarui] = useState<number | null>(null);
+  const [gagalSegar, setGagalSegar] = useState(false);
+  /** Lagi ada yang dikirim → pembaruan otomatis jangan nimpa tampilan sementaranya. */
+  const sibuk = useRef(false);
+  sibuk.current = menyimpanStatus || menyimpanSetelan;
+  const sedangMuat = useRef(false);
+
+  /**
+   * `diam`: pembaruan otomatis di latar. Gagal = data lama dibiarin tampil
+   * (cuma ada tanda kecil), dan isian waktu tutup yang mungkin lagi diketik
+   * admin nggak ditimpa.
+   */
+  const muat = async (diam = false) => {
+    if (diam && (sedangMuat.current || sibuk.current)) return;
+    sedangMuat.current = true;
     const ambil = async (url: string) => {
       const r = await fetch(url, { cache: "no-store" });
       const d = await r.json().catch(() => ({}));
@@ -94,23 +109,30 @@ export function VoteAdmin() {
       ]);
       setTeams(tRes.teams ?? []);
       setSiap(tRes.siap !== false);
-      setIsOpen(!!sRes.is_open);
-      setIsFinished(!!sRes.is_finished);
-      setTampilkanSuara(sRes.tampilkan_suara !== false);
-      setDitutupPada(sRes.voting_ditutup_pada ?? null);
-      setIsianTutup(keIsianWib(sRes.voting_ditutup_pada));
-      setSetelanSiap(sRes.siap !== false);
       setVoters(vRes.voters ?? {});
+      setSetelanSiap(sRes.siap !== false);
+      if (!(diam && sibuk.current)) {
+        setIsOpen(!!sRes.is_open);
+        setIsFinished(!!sRes.is_finished);
+        setTampilkanSuara(sRes.tampilkan_suara !== false);
+        setDitutupPada(sRes.voting_ditutup_pada ?? null);
+      }
+      if (!diam) setIsianTutup(keIsianWib(sRes.voting_ditutup_pada));
       setGalatMuat(null);
+      setGagalSegar(false);
+      setDiperbarui(Date.now());
     } catch (e) {
-      setGalatMuat(
-        e instanceof TypeError
-          ? "Koneksi terputus. Periksa jaringan Anda, lalu coba lagi."
-          : e instanceof Error
-            ? e.message
-            : "Data gagal dimuat.",
-      );
+      if (diam) setGagalSegar(true);
+      else
+        setGalatMuat(
+          e instanceof TypeError
+            ? "Koneksi terputus. Periksa jaringan Anda, lalu coba lagi."
+            : e instanceof Error
+              ? e.message
+              : "Data gagal dimuat.",
+        );
     } finally {
+      sedangMuat.current = false;
       setLoading(false);
     }
   };
@@ -118,6 +140,26 @@ export function VoteAdmin() {
   useEffect(() => {
     muat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /*
+    Suara yang masuk (mis. dari HP) kelihatan tanpa muat ulang halaman:
+    data diambil lagi tiap 5 detik selama tab ini kebuka, dan langsung pas
+    admin balik ke tab ini. (Bukan Realtime Supabase: tabel `votes` dikunci
+    per akun, jadi siarannya cuma bakal ngirim suara milik admin sendiri.)
+  */
+  const muatTerbaru = useRef(muat);
+  muatTerbaru.current = muat;
+  useEffect(() => {
+    const segarkan = () => {
+      if (document.visibilityState === "visible") muatTerbaru.current(true);
+    };
+    const t = window.setInterval(segarkan, 5_000);
+    document.addEventListener("visibilitychange", segarkan);
+    return () => {
+      window.clearInterval(t);
+      document.removeEventListener("visibilitychange", segarkan);
+    };
   }, []);
 
   /**
@@ -404,11 +446,19 @@ export function VoteAdmin() {
 
       {/* Daftar tim */}
       <div>
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-start justify-between gap-4">
           <p className="font-alice text-white">Daftar Tim</p>
-          <p className="font-alice text-sm text-white/60">
-            Total suara: {totalVote}
-          </p>
+          <div className="text-right">
+            <p className="font-alice text-sm text-white/60">Total suara: {totalVote}</p>
+            {/* Tanda pembaruan otomatis (lihat muat): biar admin tau angkanya hidup. */}
+            {/* Sengaja tanpa aria-live: jamnya ganti tiap 5 detik, bakal dibacakan terus. */}
+            <p className={`font-alice text-xs ${gagalSegar ? "text-amber-200" : "text-white/40"}`}>
+              {gagalSegar
+                ? "Gagal memperbarui, mencoba lagi…"
+                : diperbarui &&
+                  `Diperbarui otomatis · ${new Date(diperbarui).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" })}`}
+            </p>
+          </div>
         </div>
         <div className="space-y-3">
           {teams.length === 0 ? (
