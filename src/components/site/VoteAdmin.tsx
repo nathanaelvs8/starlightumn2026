@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { EditorTimVote } from "@/components/site/EditorTimVote";
+import { dariIsianWib, formatWaktuTutup, keIsianWib, statusVoting } from "@/lib/statusVoting";
+import {
+  BUCKET_FOTO,
+  BUCKET_VIDEO,
+  jenisVideo,
+  pathDariUrlPublik,
+  sampulTim,
+  type TimVote,
+} from "@/lib/videoTim";
 
-type Team = {
-  id: string;
-  name: string;
-  photo_url: string | null;
-  vote_count: number;
-};
+type Team = TimVote;
+
+/** Label kecil di daftar tim: videonya dari mana. */
+const LABEL_VIDEO = { file: "Video unggahan", youtube: "YouTube", instagram: "Instagram" } as const;
 
 type Voter = { user_id: string; name: string; email: string };
 
@@ -31,7 +39,7 @@ const STATUS: { id: StatusVoting; label: string; keterangan: string; warna: stri
   {
     id: "selesai",
     label: "Selesai",
-    keterangan: "Voting ditutup dan pengunjung melihat hasil akhir.",
+    keterangan: "Voting ditutup. Pengunjung melihat ucapan terima kasih dan rekap suara (jika jumlah suara ditampilkan).",
     warna: "bg-red-500/80 text-white",
   },
 ];
@@ -43,54 +51,74 @@ export function VoteAdmin() {
   const [isOpen, setIsOpen] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [loading, setLoading] = useState(true);
+  /** Kolom video & keterangan sudah ada di database. */
+  const [siap, setSiap] = useState(true);
+  /** Status voting lagi dikirim — pilihannya dikunci sampai server jawab. */
+  const [menyimpanStatus, setMenyimpanStatus] = useState(false);
+  /** Jumlah suara kelihatan pengunjung — selama voting dan sesudah selesai. */
+  const [tampilkanSuara, setTampilkanSuara] = useState(true);
+  /** Waktu tutup tersimpan (ISO) & isian formnya (WIB, `datetime-local`). */
+  const [ditutupPada, setDitutupPada] = useState<string | null>(null);
+  const [isianTutup, setIsianTutup] = useState("");
+  /** Kolom waktu tutup & saklar jumlah suara sudah ada di database. */
+  const [setelanSiap, setSetelanSiap] = useState(true);
+  const [menyimpanSetelan, setMenyimpanSetelan] = useState(false);
 
-  // form tambah
-  const [nama, setNama] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  /** Ganti angka ini = form tambah dikosongkan lagi (dipasang ulang). */
+  const [formBaru, setFormBaru] = useState(0);
 
   // edit
   const [editId, setEditId] = useState<string | null>(null);
-  const [editNama, setEditNama] = useState("");
-  const [editFile, setEditFile] = useState<File | null>(null);
 
   // expand daftar pemilih
   const [buka, setBuka] = useState<string | null>(null);
 
+  /*
+    Dulu respons galat (401/500) dibaca kayak data biasa: daftar tim jadi
+    kosong & status jadi "Belum Dibuka" — admin bisa ngira datanya hilang.
+    Sekarang galat ditampilkan apa adanya, dengan tombol coba lagi.
+  */
+  const [galatMuat, setGalatMuat] = useState<string | null>(null);
   const muat = async () => {
-    const [tRes, sRes, vRes] = await Promise.all([
-      fetch("/api/admin/vote-teams").then((r) => r.json()),
-      fetch("/api/admin/vote-settings").then((r) => r.json()),
-      fetch("/api/admin/vote-voters").then((r) => r.json()),
-    ]);
-    setTeams(tRes.teams ?? []);
-    setIsOpen(!!sRes.is_open);
-    setIsFinished(!!sRes.is_finished);
-    setVoters(vRes.voters ?? {});
-    setLoading(false);
+    const ambil = async (url: string) => {
+      const r = await fetch(url, { cache: "no-store" });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error ?? "Data gagal dimuat.");
+      return d;
+    };
+    try {
+      const [tRes, sRes, vRes] = await Promise.all([
+        ambil("/api/admin/vote-teams"),
+        ambil("/api/admin/vote-settings"),
+        ambil("/api/admin/vote-voters"),
+      ]);
+      setTeams(tRes.teams ?? []);
+      setSiap(tRes.siap !== false);
+      setIsOpen(!!sRes.is_open);
+      setIsFinished(!!sRes.is_finished);
+      setTampilkanSuara(sRes.tampilkan_suara !== false);
+      setDitutupPada(sRes.voting_ditutup_pada ?? null);
+      setIsianTutup(keIsianWib(sRes.voting_ditutup_pada));
+      setSetelanSiap(sRes.siap !== false);
+      setVoters(vRes.voters ?? {});
+      setGalatMuat(null);
+    } catch (e) {
+      setGalatMuat(
+        e instanceof TypeError
+          ? "Koneksi terputus. Periksa jaringan Anda, lalu coba lagi."
+          : e instanceof Error
+            ? e.message
+            : "Data gagal dimuat.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     muat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const uploadFoto = async (f: File): Promise<string | null> => {
-    const ext = f.name.split(".").pop();
-    const namaFile = `team-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2, 8)}.${ext}`;
-    const { error } = await supabase.storage
-      .from("team-photos")
-      .upload(namaFile, f, { upsert: false });
-    if (error) {
-      alert("Foto gagal diunggah: " + error.message);
-      return null;
-    }
-    const { data } = supabase.storage.from("team-photos").getPublicUrl(namaFile);
-    return data.publicUrl;
-  };
 
   /**
    * Kirim satu perubahan setelan voting, lalu BALIKIN kalau gagal.
@@ -105,10 +133,7 @@ export function VoteAdmin() {
    * yang dilihat SEMUA pengunjung. Admin bisa mengira voting sudah
    * dibuka padahal belum, dan baru sadar pas ada yang komplain.
    */
-  const simpanSetelan = async (
-    patch: { is_open: boolean; is_finished: boolean },
-    batalkan: () => void,
-  ) => {
+  const simpanSetelan = async (patch: Record<string, unknown>, batalkan: () => void): Promise<boolean> => {
     try {
       const res = await fetch("/api/admin/vote-settings", {
         method: "PATCH",
@@ -117,12 +142,46 @@ export function VoteAdmin() {
       });
       if (!res.ok) {
         batalkan();
-        alert("Setelan gagal disimpan. Status dikembalikan seperti semula.");
+        const d = await res.json().catch(() => ({}));
+        alert(`${d.error ?? "Setelan gagal disimpan."} Setelan dikembalikan seperti semula.`);
+        return false;
       }
+      return true;
     } catch {
       batalkan();
       alert("Koneksi terputus. Setelan dikembalikan seperti semula.");
+      return false;
     }
+  };
+
+  const ubahTampilkanSuara = async (baru: boolean) => {
+    if (menyimpanSetelan) return;
+    setTampilkanSuara(baru);
+    setMenyimpanSetelan(true);
+    await simpanSetelan({ tampilkan_suara: baru }, () => setTampilkanSuara(!baru));
+    setMenyimpanSetelan(false);
+  };
+
+  /** `isian` kosong = hapus waktu tutup (voting ditutup manual lewat status). */
+  const simpanWaktuTutup = async (isian: string) => {
+    if (menyimpanSetelan) return;
+    const iso = isian ? dariIsianWib(isian) : null;
+    if (isian && !iso) return alert("Waktu tutup tidak valid.");
+    if (
+      iso &&
+      Date.parse(iso) <= Date.now() &&
+      isOpen &&
+      !confirm("Waktu ini sudah lewat, jadi voting langsung tertutup bagi pengunjung. Lanjutkan?")
+    )
+      return;
+    const lama = ditutupPada;
+    setDitutupPada(iso);
+    setMenyimpanSetelan(true);
+    await simpanSetelan({ voting_ditutup_pada: iso }, () => {
+      setDitutupPada(lama);
+      setIsianTutup(keIsianWib(lama));
+    });
+    setMenyimpanSetelan(false);
   };
 
   /*
@@ -135,12 +194,22 @@ export function VoteAdmin() {
     bareng dan nggak mungkin bentrok lagi.
   */
   const status: StatusVoting = isFinished ? "selesai" : isOpen ? "buka" : "tutup";
+  /** Status masih "Dibuka" tapi waktu tutupnya udah lewat (src/lib/statusVoting.ts). */
+  const lewatTutup =
+    statusVoting({ is_open: isOpen, is_finished: isFinished, voting_ditutup_pada: ditutupPada }) === "lewat";
 
+  /*
+    Satu perubahan status dalam satu waktu. Dulu klik "Dibuka" lalu
+    "Selesai" cepat-cepat ngirim dua permintaan barengan — urutan
+    sampainya bisa kebalik, dan kalau yang pertama gagal, pembatalannya
+    malah nimpa pilihan terbaru.
+  */
   const ubahStatus = async (baru: StatusVoting) => {
-    if (baru === status) return;
+    if (baru === status || menyimpanStatus) return;
     const lama = { isOpen, isFinished };
     setIsOpen(baru === "buka");
     setIsFinished(baru === "selesai");
+    setMenyimpanStatus(true);
     await simpanSetelan(
       { is_open: baru === "buka", is_finished: baru === "selesai" },
       () => {
@@ -148,66 +217,29 @@ export function VoteAdmin() {
         setIsFinished(lama.isFinished);
       },
     );
+    setMenyimpanStatus(false);
   };
 
-  const tambah = async () => {
-    if (!nama.trim()) return alert("Nama tim wajib diisi.");
-    setUploading(true);
-    let photo_url: string | null = null;
-    if (file) {
-      photo_url = await uploadFoto(file);
-      if (!photo_url) {
-        setUploading(false);
-        return;
-      }
-    }
-    await fetch("/api/admin/vote-teams", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: nama.trim(), photo_url }),
-    });
-    setNama("");
-    setFile(null);
-    if (fileRef.current) fileRef.current.value = "";
-    setUploading(false);
-    muat();
-  };
-
-  const mulaiEdit = (t: Team) => {
-    setEditId(t.id);
-    setEditNama(t.name);
-    setEditFile(null);
-  };
-
-  const simpanEdit = async (id: string) => {
-    setUploading(true);
-    const patch: Record<string, unknown> = { id, name: editNama.trim() };
-    if (editFile) {
-      const url = await uploadFoto(editFile);
-      if (!url) {
-        setUploading(false);
-        return;
-      }
-      patch.photo_url = url;
-    }
-    await fetch("/api/admin/vote-teams", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patch),
-    });
-    setEditId(null);
-    setUploading(false);
-    muat();
-  };
-
-  const hapus = async (id: string) => {
+  const hapus = async (t: Team) => {
     if (!confirm("Hapus tim ini? Seluruh suara untuk tim ini juga akan terhapus."))
       return;
-    await fetch("/api/admin/vote-teams", {
+    const res = await fetch("/api/admin/vote-teams", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id: t.id }),
     });
+    if (res.ok) {
+      // File video & sampulnya ikut dibuang biar kuota penyimpanan nggak
+      // kepakai file yang udah nggak dipakai siapa pun. Gagal = biarin.
+      const video = jenisVideo(t.video_url) === "file" ? pathDariUrlPublik(t.video_url, BUCKET_VIDEO) : null;
+      const foto = pathDariUrlPublik(t.photo_url, BUCKET_FOTO);
+      // Supabase nggak melempar galat — dikembalikan di `{ error }`.
+      for (const [bucket, path] of [[BUCKET_VIDEO, video], [BUCKET_FOTO, foto]] as const) {
+        if (!path) continue;
+        const { error } = await supabase.storage.from(bucket).remove([path]);
+        if (error) console.warn("[vote] file tim gagal dihapus:", bucket, path, error.message);
+      }
+    } else alert("Tim gagal dihapus. Silakan coba lagi.");
     muat();
   };
 
@@ -223,7 +255,24 @@ export function VoteAdmin() {
 
   if (loading) return <p className="font-alice text-white/60">Memuat…</p>;
 
-  const totalVote = teams.reduce((s, t) => s + t.vote_count, 0);
+  if (galatMuat)
+    return (
+      <div role="alert" className="rounded-xl border border-red-400/30 bg-red-500/5 p-4 font-alice text-sm text-red-100">
+        <p>Data voting gagal dimuat: {galatMuat}</p>
+        <button
+          type="button"
+          onClick={() => {
+            setLoading(true);
+            muat();
+          }}
+          className="mt-3 rounded-md border border-white/25 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
+        >
+          Coba lagi
+        </button>
+      </div>
+    );
+
+  const totalVote = teams.reduce((s, t) => s + (t.vote_count ?? 0), 0);
 
   return (
     <div className="space-y-8">
@@ -231,7 +280,9 @@ export function VoteAdmin() {
       <div className="rounded-xl border border-white/15 bg-white/5 p-4">
         <p className="font-alice text-white">Status Voting</p>
         <p className="font-alice text-sm text-white/60">
-          {STATUS.find((s) => s.id === status)?.keterangan}
+          {lewatTutup
+            ? "Waktu tutup sudah lewat: pengunjung melihat bahwa voting telah ditutup dan suara tidak diterima lagi. Pilih Selesai untuk menampilkan hasil."
+            : STATUS.find((s) => s.id === status)?.keterangan}
         </p>
         {/*
           role="radiogroup" + role="radio" + aria-checked: screen reader
@@ -252,7 +303,8 @@ export function VoteAdmin() {
                 role="radio"
                 aria-checked={aktif}
                 onClick={() => ubahStatus(s.id)}
-                className={`rounded-md px-2 py-2.5 font-alice text-xs uppercase tracking-wide transition-colors sm:text-sm ${
+                disabled={menyimpanStatus}
+                className={`rounded-md disabled:cursor-wait px-2 py-2.5 font-alice text-xs uppercase tracking-wide transition-colors sm:text-sm ${
                   aktif ? s.warna : "text-white/60 hover:bg-white/10 hover:text-white"
                 }`}
               >
@@ -261,34 +313,93 @@ export function VoteAdmin() {
             );
           })}
         </div>
+
+        <div className="mt-5 space-y-5 border-t border-white/10 pt-5">
+          {!setelanSiap && (
+            <p className="rounded-lg border border-amber-300/30 bg-amber-300/5 p-3 font-alice text-sm text-amber-100">
+              Waktu tutup dan pengaturan jumlah suara belum tersedia di database. Jalankan SQL yang tercantum di{" "}
+              <code>src/app/api/admin/vote-settings/route.ts</code> pada SQL Editor Supabase.
+            </p>
+          )}
+
+          {/* Waktu tutup — diisi & ditampilkan dalam WIB, apa pun zona waktu laptop admin. */}
+          <div>
+            <label htmlFor="waktu-tutup-voting" className="block font-alice text-sm text-white/80">
+              Waktu voting ditutup <span className="text-white/45">(WIB, opsional)</span>
+            </label>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <input
+                id="waktu-tutup-voting"
+                type="datetime-local"
+                value={isianTutup}
+                onChange={(e) => setIsianTutup(e.target.value)}
+                disabled={!setelanSiap || menyimpanSetelan}
+                aria-describedby="waktu-tutup-ket"
+                className="rounded-md border border-white/20 bg-night px-3 py-2 font-alice text-sm text-white [color-scheme:dark] disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onClick={() => simpanWaktuTutup(isianTutup)}
+                disabled={!setelanSiap || menyimpanSetelan || !isianTutup || isianTutup === keIsianWib(ditutupPada)}
+                className="rounded-md bg-cyan-500/80 px-4 py-2 font-alice text-sm text-white transition-colors hover:bg-cyan-500 disabled:opacity-50"
+              >
+                Simpan
+              </button>
+              {ditutupPada && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsianTutup("");
+                    simpanWaktuTutup("");
+                  }}
+                  disabled={menyimpanSetelan}
+                  className="rounded-md border border-white/25 px-4 py-2 font-alice text-sm text-white/70 transition-colors hover:bg-white/10 disabled:opacity-50"
+                >
+                  Hapus
+                </button>
+              )}
+            </div>
+            <p id="waktu-tutup-ket" className="mt-2 font-alice text-xs leading-relaxed text-white/55">
+              {!ditutupPada
+                ? "Belum diatur: voting ditutup manual dengan memilih status Selesai."
+                : lewatTutup
+                  ? `Sudah lewat (${formatWaktuTutup(ditutupPada)}). Suara tidak diterima lagi.`
+                  : `Pengunjung melihat bahwa voting ditutup ${formatWaktuTutup(ditutupPada)}. Lewat dari itu, suara otomatis tidak diterima.`}
+            </p>
+          </div>
+
+          {/* Jumlah suara — disembunyikan = angkanya nggak dikirim ke pengunjung sama sekali. */}
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={tampilkanSuara}
+              onChange={(e) => ubahTampilkanSuara(e.target.checked)}
+              disabled={!setelanSiap || menyimpanSetelan}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-400"
+            />
+            <span>
+              <span className="block font-alice text-sm text-white">Tampilkan jumlah suara ke pengunjung</span>
+              <span className="mt-0.5 block font-alice text-xs leading-relaxed text-white/55">
+                {tampilkanSuara
+                  ? "Pengunjung melihat jumlah suara tiap tim, termasuk setelah voting selesai."
+                  : "Jumlah suara tidak ditampilkan ke pengunjung, juga setelah voting selesai. Admin tetap dapat melihatnya di bawah."}
+              </span>
+            </span>
+          </label>
+        </div>
       </div>
 
       {/* Form tambah tim */}
       <div className="rounded-xl border border-white/15 bg-white/5 p-4">
-        <p className="mb-3 font-alice text-white">Tambah Tim</p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <input
-            value={nama}
-            onChange={(e) => setNama(e.target.value)}
-            placeholder="Nama tim"
-            className="flex-1 rounded-md border border-white/20 bg-night px-3 py-2 font-alice text-sm text-white placeholder:text-white/40"
-          />
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="font-alice text-sm text-white/70 file:mr-3 file:rounded-md file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-white"
-          />
-          <button
-            type="button"
-            onClick={tambah}
-            disabled={uploading}
-            className="rounded-md bg-cyan-500/80 px-4 py-2 font-alice text-sm text-white transition-colors hover:bg-cyan-500 disabled:opacity-50"
-          >
-            {uploading ? "Menyimpan…" : "Tambah"}
-          </button>
-        </div>
+        <p className="mb-4 font-alice text-white">Tambah Tim</p>
+        <EditorTimVote
+          key={formBaru}
+          siap={siap}
+          onSelesai={() => {
+            setFormBaru((n) => n + 1);
+            muat();
+          }}
+        />
       </div>
 
       {/* Daftar tim */}
@@ -312,78 +423,51 @@ export function VoteAdmin() {
                   className="rounded-xl border border-white/15 bg-white/5 p-3"
                 >
                   <div className="flex items-center gap-4">
-                    {t.photo_url ? (
-                      <img
-                        src={t.photo_url}
-                        alt={t.name}
-                        className="h-14 w-14 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="grid h-14 w-14 place-items-center rounded-lg bg-white/10 font-alice text-xs text-white/40">
-                        Tanpa foto
-                      </div>
-                    )}
+                    <Sampul tim={t} />
 
-                    {editId === t.id ? (
-                      <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-                        <input
-                          value={editNama}
-                          onChange={(e) => setEditNama(e.target.value)}
-                          className="flex-1 rounded-md border border-white/20 bg-night px-3 py-1.5 font-alice text-sm text-white"
-                        />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) =>
-                            setEditFile(e.target.files?.[0] ?? null)
-                          }
-                          className="font-alice text-xs text-white/70 file:mr-2 file:rounded file:border-0 file:bg-white/10 file:px-2 file:py-1 file:text-white"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => simpanEdit(t.id)}
-                          disabled={uploading}
-                          className="rounded-md bg-green-500/80 px-3 py-1.5 font-alice text-xs text-white disabled:opacity-50"
-                        >
-                          Simpan
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditId(null)}
-                          className="rounded-md border border-white/25 px-3 py-1.5 font-alice text-xs text-white/70"
-                        >
-                          Batal
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex-1">
-                          <p className="font-alice text-white">{t.name}</p>
-                          <button
-                            type="button"
-                            onClick={() => setBuka(terbuka ? null : t.id)}
-                            className="font-alice text-sm text-cyan-200/80 hover:text-cyan-200"
-                          >
-                            {t.vote_count} suara · {terbuka ? "tutup" : "lihat pemilih"}
-                          </button>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => mulaiEdit(t)}
-                          className="rounded-md border border-white/25 px-3 py-1.5 font-alice text-xs text-white/80 transition-colors hover:bg-white/10"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => hapus(t.id)}
-                          className="rounded-md border border-red-400/40 px-3 py-1.5 font-alice text-xs text-red-400 transition-colors hover:bg-red-500/10"
-                        >
-                          Hapus
-                        </button>
-                      </>
-                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-alice text-white">{t.name}</p>
+                      <p className="font-alice text-xs text-white/50">
+                        {jenisVideo(t.video_url) ? LABEL_VIDEO[jenisVideo(t.video_url)!] : "Tanpa video"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setBuka(terbuka ? null : t.id)}
+                        className="font-alice text-sm text-cyan-200/80 hover:text-cyan-200"
+                      >
+                        {t.vote_count ?? 0} suara · {terbuka ? "tutup" : "lihat pemilih"}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditId(editId === t.id ? null : t.id)}
+                      aria-expanded={editId === t.id}
+                      className="rounded-md border border-white/25 px-3 py-1.5 font-alice text-xs text-white/80 transition-colors hover:bg-white/10"
+                    >
+                      {editId === t.id ? "Tutup" : "Edit"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => hapus(t)}
+                      className="rounded-md border border-red-400/40 px-3 py-1.5 font-alice text-xs text-red-400 transition-colors hover:bg-red-500/10"
+                    >
+                      Hapus
+                    </button>
                   </div>
+
+                  {editId === t.id && (
+                    <div className="mt-4 border-t border-white/10 pt-4">
+                      <EditorTimVote
+                        awal={t}
+                        siap={siap}
+                        onBatal={() => setEditId(null)}
+                        onSelesai={() => {
+                          setEditId(null);
+                          muat();
+                        }}
+                      />
+                    </div>
+                  )}
 
                   {/* Daftar pemilih (expand) */}
                   {terbuka && (
@@ -426,6 +510,19 @@ export function VoteAdmin() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Gambar sampul kecil di daftar tim. */
+function Sampul({ tim }: { tim: Team }) {
+  const src = sampulTim(tim);
+  return src ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="" className="aspect-video w-24 shrink-0 rounded-lg bg-night object-cover" />
+  ) : (
+    <div className="grid aspect-video w-24 shrink-0 place-items-center rounded-lg bg-white/10 font-alice text-[11px] text-white/40">
+      Tanpa sampul
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { hitungSuara } from "@/lib/suara";
+import { statusVoting, suaraTerlihat } from "@/lib/statusVoting";
 
 export async function GET() {
   const supabase = await createClient();
@@ -10,27 +12,61 @@ export async function GET() {
     return NextResponse.json({ error: "Anda belum masuk. Silakan masuk terlebih dahulu." }, { status: 401 });
   }
 
-  const [teamsRes, votesRes, settingsRes] = await Promise.all([
-    supabase.from("vote_teams").select("id, name, photo_url").order("created_at"),
-    supabase.from("votes").select("team_id, user_id"),
-    supabase.from("vote_settings").select("is_open, is_finished").eq("id", 1).single(),
+  const [teamsRes, settingsRes, pilihanRes] = await Promise.all([
+    // `*`, bukan daftar kolom: video_url & deskripsi baru ada setelah SQL di
+    // src/app/api/admin/vote-teams/route.ts dijalankan — kalau disebut
+    // namanya sebelum itu, seluruh daftar tim gagal dimuat.
+    supabase.from("vote_teams").select("*").order("created_at"),
+    // `*` juga: waktu tutup & saklar jumlah suara baru ada setelah SQL di
+    // src/app/api/admin/vote-settings/route.ts dijalankan.
+    supabase.from("vote_settings").select("*").eq("id", 1).single(),
+    // Pilihan sendiri dicari langsung, bukan dicari di antara semua suara.
+    supabase.from("votes").select("team_id").eq("user_id", user.id).maybeSingle(),
   ]);
 
-  const votes = votesRes.data ?? [];
+  /*
+    Galat database dilaporkan sebagai galat. Dulu semuanya diganti nilai
+    kosong: tim gagal dimuat = "belum ada tim", setelan gagal dimuat =
+    "voting belum dibuka" — pengunjung dibohongi, dan admin nggak tau.
+  */
+  const galat = teamsRes.error ?? settingsRes.error ?? pilihanRes.error;
+  if (galat) {
+    console.error("[vote] gagal memuat:", galat.message);
+    return NextResponse.json({ error: "Data voting gagal dimuat. Silakan coba lagi." }, { status: 500 });
+  }
+
+  const setelan = settingsRes.data;
+  const status = statusVoting(setelan);
+  /*
+    Jumlah suara disembunyikan admin → angkanya NGGAK dikirim sama sekali
+    (bukan cuma nggak ditampilkan), jadi nggak bisa diintip dari tab
+    Network. Berlaku juga setelah voting selesai.
+  */
+  const kirimJumlah = suaraTerlihat(setelan);
+
+  let jumlah: Record<string, number> = {};
+  if (kirimJumlah)
+    try {
+      jumlah = await hitungSuara((teamsRes.data ?? []).map((t) => t.id));
+    } catch (e) {
+      console.error("[vote] gagal menghitung suara:", e);
+      return NextResponse.json({ error: "Data voting gagal dimuat. Silakan coba lagi." }, { status: 500 });
+    }
+
   const teams = (teamsRes.data ?? []).map((t) => ({
     id: t.id,
     name: t.name,
     photo_url: t.photo_url,
-    vote_count: votes.filter((v) => v.team_id === t.id).length,
+    video_url: t.video_url ?? null,
+    deskripsi: t.deskripsi ?? null,
+    vote_count: kirimJumlah ? (jumlah[t.id] ?? 0) : null,
   }));
-
-  const myVote = votes.find((v) => v.user_id === user.id)?.team_id ?? null;
 
   return NextResponse.json({
     teams,
-    is_open: !!settingsRes.data?.is_open,
-    is_finished: !!settingsRes.data?.is_finished,
-    my_team_id: myVote,
+    status,
+    ditutup_pada: setelan?.voting_ditutup_pada ?? null,
+    my_team_id: pilihanRes.data?.team_id ?? null,
   });
 }
 
@@ -43,15 +79,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Anda belum masuk. Silakan masuk terlebih dahulu." }, { status: 401 });
   }
 
-  // pastikan voting masih buka
-  const { data: settings } = await supabase
-    .from("vote_settings")
-    .select("is_open, is_finished")
-    .eq("id", 1)
-    .single();
-  if (settings?.is_finished || !settings?.is_open) {
+  // Pastikan voting masih buka — termasuk waktu tutupnya. (Database juga
+  // menjaga aturan yang sama, jadi suara nggak bisa masuk lewat jalan lain.)
+  const { data: settings } = await supabase.from("vote_settings").select("*").eq("id", 1).single();
+  const status = statusVoting(settings);
+  if (status !== "buka") {
     return NextResponse.json(
-      { error: "Voting sudah ditutup." },
+      { error: status === "belum" ? "Voting belum dibuka." : "Voting sudah ditutup.", status },
       { status: 403 },
     );
   }

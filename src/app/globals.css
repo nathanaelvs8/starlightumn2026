@@ -746,6 +746,18 @@
       transform: scale(0.94) rotate(-12deg);
     }
   }
+  /* Detail tim di halaman Vote: naik sedikit sambil muncul (latarnya
+     muncul lewat .tim-modal). */
+  .detail-masuk {
+    animation: detail-masuk 340ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  @keyframes detail-masuk {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+  }
+
   /* Halaman panggungnya udah kebuka di balik portal → portalnya memudar. */
   .portal-tutup {
     animation: portal-tutup 380ms ease-out 60ms forwards;

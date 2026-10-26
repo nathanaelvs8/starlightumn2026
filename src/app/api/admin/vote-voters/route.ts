@@ -20,6 +20,23 @@ async function pastikanAdmin() {
   return { ok: true as const };
 }
 
+/**
+ * Ambil SEMUA baris, sedikit-sedikit. Supabase cuma ngirim maks. 1.000
+ * baris per permintaan — tanpa ini, pemilih ke-1.001 dst. nggak muncul.
+ */
+async function ambilSemua<T>(
+  ambil: (dari: number, sampai: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const UKURAN = 1000;
+  const hasil: T[] = [];
+  for (let dari = 0; ; dari += UKURAN) {
+    const { data, error } = await ambil(dari, dari + UKURAN - 1);
+    if (error) throw new Error(error.message);
+    hasil.push(...(data ?? []));
+    if (!data || data.length < UKURAN) return hasil;
+  }
+}
+
 export async function GET() {
   const cek = await pastikanAdmin();
   if ("error" in cek)
@@ -30,28 +47,36 @@ export async function GET() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const { data: votes, error } = await admin
-    .from("votes")
-    .select("user_id, team_id, created_at")
-    .order("created_at", { ascending: true });
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  let votes: { user_id: string; team_id: string; created_at: string }[];
+  let profiles: { id: string; full_name: string | null }[];
+  try {
+    [votes, profiles] = await Promise.all([
+      ambilSemua<{ user_id: string; team_id: string; created_at: string }>((a, b) =>
+        admin.from("votes").select("user_id, team_id, created_at").order("created_at", { ascending: true }).range(a, b),
+      ),
+      ambilSemua<{ id: string; full_name: string | null }>((a, b) =>
+        admin.from("profiles").select("id, full_name").order("id").range(a, b),
+      ),
+    ]);
+  } catch (e) {
+    console.error("[vote-voters]", e);
+    return NextResponse.json({ error: "Daftar pemilih gagal dimuat." }, { status: 500 });
+  }
+  const nameById = new Map(profiles.map((p) => [p.id, p.full_name]));
 
-  const { data: profiles } = await admin
-    .from("profiles")
-    .select("id, full_name");
-  const nameById = new Map(
-    (profiles ?? []).map((p) => [p.id, p.full_name]),
-  );
-
-  const { data: authList } = await admin.auth.admin.listUsers();
-  const emailById = new Map(
-    (authList?.users ?? []).map((u) => [u.id, u.email]),
-  );
+  /* listUsers() tanpa opsi cuma ngasih 50 akun pertama — sisanya dulu
+     tampil "—" di kolom email. Diambil per halaman sampai habis. */
+  const emailById = new Map<string, string | undefined>();
+  for (let page = 1; ; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) break;
+    data.users.forEach((u) => emailById.set(u.id, u.email));
+    if (data.users.length < 1000) break;
+  }
 
   // kelompokin pemilih per team_id
   const voters: Record<string, { user_id: string; name: string; email: string }[]> = {};
-  for (const v of votes ?? []) {
+  for (const v of votes) {
     (voters[v.team_id] ??= []).push({
       user_id: v.user_id,
       name: nameById.get(v.user_id) ?? "—",

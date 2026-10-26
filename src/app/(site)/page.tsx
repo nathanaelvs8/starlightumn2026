@@ -9,6 +9,7 @@ import { asset } from "@/lib/assets";
 import { copy } from "@/lib/copy";
 import { SPONSOR, MEDIA_PARTNER } from "@/lib/sponsor";
 import { createClient } from "@/lib/supabase/server";
+import { statusVoting } from "@/lib/statusVoting";
 
 /*
   Dirender per permintaan, bukan sekali pas build: tombol Vote &
@@ -38,15 +39,16 @@ async function linkRegistrasi(): Promise<string | null> {
   return /^https?:\/\//i.test(data.registrasi_url) ? data.registrasi_url : null;
 }
 
-/** Voting lagi dibuka? Dipakai buat nampilin tombol "Vote Sekarang" di hero. */
+/**
+ * Voting lagi dibuka? Dipakai buat nampilin tombol "Vote Sekarang" di hero.
+ * Ikut waktu tutupnya juga (src/lib/statusVoting.ts) — lewat jam tutup,
+ * tombolnya hilang walau admin belum ngubah status ke Selesai.
+ */
 async function votingDibuka() {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("vote_settings")
-    .select("is_open, is_finished")
-    .eq("id", 1)
-    .single();
-  return !!data?.is_open && !data?.is_finished;
+  // `*`: kolom waktu tutup baru ada setelah SQL setelan voting dijalankan.
+  const { data } = await supabase.from("vote_settings").select("*").eq("id", 1).single();
+  return statusVoting(data) === "buka";
 }
 
 export default async function HomePage() {
