@@ -247,6 +247,23 @@ dipakai lagi di putaran ini (kuotanya mau habis).
   MP4 = situs kita yang menyebarkan lagunya. Saran: lagu berlisensi →
   pakai link IG; MP4 → audio asli / bebas royalti.
 
+## Batal pilih (unvote) & "pilihan bisa diganti" — 27 Okt 2026
+
+Masalahnya: orang nggak tau pilihannya bisa diganti / dibatalkan.
+
+- Tombol tim yang dipilih: "✓ Pilihan Anda" + baris kecil "Tekan untuk
+  membatalkan". Dipencet → "Batalkan pilihan? · Tekan sekali lagi"
+  (merah lembut) → dipencet lagi = batal. 4 detik dibiarin / pindah fokus
+  → balik semula (biar nggak kebatal kesenggol jempol).
+- Tombol tim lain setelah memilih: "Ganti pilihan" (detail: "Ganti pilihan
+  ke tim ini"), bukan "Pilih".
+- Teks pembuka & pesan sesudah vote: "Pilihan dapat diganti atau
+  dibatalkan sampai voting ditutup".
+- `DELETE /api/vote`: cuma selama status `buka`; hapusnya pakai service
+  role (src/lib/suara.ts → `batalkanSuara`). Akun biasa sengaja nggak
+  punya izin hapus langsung di database (SQL privasi cuma ngasih
+  pembatas, tanpa izin hapus).
+
 ## Minta di-review
 
 Tolong kritik keras bagian ini:

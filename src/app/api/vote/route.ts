@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { hitungSuara } from "@/lib/suara";
+import { batalkanSuara, hitungSuara } from "@/lib/suara";
 import { statusVoting, suaraTerlihat } from "@/lib/statusVoting";
 
 export async function GET() {
@@ -122,6 +122,38 @@ export async function POST(req: Request) {
       { error: "Suara Anda gagal tersimpan. Silakan coba beberapa saat lagi." },
       { status: 500 },
     );
+  }
+  return NextResponse.json({ ok: true });
+}
+/**
+ * Batalkan suara sendiri ("Tekan untuk membatalkan" di halaman Vote).
+ * Cuma selama voting dibuka — sama kayak memilih. Hapusnya lewat server
+ * (src/lib/suara.ts): akun biasa nggak dikasih izin hapus langsung di
+ * database, jadi jalannya cuma lewat sini, yang udah ngecek akun & status.
+ */
+export async function DELETE() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Anda belum masuk. Silakan masuk terlebih dahulu." }, { status: 401 });
+  }
+
+  const { data: settings } = await supabase.from("vote_settings").select("*").eq("id", 1).single();
+  const status = statusVoting(settings);
+  if (status !== "buka") {
+    return NextResponse.json(
+      { error: status === "belum" ? "Voting belum dibuka." : "Voting sudah ditutup. Pilihan tidak dapat dibatalkan lagi.", status },
+      { status: 403 },
+    );
+  }
+
+  try {
+    await batalkanSuara(user.id);
+  } catch (e) {
+    console.error("[vote] gagal membatalkan:", e);
+    return NextResponse.json({ error: "Pilihan Anda gagal dibatalkan. Silakan coba lagi." }, { status: 500 });
   }
   return NextResponse.json({ ok: true });
 }

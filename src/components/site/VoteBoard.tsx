@@ -186,20 +186,53 @@ export function VoteBoard() {
         itu ikut dilaporkan "Koneksi terputus", seolah suaranya hilang,
         dan orangnya vote ulang.
       */
+      const ganti = myTeam !== null && myTeam !== teamId;
       setMyTeam(teamId);
       setPercik({ id: teamId, n: Date.now() });
       const segar = await muat(true);
+      /* Momen yang pas buat ngasih tau: banyak yang ngira pilihannya
+         permanen begitu dipencet. */
       setKabar({
         tipe: "ok",
-        teks: segar
-          ? `Suara Anda untuk ${nama} telah tercatat.`
-          : `Suara Anda untuk ${nama} telah tercatat. Jumlah suara akan diperbarui saat halaman dimuat ulang.`,
+        teks:
+          (ganti ? `Pilihan Anda telah diganti ke ${nama}.` : `Suara Anda untuk ${nama} telah tercatat.`) +
+          (segar
+            ? " Pilihan dapat diganti atau dibatalkan sampai voting ditutup."
+            : " Jumlah suara akan diperbarui saat halaman dimuat ulang."),
       });
     } catch {
       setKabar({
         tipe: "galat",
         teks: "Koneksi terputus. Periksa jaringan Anda, lalu coba lagi.",
       });
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  /** Batalkan pilihan sendiri — orangnya jadi belum memilih siapa pun. */
+  const batalkan = async () => {
+    if (saving || !myTeam) return;
+    const teamId = myTeam;
+    const nama = teams.find((t) => t.id === teamId)?.name ?? "tim itu";
+    setSaving(teamId);
+    setKabar(null);
+    try {
+      const res = await fetch("/api/vote", { method: "DELETE" });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setKabar({ tipe: "galat", teks: d.error ?? "Pilihan Anda gagal dibatalkan. Silakan coba lagi." });
+        if (d.status && d.status !== "buka") await muat(true);
+        return;
+      }
+      setMyTeam(null);
+      await muat(true);
+      setKabar({
+        tipe: "ok",
+        teks: `Pilihan Anda untuk ${nama} telah dibatalkan. Anda dapat memilih lagi selama voting dibuka.`,
+      });
+    } catch {
+      setKabar({ tipe: "galat", teks: "Koneksi terputus. Periksa jaringan Anda, lalu coba lagi." });
     } finally {
       setSaving(null);
     }
@@ -341,11 +374,11 @@ export function VoteBoard() {
         Pilih satu tim.{" "}
         {ditutupPada ? (
           <>
-            Pilihan dapat diubah sampai voting ditutup{" "}
+            Pilihan dapat diganti atau dibatalkan sampai voting ditutup{" "}
             <span className="text-white">{formatWaktuTutup(ditutupPada)}</span>.
           </>
         ) : (
-          "Pilihan dapat diubah selama periode voting masih berlangsung."
+          "Pilihan dapat diganti atau dibatalkan selama periode voting masih berlangsung."
         )}
       </p>
       {ringkasanPilihan}
@@ -391,6 +424,7 @@ export function VoteBoard() {
             menyimpan={saving === t.id}
             sibuk={saving !== null}
             onVote={() => vote(t.id)}
+            onBatal={batalkan}
             onDetail={(el) => bukaDetail(t.id, el)}
             percik={!detail && percik?.id === t.id ? percik.n : null}
           />
@@ -407,6 +441,7 @@ export function VoteBoard() {
           menyimpan={saving === timDetail.id}
           sibuk={saving !== null}
           onVote={() => vote(timDetail.id)}
+          onBatal={batalkan}
           kabar={kabar}
           percik={percik?.id === timDetail.id ? percik.n : null}
           onTutup={tutupDetail}
@@ -430,7 +465,12 @@ export function VoteBoard() {
  * terkunci, biar nggak kelihatan bisa dipencet padahal nggak ngapa-ngapain.
  *
  * `ganti`: orangnya udah milih tim LAIN — mencet ini memindahkan suaranya,
- * dan tombolnya bilang begitu.
+ * dan tombolnya bilang begitu ("Ganti pilihan").
+ *
+ * Tim yang dipilih: tombolnya tetap bisa dipencet buat MEMBATALKAN, dan
+ * baris keduanya bilang begitu — banyak yang ngira pilihannya permanen.
+ * Dua langkah (pencet → "Batalkan pilihan?" → pencet lagi) biar nggak
+ * kebatal gara-gara kesenggol jempol; 4 detik dibiarin → balik semula.
  */
 function TombolPilih({
   nama,
@@ -439,6 +479,7 @@ function TombolPilih({
   menyimpan,
   sibuk,
   onVote,
+  onBatal,
   percik,
   besar,
 }: {
@@ -449,41 +490,74 @@ function TombolPilih({
   menyimpan: boolean;
   sibuk: boolean;
   onVote: () => void;
+  onBatal: () => void;
   percik: number | null;
   besar?: boolean;
 }) {
+  const [yakin, setYakin] = useState(false);
+  useEffect(() => {
+    if (!yakin) return;
+    const t = window.setTimeout(() => setYakin(false), 4000);
+    return () => window.clearTimeout(t);
+  }, [yakin]);
+  useEffect(() => {
+    setYakin(false);
+  }, [dipilih]);
+
+  const tekan = () => {
+    if (!dipilih) return onVote();
+    if (!yakin) return setYakin(true);
+    setYakin(false);
+    onBatal();
+  };
+
+  const [utama, keterangan] = dipilih
+    ? menyimpan
+      ? ["Membatalkan…", null]
+      : yakin
+        ? // Kartu HP sempit: versi panjangnya pecah 2 baris & bikin kartunya melar.
+          [besar ? "Batalkan pilihan?" : "Batalkan?", "Tekan sekali lagi"]
+        : ["✓ Pilihan Anda", "Tekan untuk membatalkan"]
+    : [
+        menyimpan ? "Menyimpan…" : besar ? (ganti ? "Ganti pilihan ke tim ini" : "Pilih tim ini") : ganti ? "Ganti pilihan" : "Pilih",
+        null,
+      ];
+
   return (
     <div className="relative flex-1">
       <button
         type="button"
-        onClick={onVote}
-        disabled={menyimpan || dipilih || sibuk}
+        onClick={tekan}
+        onBlur={() => setYakin(false)}
+        disabled={menyimpan || sibuk}
         aria-label={
           nama && !menyimpan
             ? dipilih
-              ? `Pilihan Anda: ${nama}`
+              ? yakin
+                ? `Tekan sekali lagi untuk membatalkan pilihan ${nama}`
+                : `Pilihan Anda: ${nama}. Tekan untuk membatalkan`
               : ganti
-                ? `Ubah pilihan ke ${nama}`
+                ? `Ganti pilihan ke ${nama}`
                 : `Pilih ${nama}`
             : undefined
         }
         className={clsx(
-          "w-full rounded-pill px-3 font-alice font-bold uppercase tracking-[0.1em] transition-[background-color,box-shadow,opacity] duration-200",
-          besar ? "min-h-12 py-3.5 text-sm sm:text-base" : "min-h-11 py-2.5 text-xs sm:text-[13px]",
+          "flex w-full flex-col items-center justify-center rounded-pill px-3 font-alice transition-[background-color,border-color,box-shadow,opacity] duration-200",
+          besar ? "min-h-12" : "min-h-11",
+          keterangan ? "py-1.5" : besar ? "py-3.5" : "py-2.5",
           dipilih
-            ? "cursor-default border border-cyan-300/60 bg-cyan-400/20 text-cyan-100"
+            ? yakin
+              ? "border border-red-300/60 bg-red-400/15 text-red-100"
+              : "border border-cyan-300/60 bg-cyan-400/20 text-cyan-100 disabled:opacity-60 [@media(hover:hover)]:hover:border-cyan-200 [@media(hover:hover)]:hover:bg-cyan-400/30"
             : "bg-emas text-night shadow-[0_0_20px_rgb(var(--c-emas-rgb)/0.3)] disabled:opacity-60 [@media(hover:hover)]:hover:shadow-[0_0_30px_rgb(var(--c-emas-rgb)/0.5)]",
         )}
       >
-        {dipilih
-          ? "✓ Pilihan Anda"
-          : menyimpan
-            ? "Menyimpan…"
-            : besar
-              ? ganti
-                ? "Ubah pilihan ke tim ini"
-                : "Pilih tim ini"
-              : "Pilih"}
+        <span className={clsx("font-bold uppercase tracking-[0.1em]", besar ? "text-sm sm:text-base" : "text-xs sm:text-[13px]")}>
+          {utama}
+        </span>
+        {keterangan && (
+          <span className={clsx("leading-tight opacity-80", besar ? "text-xs" : "text-[10px] sm:text-[11px]")}>{keterangan}</span>
+        )}
       </button>
       {percik !== null && <Percikan key={percik} />}
     </div>
@@ -506,6 +580,7 @@ function KartuTim({
   menyimpan,
   sibuk,
   onVote,
+  onBatal,
   onDetail,
   percik,
 }: {
@@ -515,6 +590,7 @@ function KartuTim({
   menyimpan: boolean;
   sibuk: boolean;
   onVote: () => void;
+  onBatal: () => void;
   onDetail: (pemicu: HTMLElement) => void;
   percik: number | null;
 }) {
@@ -546,6 +622,7 @@ function KartuTim({
           menyimpan={menyimpan}
           sibuk={sibuk}
           onVote={onVote}
+          onBatal={onBatal}
           percik={percik}
         />
         <button
@@ -588,6 +665,7 @@ function DetailTim({
   menyimpan,
   sibuk,
   onVote,
+  onBatal,
   kabar,
   percik,
   onTutup,
@@ -598,6 +676,7 @@ function DetailTim({
   menyimpan: boolean;
   sibuk: boolean;
   onVote: () => void;
+  onBatal: () => void;
   kabar: Kabar;
   percik: number | null;
   onTutup: () => void;
@@ -794,6 +873,7 @@ function DetailTim({
                   menyimpan={menyimpan}
                   sibuk={sibuk}
                   onVote={onVote}
+                  onBatal={onBatal}
                   percik={percik}
                   besar
                 />
