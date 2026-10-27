@@ -1082,6 +1082,8 @@ function PemutarVideo({
   const kelasSumber = sumberDiKanan ? "lg:hidden" : undefined;
   const [gagal, setGagal] = useState(false);
   const [putarYt, setPutarYt] = useState(false);
+  /** Reel landscape: kartunya udah punya tombol "Tonton di Instagram" sendiri. */
+  const [igMelebar, setIgMelebar] = useState(false);
 
   if (jenis === "youtube") {
     const id = idYoutube(tim.video_url)!;
@@ -1125,9 +1127,9 @@ function PemutarVideo({
     return (
       <>
         <div className="px-3 pt-3 sm:px-6 sm:pt-2 lg:p-0">
-          <EmbedInstagram tim={tim} ig={ig} sampul={sampul} />
+          <EmbedInstagram tim={tim} ig={ig} sampul={sampul} onMelebar={() => setIgMelebar(true)} />
         </div>
-        {sumber && <TombolSumber {...sumber} className={kelasSumber} />}
+        {sumber && !igMelebar && <TombolSumber {...sumber} className={kelasSumber} />}
       </>
     );
   }
@@ -1189,7 +1191,18 @@ const pitaTegak = (tegak: boolean) => (tegak ? "lg:bg-transparent" : "");
  * dihitung ulang kalau lebarnya berubah (HP diputar) — dan sampul timnya
  * tampil redup di tempatnya, biar nggak kedip putih.
  */
-function EmbedInstagram({ tim, ig, sampul }: { tim: Team; ig: { tipe: string; kode: string }; sampul: string | null }) {
+function EmbedInstagram({
+  tim,
+  ig,
+  sampul,
+  onMelebar,
+}: {
+  tim: Team;
+  ig: { tipe: string; kode: string };
+  sampul: string | null;
+  /** Dipanggil pas ketahuan video landscape (lihat `melebar`). */
+  onMelebar: () => void;
+}) {
   const kotak = useRef<HTMLDivElement>(null);
   const bingkai = useRef<HTMLIFrameElement>(null);
   const [tinggi, setTinggi] = useState<number | null>(null);
@@ -1201,6 +1214,15 @@ function EmbedInstagram({ tim, ig, sampul }: { tim: Team; ig: { tipe: string; ko
   const [status, setStatus] = useState<"memuat" | "tampil" | "lambat">("memuat");
   /** Naik tiap "Coba lagi" → iframe-nya dibikin ulang. */
   const [percobaan, setPercobaan] = useState(0);
+  /**
+   * Instagram ngasih kotak media melebar (16:9) — reel yang dianggap
+   * video landscape. Video kayak gini NGGAK mau diputar Instagram di situs
+   * lain ("Watch on Instagram"), dan sebagian malah tampil rusak (gambarnya
+   * luber nutupin kartu). Diganti sampul tim + tombol "Tonton di Instagram".
+   */
+  const [melebar, setMelebar] = useState(false);
+  const onMelebarRef = useRef(onMelebar);
+  onMelebarRef.current = onMelebar;
   const dapatUkuran = useRef(false);
   const cadangan = useRef<number>();
 
@@ -1234,6 +1256,13 @@ function EmbedInstagram({ tim, ig, sampul }: { tim: Team; ig: { tipe: string; ko
       const h = Number(pesan.details?.height);
       if (!Number.isFinite(h) || h < 150 || h > 4000) return;
       dapatUkuran.current = true;
+      // Tinggi kotak media = tinggi kartu − kepala & kaki (±209px). Reel
+      // tegak: 4:5 (1,25 × lebar); landscape: 16:9 (0,56 × lebar).
+      const lebar = bingkai.current.offsetWidth;
+      if (lebar && (h - 209) / lebar < 0.9) {
+        setMelebar(true);
+        onMelebarRef.current();
+      }
       setTinggi(Math.ceil(h));
       setStatus("tampil");
     };
@@ -1257,6 +1286,36 @@ function EmbedInstagram({ tim, ig, sampul }: { tim: Team; ig: { tipe: string; ko
     setStatus("memuat");
     setPercobaan((n) => n + 1);
   };
+
+  if (melebar)
+    return (
+      <a
+        href={`https://www.instagram.com/${ig.tipe}/${ig.kode}/`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={clsx("group relative mx-auto block overflow-hidden rounded-lg bg-black/60", KOTAK_TEGAK)}
+      >
+        {sampul && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={sampul}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 [@media(hover:hover)]:group-hover:scale-[1.03]"
+          />
+        )}
+        <span aria-hidden className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-night via-night/75 to-transparent" />
+        <span className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 px-5 pb-6 text-center">
+          <span className="font-alice text-sm text-white/85">Video ini hanya dapat diputar di Instagram.</span>
+          <span className="inline-flex min-h-11 items-center gap-2 rounded-pill border border-white/30 bg-night/60 px-5 font-alice text-xs font-bold uppercase tracking-[0.1em] text-white backdrop-blur transition-colors sm:text-[13px] [@media(hover:hover)]:group-hover:bg-white/15">
+            Tonton di Instagram
+            <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4" style={{ filter: GLOW_GARIS }}>
+              <path d="M9 5 H19 V15 M19 5 L6 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        </span>
+        <span className="sr-only"> (membuka tab baru)</span>
+      </a>
+    );
 
   return (
     // Desktop: selebar yang bikin kartunya muat setinggi panel (laptop

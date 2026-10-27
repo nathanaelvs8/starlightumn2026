@@ -149,6 +149,12 @@ Fakta yang udah dicek langsung (bukan tebakan):
   angkanya meleset ±19px.
 - Bilah hitam kiri-kanan di reel = kotak 4:5 bawaan embed IG. Nggak bisa
   diubah dari luar iframe. Mau tampil penuh tegak → unggah file MP4-nya.
+- **Reel yang dianggap IG video landscape** dapat kotak 16:9 (tinggi ≈
+  0,56 × lebar + 209). IG nolak muter video ini di situs lain ("Watch on
+  Instagram"), dan sebagian malah tampil rusak (sampul luber nutupin
+  kartu). Ketemu di 5 dari 10 reel tim (27 Okt). `EmbedInstagram` ngecek
+  rasio dari MEASURE → diganti sampul tim + "Tonton di Instagram". Biar
+  bisa diputar langsung: unggah ke YouTube (Unlisted) & pakai link-nya.
 - **oEmbed IG nggak ngasih `thumbnail_url` lagi** sejak 3 Nov 2025. Saran
   Meta: ambil dari metadata HTML post-nya (`og:image`). Hasilnya 640px
   (reel: 361×640, tegak), ada ikon putar bawaan IG di tengahnya, dan
